@@ -3,14 +3,13 @@ import { Button } from "@/shared/Button";
 import { DeleteMessage } from "@/shared/DeleteMessage";
 import { useTutorialProgressStore } from "@/store/tutorialProgressStore";
 import { shallow } from "zustand/shallow";
-import { useEditingHistoryManager } from "@/helpers/hooks";
-import { KeyboardEventProps, ManualInputFormProps } from "./types";
+import { ManualInputFormProps } from "./types";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import { Hint } from "@/shared/Hint";
 import { HINTS_GROUP_NAMES, HINTS_ALERTS, KEY_CODES } from "@/helpers/constants";
 import { changeHintConditions } from "@/helpers/utils/utils";
 import { TRACK_ANALYTICS } from "@/helpers/constants";
-import { getReportWithCopiedLine } from "./utils";
+import TextAreaWithSuggestions from "../TextareaWithSuggestions/TextAreaWithSuggestions";
 
 const ManualInputForm = ({
   saveReportTrigger,
@@ -27,7 +26,6 @@ const ManualInputForm = ({
   const textareaRef = useRef(null);
   const [showDeleteMessage, setShowDeleteMessage] = useState(false);
   const [showDeleteButton, setShowDeleteButton] = useState(false);
-  const editingHistoryManager = useEditingHistoryManager(report);
   const [cursorPosition, setCursorPosition] = useState(0);
   const [progress, setProgress] = useTutorialProgressStore((state) => [state.progress, state.setProgress], shallow);
   const [isFieldDisabled, setIsFieldDisabled] = useState(!isToday);
@@ -48,37 +46,12 @@ const ManualInputForm = ({
     }
   };
 
-  const handleTextAreaKeyDown = (e: KeyboardEventProps) => {
-    if ((e.ctrlKey || e.metaKey) && e.code === KEY_CODES.KEY_D) {
-      e.preventDefault();
-      setReport(getReportWithCopiedLine(textareaRef, report));
-    }
-
-    if ((e.ctrlKey || e.metaKey) && e.code === KEY_CODES.KEY_Z && !e.shiftKey) {
-      e.preventDefault();
-
-      const [currentValue, changePlace] = editingHistoryManager.undoEditing();
-
-      if (typeof currentValue === "string") {
-        setReport(currentValue);
-        setCursorPosition(typeof changePlace === "number" ? changePlace : 0);
-      }
-    }
-
-    if (
-      ((e.ctrlKey || e.metaKey) && e.code === KEY_CODES.KEY_Y) ||
-      ((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === KEY_CODES.KEY_Z)
-    ) {
-      e.preventDefault();
-
-      const [currentValue, changePlace] = editingHistoryManager.redoEditing();
-
-      if (typeof currentValue === "string") {
-        setReport(currentValue);
-        setCursorPosition(typeof changePlace === "number" ? changePlace : 0);
-      }
-    }
-  };
+  // const handleTextAreaKeyDown = (e: KeyboardEventProps) => {
+  //   if ((e.ctrlKey || e.metaKey) && e.code === KEY_CODES.KEY_D) {
+  //     e.preventDefault();
+  //     setReport(getReportWithCopiedLine(textareaRef, report));
+  //   }
+  // };
 
   const handleOnFocus = () => {
     changeHintConditions(progress, setProgress, [
@@ -126,7 +99,6 @@ const ManualInputForm = ({
   }, [selectedDateReport]);
 
   useEffect(() => {
-    editingHistoryManager.setValue(report);
     setReport(report);
 
     if (cursorPosition) {
@@ -210,7 +182,7 @@ const ManualInputForm = ({
         Manual input
       </h2>
 
-      <textarea
+      {/* <textarea
         value={report}
         onFocus={handleOnFocus}
         onChange={(e) => setReport(e.target.value)}
@@ -218,9 +190,22 @@ const ManualInputForm = ({
         className={textAreaClassNames}
         spellCheck={true}
         ref={textareaRef}
-        onKeyDown={handleTextAreaKeyDown}
+        // onKeyDown={handleTextAreaKeyDown}
         disabled={isFieldDisabled}
-      />
+      /> */}
+      {selectedDateReport !== null && (
+        <TextAreaWithSuggestions
+          key={selectedDateReport}
+          className={textAreaClassNames}
+          defaultValue={selectedDateReport}
+          onFocus={handleOnFocus}
+          onChange={(value) => setReport(value)}
+          spellCheck={true}
+          // ref={textareaRef}
+          // onKeyDown={handleTextAreaKeyDown}
+          disabled={isFieldDisabled}
+        />
+      )}
       <div className="relative flex flex-col gap-4 mt-6 justify-stretch">
         {showDeleteMessage && (
           <DeleteMessage

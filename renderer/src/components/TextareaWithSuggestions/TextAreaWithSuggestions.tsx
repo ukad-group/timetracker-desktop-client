@@ -1,0 +1,218 @@
+import React, {
+  KeyboardEvent,
+  MouseEvent,
+  TextareaHTMLAttributes,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Editor, Transforms, Range, createEditor, Descendant, Text } from "slate";
+import { withHistory } from "slate-history";
+import { Editable, ReactEditor, RenderElementProps, RenderLeafProps, Slate, withReact } from "slate-react";
+import { CustomEditor } from "./types";
+import { Portal } from "@headlessui/react";
+import { projects } from "./constants";
+import clsx from "clsx";
+
+type TextAreaWithSuggestionsProps = {
+  className?: string;
+  defaultValue: string;
+  onChange: (value: string) => void;
+  onFocus: () => void;
+  spellCheck?: boolean;
+  disabled?: boolean;
+};
+
+const stringToSlateValue = (text: string): Descendant[] => [
+  {
+    type: "paragraph",
+    children: [{ text }],
+  },
+];
+
+const isText = (node: Descendant): node is Text => "text" in node;
+
+const nodeToString = (node: Descendant): string => {
+  if (isText(node)) {
+    return node.text;
+  }
+  return node.children.map(nodeToString).join("");
+};
+
+const slateValueToString = (value: Descendant[]): string => {
+  return value.map(nodeToString).join("\n");
+};
+
+const TextAreaWithSuggestionsAsText = ({ defaultValue, onChange, ...props }: TextAreaWithSuggestionsProps) => {
+  const suggestionRef = useRef<HTMLDivElement | null>(null);
+  const [target, setTarget] = useState<Range | null>(null);
+  const [index, setIndex] = useState(0);
+  const [search, setSearch] = useState("");
+  const renderElement = useCallback((props: RenderElementProps) => <Element {...props} />, []);
+  const renderLeaf = useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
+  const editor = useMemo(() => withReact(withHistory(createEditor())) as CustomEditor, []);
+
+  const chars = useMemo(
+    () => projects.filter((c) => c.toLowerCase().startsWith(search.toLowerCase())).slice(0, 10),
+    [search],
+  );
+
+  const insertSuggestion = useCallback(
+    (character: string) => {
+      if (!target) return;
+
+      Transforms.select(editor, target);
+
+      Transforms.insertText(editor, character);
+
+      Transforms.collapse(editor, { edge: "end" });
+
+      setTarget(null);
+    },
+    [editor, target],
+  );
+
+  const onKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (target && chars.length > 0) {
+        switch (event.key) {
+          case "ArrowDown":
+            event.preventDefault();
+            const prevIndex = index >= chars.length - 1 ? 0 : index + 1;
+            setIndex(prevIndex);
+            break;
+          case "ArrowUp":
+            event.preventDefault();
+            const nextIndex = index <= 0 ? chars.length - 1 : index - 1;
+            setIndex(nextIndex);
+            break;
+          case "Tab":
+          case "Enter":
+            event.preventDefault();
+
+            insertSuggestion(chars[index]);
+
+            break;
+          case "Escape":
+            event.preventDefault();
+            setTarget(null);
+            break;
+        }
+      }
+    },
+    [chars, index, target, insertSuggestion],
+  );
+
+  useEffect(() => {
+    if (target && chars.length > 0 && suggestionRef.current) {
+      const el = suggestionRef.current;
+      try {
+        const domRange = ReactEditor.toDOMRange(editor, target);
+        const rect = domRange.getBoundingClientRect();
+        el.style.top = `${rect.top + window.pageYOffset + 24}px`;
+        el.style.left = `${rect.left + window.pageXOffset}px`;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [chars.length, editor, target]);
+
+  const handleOnChange = useCallback(
+    (value: Descendant[]) => {
+      onChange(slateValueToString(value));
+      const { selection, operations } = editor;
+
+      const isInsertText = operations.some((op) => op.type === "insert_text");
+
+      if (!isInsertText) {
+        setTarget(null);
+        return;
+      }
+
+      if (selection && Range.isCollapsed(selection)) {
+        const [start] = Range.edges(selection);
+        const blockStart = Editor.start(editor, start.path);
+        const rangeBefore = { anchor: blockStart, focus: start };
+        const textBefore = Editor.string(editor, rangeBefore);
+
+        const match = textBefore.match(/(\w*)$/);
+
+        if (match) {
+          setSearch(match[1]);
+
+          const triggerStart = Editor.before(editor, start, {
+            distance: match[0].length,
+            unit: "character",
+          });
+
+          if (triggerStart) {
+            const triggerRange = { anchor: triggerStart, focus: start };
+            setTarget(triggerRange);
+            setIndex(0);
+            return;
+          }
+        }
+      }
+
+      setTarget(null);
+    },
+    [editor],
+  );
+
+  return (
+    <Slate editor={editor} initialValue={stringToSlateValue(defaultValue)} onChange={handleOnChange}>
+      <Editable {...props} renderElement={renderElement} renderLeaf={renderLeaf} onKeyDown={onKeyDown} />
+      {target && chars.length > 0 && (
+        <Portal>
+          <div
+            ref={suggestionRef}
+            className="-left-full -top-full absolute z-10 p-1 border border-gray-300 bg-white rounded-md shadow-sm dark:bg-dark-back a dark:border-slate-600 dark:text-slate-200"
+            data-cy="suggestions-portal"
+          >
+            {chars.map((char, i) => (
+              <button
+                key={char}
+                onClick={() => {
+                  insertSuggestion(char);
+                }}
+                className={clsx("block w-full text-left cursor-pointer py-px px-1 rounded-sm", {
+                  "bg-blue-600 text-white": i === index,
+                })}
+              >
+                {char}
+              </button>
+            ))}
+          </div>
+        </Portal>
+      )}
+    </Slate>
+  );
+};
+
+const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
+  if (leaf.bold) {
+    children = <strong>{children}</strong>;
+  }
+  if (leaf.code) {
+    children = <code>{children}</code>;
+  }
+  if (leaf.italic) {
+    children = <em>{children}</em>;
+  }
+  if (leaf.underline) {
+    children = <u>{children}</u>;
+  }
+  return <span {...attributes}>{children}</span>;
+};
+
+const Element = (props: RenderElementProps) => {
+  const { attributes, children, element } = props;
+  switch (element.type) {
+    default:
+      return <p {...attributes}>{children}</p>;
+  }
+};
+
+export default TextAreaWithSuggestionsAsText;
