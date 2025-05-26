@@ -257,3 +257,22 @@ export const getTimetrackerBookings = async (
 
   return response.json();
 };
+
+export const getTimetrackerMentions = async (cookie: string) => {
+  const response = await fetch(
+    "http://tt-api.ukad-demo.com/json/contactPerson/getAll",
+    {
+      headers: {
+        Cookie: cookie,
+      },
+    }
+  );
+  
+  if (!response.ok && response.status === 401) {
+    return "invalid_token";
+  } else if (!response.ok) {
+    throw new Error();
+  }
+
+  return response.json();
+};

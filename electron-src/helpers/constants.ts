@@ -43,6 +43,7 @@ export const IPC_MAIN_CHANNELS = {
   APP_CHECK_EXIST_REPORT: "app:check-exist-report",
   APP_FIND_LAST_REPORT: "app:find-last-report",
   TIMETRACKER_GET_PROJECTS: "timetracker:get-projects",
+  TIMETRACKER_GET_MENTIONS: "timetracker:get-mentions",
   TIMETRACKER_REFRESH_USER_INFO_TOKEN: "timetracker:refresh-user-info-token",
   TIMETRACKER_REFRESH_PLANNER_TOKEN: "timetracker:refresh-planner-token",
   TIMETRACKER_LOGIN: "timetracker:login",

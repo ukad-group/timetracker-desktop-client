@@ -30,6 +30,7 @@ import {
   getTimetrackerCookie,
   getTimetrackerHolidays,
   getTimetrackerProjects,
+  getTimetrackerMentions,
   getTimetrackerVacations,
   getRefreshedUserInfoToken,
   getTimetrackerBookings,
@@ -1033,6 +1034,10 @@ ipcMain.handle(IPC_MAIN_CHANNELS.TIMETRACKER_LOGIN, async (_, idToken: string) =
 
 ipcMain.handle(IPC_MAIN_CHANNELS.TIMETRACKER_GET_PROJECTS, async (_, cookie: string) => {
   return await getTimetrackerProjects(cookie);
+});
+
+ipcMain.handle(IPC_MAIN_CHANNELS.TIMETRACKER_GET_MENTIONS, async (_, cookie: string) => {
+  return await getTimetrackerMentions(cookie);
 });
 
 ipcMain.handle(

@@ -13,7 +13,7 @@ import { withHistory } from "slate-history";
 import { Editable, ReactEditor, RenderElementProps, RenderLeafProps, Slate, withReact } from "slate-react";
 import { CustomEditor } from "./types";
 import { Portal } from "@headlessui/react";
-import { projects } from "./constants";
+import { getTimetrackerMentions } from "./utils";
 import clsx from "clsx";
 
 type TextAreaWithSuggestionsProps = {
@@ -50,12 +50,13 @@ const TextAreaWithSuggestionsAsText = ({ defaultValue, onChange, ...props }: Tex
   const [target, setTarget] = useState<Range | null>(null);
   const [index, setIndex] = useState(0);
   const [search, setSearch] = useState("");
+  let [mentions, setMentions] = useState([]);
   const renderElement = useCallback((props: RenderElementProps) => <Element {...props} />, []);
   const renderLeaf = useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
   const editor = useMemo(() => withReact(withHistory(createEditor())) as CustomEditor, []);
 
   const chars = useMemo(
-    () => projects.filter((c) => c.toLowerCase().startsWith(search.toLowerCase())).slice(0, 10),
+    () => mentions.filter((c) => c.toLowerCase().startsWith(search.toLowerCase())).slice(0, 10),
     [search],
   );
 
@@ -64,8 +65,8 @@ const TextAreaWithSuggestionsAsText = ({ defaultValue, onChange, ...props }: Tex
       if (!target) return;
 
       Transforms.select(editor, target);
-
-      Transforms.insertText(editor, character);
+      let insertingText = "@" + character.split("-")[0].trim();
+      Transforms.insertText(editor, insertingText);
 
       Transforms.collapse(editor, { edge: "end" });
 
@@ -106,6 +107,12 @@ const TextAreaWithSuggestionsAsText = ({ defaultValue, onChange, ...props }: Tex
   );
 
   useEffect(() => {
+    if (!mentions.length) {
+      getTimetrackerMentions(setMentions);
+    }
+  }, []);
+
+  useEffect(() => {
     if (target && chars.length > 0 && suggestionRef.current) {
       const el = suggestionRef.current;
       try {
@@ -137,7 +144,7 @@ const TextAreaWithSuggestionsAsText = ({ defaultValue, onChange, ...props }: Tex
         const rangeBefore = { anchor: blockStart, focus: start };
         const textBefore = Editor.string(editor, rangeBefore);
 
-        const match = textBefore.match(/(\w*)$/);
+        const match = textBefore.match(/@(\w*)$/);
 
         if (match) {
           setSearch(match[1]);
