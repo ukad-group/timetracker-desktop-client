@@ -104,6 +104,7 @@ export const loadHolidaysAndVacations = async (calendarDate: Date) => {
           duration: item?.quantity,
           description: item?.description,
           type: item?.type,
+          status: item.status,
         });
       }
     });

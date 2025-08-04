@@ -26,6 +26,7 @@ export type DayOff = {
   duration: number;
   description: string;
   type: number;
+  status: number;
 };
 
 export type ApiDayOff = {
@@ -34,6 +35,7 @@ export type ApiDayOff = {
   quantity: number;
   description: string;
   type: number;
+  status: number;
 };
 
 export type TTUserInfoProps = {

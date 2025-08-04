@@ -76,7 +76,7 @@ export function getRequiredHours(calendarDate: Date, daysOff: DayOff[], lastDay:
     const monthDay = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), i);
 
     const isWeekend = monthDay.getDay() === 0 || monthDay.getDay() === 6;
-    const dayOff = daysOff.find((day) => isTheSameDates(monthDay, day.date));
+    const dayOff = daysOff.find((day) => isTheSameDates(monthDay, day.date) && day.status !== 3);
 
     if (!isWeekend && !dayOff) {
       totalWorkHours += 8;
@@ -131,6 +131,7 @@ export function extractDatesFromPeriod(period: ApiDayOff, holidays: DayOff[]) {
         duration: period?.quantity,
         description: period?.description,
         type: period?.type,
+        status: period.status,
       };
     });
 }
