@@ -10,6 +10,15 @@ export const getTimetrackerMentions = async (setMentions: Dispatch<SetStateActio
 
   if (!TTUserInfo) return;
 
+  const ClientsForMentions = JSON.parse(
+    global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_SESSION_GET, LOCAL_STORAGE_VARIABLES.CLIENTS_FOR_MENTIONS),
+  );
+
+  if (ClientsForMentions !== null) {
+    setMentions(ClientsForMentions);
+    return;
+  }
+
   const { cookie, refreshToken } = TTUserInfo;
 
   try {
@@ -55,6 +64,12 @@ export const getTimetrackerMentions = async (setMentions: Dispatch<SetStateActio
 
     var allClientsMapped = allClients.flatMap((c) => [c.name + (c.email.length ? " - " + c.email : "")]);
     setMentions(allClientsMapped);
+
+    global.ipcRenderer.send(
+      IPC_MAIN_CHANNELS.ELECTRON_SESSION_SET,
+      LOCAL_STORAGE_VARIABLES.CLIENTS_FOR_MENTIONS,
+      JSON.stringify(allClientsMapped),
+    );
   } catch (error) {
     console.log(error);
     getTimetrackerMentions(TTUserInfo.allClients);

@@ -160,14 +160,36 @@ ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, async (_, val) => {
   var value = electronStore.get(val)
   _.returnValue = value ? value : null;
 });
+
 ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_STORE_SET, (_, key, val) => {
   electronStore.set(key, typeof val == "string" ? val : JSON.stringify(val));
 });
+
 ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_STORE_DELETE, (_, key) => {
   electronStore.delete(key);
 });
+
 ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_STORE_CLEAR, (_) => {
   electronStore.clear();
+});
+
+//defined the session
+let electronSession: Record<string, any> = {};
+
+ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_SESSION_GET, (_, key) => {
+  _.returnValue = electronSession[key] ?? null;
+});
+
+ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_SESSION_SET, (_, key, value) => {
+  electronSession[key] = typeof value === "string" ? value : JSON.stringify(value);
+});
+
+ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_SESSION_DELETE, (_, key) => {
+  delete electronSession[key];
+});
+
+ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_SESSION_CLEAR, (_) => {
+  electronSession = {};
 });
 
 const userDataDirectory = app.getPath("userData");

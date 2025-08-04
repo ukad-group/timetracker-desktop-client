@@ -68,5 +68,9 @@ export const IPC_MAIN_CHANNELS = {
   ELECTRON_STORE_GET: "electron-store-get",
   ELECTRON_STORE_SET: "electron-store-set",
   ELECTRON_STORE_DELETE: "electron-store-delete",
-  ELECTRON_STORE_CLEAR: "electron-store-clear"
+  ELECTRON_STORE_CLEAR: "electron-store-clear",
+  ELECTRON_SESSION_GET: "electron-session-get",
+  ELECTRON_SESSION_SET: "electron-session-set",
+  ELECTRON_SESSION_DELETE: "electron-session-delete",
+  ELECTRON_SESSION_CLEAR: "electron-session-clear"
 };
