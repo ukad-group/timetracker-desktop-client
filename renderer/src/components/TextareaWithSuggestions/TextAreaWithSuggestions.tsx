@@ -1,20 +1,21 @@
 import React, {
+  Dispatch,
   KeyboardEvent,
-  MouseEvent,
-  TextareaHTMLAttributes,
+  SetStateAction,
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
-import { Editor, Transforms, Range, createEditor, Descendant, Text } from "slate";
+import { Editor, Transforms, Range, createEditor, Descendant, Text, Path, Element as SlateElement } from "slate";
 import { withHistory } from "slate-history";
 import { Editable, ReactEditor, RenderElementProps, RenderLeafProps, Slate, withReact } from "slate-react";
 import { CustomEditor } from "./types";
 import { Portal } from "@headlessui/react";
 import { getTimetrackerMentions } from "./utils";
 import clsx from "clsx";
+import { getReportWithCopiedLine } from "../ManualInputForm/utils";
 
 type TextAreaWithSuggestionsProps = {
   className?: string;
@@ -23,6 +24,8 @@ type TextAreaWithSuggestionsProps = {
   onFocus: () => void;
   spellCheck?: boolean;
   disabled?: boolean;
+  setSelectedDateReport: Dispatch<SetStateAction<string>>;
+  report: string;
 };
 
 const stringToSlateValue = (text: string): Descendant[] => [
@@ -45,7 +48,13 @@ const slateValueToString = (value: Descendant[]): string => {
   return value.map(nodeToString).join("\n");
 };
 
-const TextAreaWithSuggestionsAsText = ({ defaultValue, onChange, ...props }: TextAreaWithSuggestionsProps) => {
+const TextAreaWithSuggestionsAsText = ({
+  defaultValue,
+  onChange,
+  setSelectedDateReport,
+  report,
+  ...props
+}: TextAreaWithSuggestionsProps) => {
   const suggestionRef = useRef<HTMLDivElement | null>(null);
   const [target, setTarget] = useState<Range | null>(null);
   const [index, setIndex] = useState(0);
@@ -75,6 +84,42 @@ const TextAreaWithSuggestionsAsText = ({ defaultValue, onChange, ...props }: Tex
     [editor, target],
   );
 
+  const copyCurrentActivityToTheEnd = (event: KeyboardEvent<HTMLDivElement>) => {
+    event.preventDefault();
+
+    if (editor.selection) {
+      const blockEntry = Editor.above(editor, {
+        match: (n) => SlateElement.isElement(n) && Editor.isBlock(editor, n),
+      });
+      if (blockEntry) {
+        const [_, blockPath] = blockEntry;
+        const blockText = Editor.string(editor, blockPath);
+        const { anchor } = editor.selection;
+
+        if (Path.isAncestor(blockPath, anchor.path)) {
+          const offset = anchor.offset;
+          const lines = blockText.split("\n");
+          let runningLength = 0;
+
+          for (const line of lines) {
+            if (offset <= runningLength + line.length) {
+              const reportWithCopiedLine = getReportWithCopiedLine(line, report);
+              onChange(reportWithCopiedLine);
+
+              // Replace the entire editor content with the new report
+              const newValue = stringToSlateValue(reportWithCopiedLine);
+              Transforms.removeNodes(editor, { at: [0] });
+              Transforms.insertNodes(editor, newValue[0], { at: [0] });
+
+              break;
+            }
+            runningLength += line.length + 1;
+          }
+        }
+      }
+    }
+  };
+
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (target && chars.length > 0) {
@@ -102,8 +147,12 @@ const TextAreaWithSuggestionsAsText = ({ defaultValue, onChange, ...props }: Tex
             break;
         }
       }
+
+      if ((event.ctrlKey || event.metaKey) && event.key === "d") {
+        copyCurrentActivityToTheEnd(event);
+      }
     },
-    [chars, index, target, insertSuggestion],
+    [chars, index, target, insertSuggestion, report],
   );
 
   useEffect(() => {

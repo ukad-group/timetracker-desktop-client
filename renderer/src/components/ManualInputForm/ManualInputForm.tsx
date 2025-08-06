@@ -46,13 +46,6 @@ const ManualInputForm = ({
     }
   };
 
-  // const handleTextAreaKeyDown = (e: KeyboardEventProps) => {
-  //   if ((e.ctrlKey || e.metaKey) && e.code === KEY_CODES.KEY_D) {
-  //     e.preventDefault();
-  //     setReport(getReportWithCopiedLine(textareaRef, report));
-  //   }
-  // };
-
   const handleOnFocus = () => {
     changeHintConditions(progress, setProgress, [
       {
@@ -91,7 +84,7 @@ const ManualInputForm = ({
   }, [selectedDateReport, report]);
 
   useEffect(() => {
-    setShowDeleteButton(isFileExist && !report.length);
+    setShowDeleteButton(isFileExist && !report?.length);
   }, [isFileExist, report]);
 
   useEffect(() => {
@@ -201,9 +194,9 @@ const ManualInputForm = ({
           onFocus={handleOnFocus}
           onChange={(value) => setReport(value)}
           spellCheck={true}
-          // ref={textareaRef}
-          // onKeyDown={handleTextAreaKeyDown}
+          setSelectedDateReport={setSelectedDateReport}
           disabled={isFieldDisabled}
+          report={report}
         />
       )}
       <div className="relative flex flex-col gap-4 mt-6 justify-stretch">
