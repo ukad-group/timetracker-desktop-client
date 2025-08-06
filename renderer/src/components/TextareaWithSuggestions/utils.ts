@@ -62,7 +62,7 @@ export const getTimetrackerMentions = async (setMentions: Dispatch<SetStateActio
       JSON.stringify(updatedUserInfo),
     );
 
-    var allClientsMapped = allClients.flatMap((c) => [c.name + (c.email.length ? " - " + c.email : "")]);
+    const allClientsMapped = allClients.flatMap((c) => [c.name + (c.email.length ? " - " + c.email : "")]);
     setMentions(allClientsMapped);
 
     global.ipcRenderer.send(
@@ -72,7 +72,6 @@ export const getTimetrackerMentions = async (setMentions: Dispatch<SetStateActio
     );
   } catch (error) {
     console.log(error);
-    getTimetrackerMentions(TTUserInfo.allClients);
     const online = await isOnline();
     if (!online) {
       console.log(OFFLINE_MESSAGE);

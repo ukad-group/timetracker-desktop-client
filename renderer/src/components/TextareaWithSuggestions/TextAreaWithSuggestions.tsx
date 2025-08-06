@@ -50,7 +50,7 @@ const TextAreaWithSuggestionsAsText = ({ defaultValue, onChange, ...props }: Tex
   const [target, setTarget] = useState<Range | null>(null);
   const [index, setIndex] = useState(0);
   const [search, setSearch] = useState("");
-  let [mentions, setMentions] = useState([]);
+  const [mentions, setMentions] = useState([]);
   const renderElement = useCallback((props: RenderElementProps) => <Element {...props} />, []);
   const renderLeaf = useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
   const editor = useMemo(() => withReact(withHistory(createEditor())) as CustomEditor, []);
@@ -65,7 +65,7 @@ const TextAreaWithSuggestionsAsText = ({ defaultValue, onChange, ...props }: Tex
       if (!target) return;
 
       Transforms.select(editor, target);
-      let insertingText = "@" + character.split("-")[0].trim();
+      const insertingText = "@" + character.split("-")[0].trim();
       Transforms.insertText(editor, insertingText);
 
       Transforms.collapse(editor, { edge: "end" });
