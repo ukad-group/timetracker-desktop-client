@@ -159,7 +159,6 @@ export type CustomText = {
   code?: boolean;
   underline?: boolean;
   strikethrough?: boolean;
-  // MARKDOWN PREVIEW SPECIFIC LEAF
   underlined?: boolean;
   title?: boolean;
   list?: boolean;
@@ -194,3 +193,9 @@ declare module "slate" {
     };
   }
 }
+
+export type ContactPerson = {
+  id: number;
+  name: string;
+  email: string;
+};

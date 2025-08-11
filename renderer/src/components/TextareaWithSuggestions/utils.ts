@@ -2,27 +2,31 @@ import { Dispatch, SetStateAction } from "react";
 import { LOCAL_STORAGE_VARIABLES, OFFLINE_MESSAGE } from "@/helpers/constants";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import isOnline from "is-online";
+import { ContactPerson } from "./types";
 
-export const getTimetrackerMentions = async (setMentions: Dispatch<SetStateAction<string[]>>) => {
-  const TTUserInfo = JSON.parse(
+export const getTimetrackerContactPersons = async (setMentions: Dispatch<SetStateAction<string[]>>) => {
+  const ttUserInfo = JSON.parse(
     global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER),
   );
 
-  if (!TTUserInfo) return;
+  if (!ttUserInfo) return;
 
-  const ClientsForMentions = JSON.parse(
+  const clientsForMentions = JSON.parse(
     global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_SESSION_GET, LOCAL_STORAGE_VARIABLES.CLIENTS_FOR_MENTIONS),
   );
 
-  if (ClientsForMentions !== null) {
-    setMentions(ClientsForMentions);
+  if (clientsForMentions !== null) {
+    setMentions(clientsForMentions);
     return;
   }
 
-  const { cookie, refreshToken } = TTUserInfo;
+  const { cookie, refreshToken } = ttUserInfo;
 
   try {
-    const allClients = await global.ipcRenderer.invoke(IPC_MAIN_CHANNELS.TIMETRACKER_GET_MENTIONS, cookie);
+    const allClients: ContactPerson[] | string = await global.ipcRenderer.invoke(
+      IPC_MAIN_CHANNELS.TIMETRACKER_GET_MENTIONS,
+      cookie,
+    );
 
     if (allClients === "invalid_token") {
       if (!refreshToken) return;
@@ -37,7 +41,7 @@ export const getTimetrackerMentions = async (setMentions: Dispatch<SetStateActio
       const updatedCookie = await global.ipcRenderer.invoke(IPC_MAIN_CHANNELS.TIMETRACKER_LOGIN, updatedIdToken);
 
       const updatedUser = {
-        ...TTUserInfo,
+        ...ttUserInfo,
         idToken: updatedIdToken,
         cookie: updatedCookie,
       };
@@ -48,28 +52,30 @@ export const getTimetrackerMentions = async (setMentions: Dispatch<SetStateActio
         JSON.stringify(updatedUser),
       );
 
-      return await getTimetrackerMentions(setMentions);
+      return await getTimetrackerContactPersons(setMentions);
     }
 
-    const updatedUserInfo = {
-      ...TTUserInfo,
-      allClients: allClients,
-    };
+    if (typeof allClients !== "string") {
+      const updatedUserInfo = {
+        ...ttUserInfo,
+        allClients: allClients,
+      };
 
-    global.ipcRenderer.send(
-      IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
-      LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER,
-      JSON.stringify(updatedUserInfo),
-    );
+      global.ipcRenderer.send(
+        IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+        LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER,
+        JSON.stringify(updatedUserInfo),
+      );
 
-    const allClientsMapped = allClients.flatMap((c) => [c.name + (c.email.length ? " - " + c.email : "")]);
-    setMentions(allClientsMapped);
+      const allClientsMapped = allClients.flatMap((c) => [c.name + (c.email.length ? " - " + c.email : "")]);
+      setMentions(allClientsMapped);
 
-    global.ipcRenderer.send(
-      IPC_MAIN_CHANNELS.ELECTRON_SESSION_SET,
-      LOCAL_STORAGE_VARIABLES.CLIENTS_FOR_MENTIONS,
-      JSON.stringify(allClientsMapped),
-    );
+      global.ipcRenderer.send(
+        IPC_MAIN_CHANNELS.ELECTRON_SESSION_SET,
+        LOCAL_STORAGE_VARIABLES.CLIENTS_FOR_MENTIONS,
+        JSON.stringify(allClientsMapped),
+      );
+    }
   } catch (error) {
     console.log(error);
     const online = await isOnline();

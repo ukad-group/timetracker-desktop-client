@@ -175,17 +175,6 @@ const ManualInputForm = ({
         Manual input
       </h2>
 
-      {/* <textarea
-        value={report}
-        onFocus={handleOnFocus}
-        onChange={(e) => setReport(e.target.value)}
-        rows={15}
-        className={textAreaClassNames}
-        spellCheck={true}
-        ref={textareaRef}
-        // onKeyDown={handleTextAreaKeyDown}
-        disabled={isFieldDisabled}
-      /> */}
       {selectedDateReport !== null && (
         <TextAreaWithSuggestions
           key={selectedDateReport}

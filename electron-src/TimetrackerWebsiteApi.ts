@@ -1,4 +1,5 @@
 import { Options } from "./helpers/API/office365Api";
+import { ContactPerson } from "../renderer/src/components/TextareaWithSuggestions/types";
 
 export const getAzureAuthUrl = (options: Options) => {
   const { clientId, scope, redirectUri } = options;
@@ -258,7 +259,7 @@ export const getTimetrackerBookings = async (
   return response.json();
 };
 
-export const getTimetrackerMentions = async (cookie: string) => {
+export const getTimetrackerContactPersons = async (cookie: string): Promise<ContactPerson[] | string> => {
   const response = await fetch(
     "http://tt-api.ukad-demo.com/json/contactPerson/getAll",
     {

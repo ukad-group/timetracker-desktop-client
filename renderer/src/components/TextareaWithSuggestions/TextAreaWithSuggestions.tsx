@@ -13,7 +13,7 @@ import { withHistory } from "slate-history";
 import { Editable, ReactEditor, RenderElementProps, RenderLeafProps, Slate, withReact } from "slate-react";
 import { CustomEditor } from "./types";
 import { Portal } from "@headlessui/react";
-import { getTimetrackerMentions } from "./utils";
+import { getTimetrackerContactPersons } from "./utils";
 import clsx from "clsx";
 import { getReportWithCopiedLine } from "../ManualInputForm/utils";
 
@@ -157,7 +157,7 @@ const TextAreaWithSuggestionsAsText = ({
 
   useEffect(() => {
     if (!mentions.length) {
-      getTimetrackerMentions(setMentions);
+      getTimetrackerContactPersons(setMentions);
     }
   }, []);
 
