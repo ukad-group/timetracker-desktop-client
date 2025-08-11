@@ -224,7 +224,7 @@ const TextAreaWithSuggestionsAsText = ({
         <Portal>
           <div
             ref={suggestionRef}
-            className="-left-full -top-full absolute z-10 p-1 border border-gray-300 bg-white rounded-md shadow-sm dark:bg-dark-back a dark:border-slate-600 dark:text-slate-200"
+            className="-left-full -top-full absolute z-10 p-1 border border-gray-300 bg-white rounded-md shadow-sm dark:bg-dark-back dark:border-slate-600 dark:text-slate-200"
             data-cy="suggestions-portal"
           >
             {chars.map((char, i) => (
