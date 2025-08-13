@@ -219,7 +219,13 @@ const TextAreaWithSuggestionsAsText = ({
 
   return (
     <Slate editor={editor} initialValue={stringToSlateValue(defaultValue)} onChange={handleOnChange}>
-      <Editable {...props} renderElement={renderElement} renderLeaf={renderLeaf} onKeyDown={onKeyDown} />
+      <Editable
+        {...props}
+        renderElement={renderElement}
+        renderLeaf={renderLeaf}
+        onKeyDown={onKeyDown}
+        style={{ minHeight: "300px" }}
+      />
       {target && chars.length > 0 && (
         <Portal>
           <div

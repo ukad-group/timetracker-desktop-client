@@ -4,7 +4,19 @@ import next from "next";
 import { parse } from "url";
 import { createServer, Server, IncomingMessage, ServerResponse } from "http";
 import { AddressInfo } from "net";
-import { app, BrowserWindow, dialog, ipcMain, Menu, MenuItem, shell, Tray, globalShortcut, protocol, net } from "electron";
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  Menu,
+  MenuItem,
+  shell,
+  Tray,
+  globalShortcut,
+  protocol,
+  net,
+} from "electron";
 import url from "node:url";
 import { autoUpdater, UpdateInfo } from "electron-updater";
 import isDev from "electron-is-dev";
@@ -30,7 +42,7 @@ import {
   getTimetrackerCookie,
   getTimetrackerHolidays,
   getTimetrackerProjects,
-  getTimetrackerMentions,
+  getTimetrackerContactPersons,
   getTimetrackerVacations,
   getRefreshedUserInfoToken,
   getTimetrackerBookings,
@@ -46,7 +58,7 @@ import {
 } from "./helpers/API/jiraApi";
 import { IPC_MAIN_CHANNELS } from "./helpers/constants";
 import { getGoogleAuthUrl } from "./helpers/API/googleApi";
-import Store from 'electron-store'
+import Store from "electron-store";
 
 initialize("A-EU-9361517871");
 ipcMain.on(IPC_MAIN_CHANNELS.ANALYTICS_DATA, (_, analyticsEvent: string, data?: Record<string, string>) => {
@@ -157,7 +169,7 @@ ipcMain.on(IPC_MAIN_CHANNELS.GET_CURRENT_PORT, async (_) => {
 });
 
 ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, async (_, val) => {
-  var value = electronStore.get(val)
+  var value = electronStore.get(val);
   _.returnValue = value ? value : null;
 });
 
@@ -196,18 +208,22 @@ const userDataDirectory = app.getPath("userData");
 let mainWindow: Electron.CrossProcessExports.BrowserWindow | null = null;
 const gotTheLock = app.requestSingleInstanceLock();
 
-let server : Server<typeof IncomingMessage, typeof ServerResponse>;
+let server: Server<typeof IncomingMessage, typeof ServerResponse>;
 
 const getServerPort = () => {
   let address = server?.address() as AddressInfo;
-  let serverPort = address?.port ? address.port : 0
+  let serverPort = address?.port ? address.port : 0;
   return serverPort;
-}
+};
 
 const getServerAddress = () => {
-  var address = process.env.NEXT_PUBLIC_SERVER_ADDRESS?.replace(process.env.NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME || "", getServerPort().toString()) || ""
+  var address =
+    process.env.NEXT_PUBLIC_SERVER_ADDRESS?.replace(
+      process.env.NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME || "",
+      getServerPort().toString(),
+    ) || "";
   return address;
-}
+};
 
 const generateWindow = () => {
   mainWindow = createWindow({
@@ -287,7 +303,6 @@ app.on("before-quit", () => {
 });
 
 app.on("ready", async () => {
-
   const nextApp = next({
     dev: isDev,
     dir: app.getAppPath() + "/renderer",
@@ -315,7 +330,7 @@ app.on("ready", async () => {
     const parsedUrl = parse(req.url, true);
     requestHandler(req, res, parsedUrl);
   }).listen(0, "127.0.0.1", () => {
-    let address : AddressInfo | null | string = server.address();
+    let address: AddressInfo | null | string = server.address();
     let port = (address as AddressInfo).port;
     process.env.NEXT_PUBLIC_PORT = `${port}`;
 
@@ -325,7 +340,7 @@ app.on("ready", async () => {
   const restartServer = () => {
     server.close(() => {
       server.listen(0, "127.0.0.1", () => {
-        let address : AddressInfo | null | string = server.address();
+        let address: AddressInfo | null | string = server.address();
         let port = (address as AddressInfo).port;
         process.env.NEXT_PUBLIC_PORT = `${port}`;
 
@@ -361,7 +376,7 @@ app.on("ready", async () => {
     }
   });
 
-  server.on('listening', () => {
+  server.on("listening", () => {
     if (!gotTheLock) {
       app.quit();
     } else {
@@ -379,14 +394,16 @@ app.on("ready", async () => {
 
     if (mainWindow) {
       app.whenReady().then(() => {
-
         protocol.handle(process.env.NEXT_PUBLIC_PROTOCOL as string, (request) => {
-          const localUrl = request.url.replace(process.env.NEXT_PUBLIC_PROTOCOL_SERVER_ADDRESS || "", getServerAddress());
+          const localUrl = request.url.replace(
+            process.env.NEXT_PUBLIC_PROTOCOL_SERVER_ADDRESS || "",
+            getServerAddress(),
+          );
           return net.fetch(localUrl);
         });
 
         if (process.platform === "darwin") return;
-        
+
         try {
           generateTray();
         } catch (err) {
@@ -584,8 +601,8 @@ app.on("ready", async () => {
         }
       });
 
-      mainWindow.webContents.on('will-navigate', function (event, newUrl) {
-          console.log('will-navigate', newUrl);
+      mainWindow.webContents.on("will-navigate", function (event, newUrl) {
+        console.log("will-navigate", newUrl);
       });
 
       mainWindow.webContents.on("context-menu", (_, params) => {
@@ -946,7 +963,11 @@ const getOffice365Options = () => {
   return {
     clientId: process.env.NEXT_PUBLIC_OFFICE365_CLIENT_ID || "",
     clientSecret: process.env.NEXT_PUBLIC_OFFICE365_CLIENT_SECRET || "",
-    redirectUri: process.env.NEXT_PUBLIC_OFFICE365_REDIRECT_URI?.replace(process.env.NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME || "", getServerPort().toString()) || "",
+    redirectUri:
+      process.env.NEXT_PUBLIC_OFFICE365_REDIRECT_URI?.replace(
+        process.env.NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME || "",
+        getServerPort().toString(),
+      ) || "",
     scope: process.env.NEXT_PUBLIC_OFFICE365_SCOPE || "",
   };
 };
@@ -1059,7 +1080,7 @@ ipcMain.handle(IPC_MAIN_CHANNELS.TIMETRACKER_GET_PROJECTS, async (_, cookie: str
 });
 
 ipcMain.handle(IPC_MAIN_CHANNELS.TIMETRACKER_GET_MENTIONS, async (_, cookie: string) => {
-  return await getTimetrackerMentions(cookie);
+  return await getTimetrackerContactPersons(cookie);
 });
 
 ipcMain.handle(
