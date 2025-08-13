@@ -119,8 +119,8 @@ describe("GIVEN datetime-ui/getMonthRequiredHours", () => {
   it("calculates the correct total required work hours for the month", () => {
     const calendarDate = new Date("2022-01-01");
     const daysOff = [
-      { date: new Date("2022-01-05"), duration: 4, description: "Desc", type: 1 },
-      { date: new Date("2022-01-10"), duration: 8, description: "Desc", type: 1 },
+      { date: new Date("2022-01-05"), duration: 4, description: "Desc", type: 1, status: 1 },
+      { date: new Date("2022-01-10"), duration: 8, description: "Desc", type: 1, status: 1 },
     ];
     const lastDayOfMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 0);
 
