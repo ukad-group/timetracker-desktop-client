@@ -1,4 +1,5 @@
 import { Options } from "./helpers/API/office365Api";
+import { ContactPerson } from "../renderer/src/components/TextareaWithSuggestions/types";
 
 export const getAzureAuthUrl = (options: Options) => {
   const { clientId, scope, redirectUri } = options;
@@ -249,6 +250,25 @@ export const getTimetrackerBookings = async (
     }
   );
 
+  if (!response.ok && response.status === 401) {
+    return "invalid_token";
+  } else if (!response.ok) {
+    throw new Error();
+  }
+
+  return response.json();
+};
+
+export const getTimetrackerContactPersons = async (cookie: string): Promise<ContactPerson[] | string> => {
+  const response = await fetch(
+    "http://tt-api.ukad-demo.com/json/contactPerson/getAll",
+    {
+      headers: {
+        Cookie: cookie,
+      },
+    }
+  );
+  
   if (!response.ok && response.status === 401) {
     return "invalid_token";
   } else if (!response.ok) {

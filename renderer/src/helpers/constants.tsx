@@ -36,6 +36,7 @@ export const LOCAL_STORAGE_VARIABLES = {
   IS_MANUAL_INPUT_MAIN: "is-manual-input-main-section",
   VERSION_DATA: "version-data",
   WIDGET_ORDER: "sectionsOptions",
+  CLIENTS_FOR_MENTIONS: "clients-for-mentions",
   // ...Add more local storage variables as needed
 };
 
