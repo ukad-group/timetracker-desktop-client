@@ -20,6 +20,7 @@ const ManualInputForm = ({
   isFileExist,
   setIsFileExist,
   isToday,
+  projects,
 }: ManualInputFormProps) => {
   const [report, setReport] = useState("");
   const [saveBtnStatus, setSaveBtnStatus] = useState("disabled");
@@ -186,6 +187,7 @@ const ManualInputForm = ({
           setSelectedDateReport={setSelectedDateReport}
           disabled={isFieldDisabled}
           report={report}
+          projects={projects}
         />
       )}
       <div className="relative flex flex-col gap-4 mt-6 justify-stretch">

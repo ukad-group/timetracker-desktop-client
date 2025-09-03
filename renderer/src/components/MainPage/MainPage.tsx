@@ -239,6 +239,7 @@ const MainPage = ({
             isFileExist={isFileExist}
             setIsFileExist={setIsFileExist}
             isToday={isToday}
+            projects={latestProjAndAct ? Object.keys(latestProjAndAct) : []}
           />
         </section>
       ),

@@ -2,6 +2,7 @@ import { KeyboardEvent, SetStateAction } from "react";
 
 export type ManualInputFormProps = {
   saveReportTrigger: boolean;
+  projects: string[];
   onSave: (selectedDateReport: SetStateAction<string>, shouldAutosave: SetStateAction<boolean>) => void;
   selectedDateReport: string | null;
   selectedDate: Date;

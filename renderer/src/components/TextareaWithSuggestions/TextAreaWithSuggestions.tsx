@@ -16,7 +16,6 @@ import { Portal } from "@headlessui/react";
 import { getTimetrackerContactPersons } from "./utils";
 import clsx from "clsx";
 import { getReportWithCopiedLine } from "../ManualInputForm/utils";
-import { co } from "@fullcalendar/core/internal-common";
 
 type TextAreaWithSuggestionsProps = {
   className?: string;
@@ -27,6 +26,7 @@ type TextAreaWithSuggestionsProps = {
   disabled?: boolean;
   setSelectedDateReport: Dispatch<SetStateAction<string>>;
   report: string;
+  projects: string[];
 };
 
 const stringToSlateValue = (text: string): Descendant[] => [
@@ -62,7 +62,7 @@ const TextAreaWithSuggestionsAsText = ({
   const [search, setSearch] = useState("");
   const [isProjectsMode, setIsProjectsMode] = useState(false);
   const [mentions, setMentions] = useState([]);
-  const [projects, setProjects] = useState(["creuna.dk", "creauna.se", "knowit", "cotunity", "zipline"]);
+  const projects = props.projects;
   const renderElement = useCallback((props: RenderElementProps) => <Element {...props} />, []);
   const renderLeaf = useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
   const editor = useMemo(() => withReact(withHistory(createEditor())) as CustomEditor, []);
@@ -93,8 +93,14 @@ const TextAreaWithSuggestionsAsText = ({
       Transforms.select(editor, target);
       let insertingText;
       if (isProjectsMode) {
-        // Insert 'HH:MM - project - '
-        insertingText = timePatternRef.current + character + " - ";
+        // Determine if timePatternRef.current ends with ' - '
+        if (/ - $/.test(timePatternRef.current)) {
+          // Pattern: 'HH:MM - '
+          insertingText = timePatternRef.current + character + " - ";
+        } else {
+          // Pattern: 'HH:MM'
+          insertingText = timePatternRef.current + " - " + character + " - ";
+        }
         // Remove the old time pattern (if any) before inserting
         Transforms.delete(editor, { at: target });
       } else {
@@ -229,20 +235,20 @@ const TextAreaWithSuggestionsAsText = ({
 
           if (triggerStart) {
             const triggerRange = { anchor: triggerStart, focus: start };
-            console.log("triggerRange 1", triggerRange);
             setTarget(triggerRange);
             setIndex(0);
             setIsProjectsMode(false);
             return;
           }
         }
-        // Only trigger project pattern on the last line after ' - '
+        // Only trigger project pattern on the last line after 'HH:MM' or 'HH:MM - '
         const lines = textBefore.split(/\r?\n/);
         const lastLine = lines[lines.length - 1];
+        // Match pattern: HH:MM (at end of last line)
+        const projectPattern1 = /^([01]?\d|2[0-3]):[0-5]\d$/;
         // Match pattern: HH:MM - (at end of last line)
-        const projectPattern = /^([01]?\d|2[0-3]):[0-5]\d\s-\s$/;
-        if (projectPattern.test(lastLine)) {
-          console.log("Project match found in last line:", lastLine);
+        const projectPattern2 = /^([01]?\d|2[0-3]):[0-5]\d\s-\s$/;
+        if ((projectPattern1.test(lastLine) || projectPattern2.test(lastLine)) && projects.length > 0) {
           setSearch(""); // Show all projects
           timePatternRef.current = lastLine; // Store the matched time pattern
           // Find the start offset of the last line within the block text
