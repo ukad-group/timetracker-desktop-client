@@ -16,6 +16,7 @@ import { Portal } from "@headlessui/react";
 import { getTimetrackerContactPersons } from "./utils";
 import clsx from "clsx";
 import { getReportWithCopiedLine } from "../ManualInputForm/utils";
+import { co } from "@fullcalendar/core/internal-common";
 
 type TextAreaWithSuggestionsProps = {
   className?: string;
@@ -59,29 +60,55 @@ const TextAreaWithSuggestionsAsText = ({
   const [target, setTarget] = useState<Range | null>(null);
   const [index, setIndex] = useState(0);
   const [search, setSearch] = useState("");
+  const [isProjectsMode, setIsProjectsMode] = useState(false);
   const [mentions, setMentions] = useState([]);
+  const [projects, setProjects] = useState(["creuna.dk", "creauna.se", "knowit", "cotunity", "zipline"]);
   const renderElement = useCallback((props: RenderElementProps) => <Element {...props} />, []);
   const renderLeaf = useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
   const editor = useMemo(() => withReact(withHistory(createEditor())) as CustomEditor, []);
 
   const chars = useMemo(
     () => mentions.filter((c) => c.toLowerCase().startsWith(search.toLowerCase())).slice(0, 10),
-    [search],
+    [search, mentions],
   );
+
+  const projectsList = useMemo(
+    () =>
+      search.length > 0
+        ? projects.filter((c) => c.toLowerCase().startsWith(search.toLowerCase())).slice(0, 10)
+        : projects,
+    [search, projects],
+  );
+
+  // Unify active suggestion list for navigation and selection
+  const activeList = isProjectsMode ? projectsList : chars;
+
+  // Store the matched time pattern for project mode
+  const timePatternRef = useRef("");
 
   const insertSuggestion = useCallback(
     (character: string) => {
       if (!target) return;
 
       Transforms.select(editor, target);
-      const insertingText = "@" + character.split("-")[0].trim();
+      let insertingText;
+      if (isProjectsMode) {
+        // Insert 'HH:MM - project - '
+        insertingText = timePatternRef.current + character + " - ";
+        // Remove the old time pattern (if any) before inserting
+        Transforms.delete(editor, { at: target });
+      } else {
+        insertingText = "@" + character.split("-")[0].trim();
+      }
       Transforms.insertText(editor, insertingText);
 
       Transforms.collapse(editor, { edge: "end" });
 
       setTarget(null);
+      setIsProjectsMode(false);
+      timePatternRef.current = "";
     },
-    [editor, target],
+    [editor, target, isProjectsMode],
   );
 
   const copyCurrentActivityToTheEnd = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -122,28 +149,25 @@ const TextAreaWithSuggestionsAsText = ({
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
-      if (target && chars.length > 0) {
+      if (target && activeList.length > 0) {
         switch (event.key) {
           case "ArrowDown":
             event.preventDefault();
-            const prevIndex = index >= chars.length - 1 ? 0 : index + 1;
-            setIndex(prevIndex);
+            setIndex((prev) => (prev >= activeList.length - 1 ? 0 : prev + 1));
             break;
           case "ArrowUp":
             event.preventDefault();
-            const nextIndex = index <= 0 ? chars.length - 1 : index - 1;
-            setIndex(nextIndex);
+            setIndex((prev) => (prev <= 0 ? activeList.length - 1 : prev - 1));
             break;
           case "Tab":
           case "Enter":
             event.preventDefault();
-
-            insertSuggestion(chars[index]);
-
+            insertSuggestion(activeList[index]);
             break;
           case "Escape":
             event.preventDefault();
             setTarget(null);
+            setIsProjectsMode(false);
             break;
         }
       }
@@ -152,7 +176,7 @@ const TextAreaWithSuggestionsAsText = ({
         copyCurrentActivityToTheEnd(event);
       }
     },
-    [chars, index, target, insertSuggestion, report],
+    [activeList, index, target, insertSuggestion, report],
   );
 
   useEffect(() => {
@@ -205,13 +229,36 @@ const TextAreaWithSuggestionsAsText = ({
 
           if (triggerStart) {
             const triggerRange = { anchor: triggerStart, focus: start };
+            console.log("triggerRange 1", triggerRange);
             setTarget(triggerRange);
             setIndex(0);
+            setIsProjectsMode(false);
             return;
           }
         }
+        // Only trigger project pattern on the last line after ' - '
+        const lines = textBefore.split(/\r?\n/);
+        const lastLine = lines[lines.length - 1];
+        // Match pattern: HH:MM - (at end of last line)
+        const projectPattern = /^([01]?\d|2[0-3]):[0-5]\d\s-\s$/;
+        if (projectPattern.test(lastLine)) {
+          console.log("Project match found in last line:", lastLine);
+          setSearch(""); // Show all projects
+          timePatternRef.current = lastLine; // Store the matched time pattern
+          // Find the start offset of the last line within the block text
+          const blockText = Editor.string(editor, blockStart.path);
+          const lastLineOffset = blockText.lastIndexOf(lastLine);
+          const triggerStart = {
+            path: start.path,
+            offset: lastLineOffset,
+          };
+          const triggerRange = { anchor: triggerStart, focus: start };
+          setIsProjectsMode(true);
+          setTarget(triggerRange);
+          setIndex(0);
+          return;
+        }
       }
-
       setTarget(null);
     },
     [editor],
@@ -226,24 +273,24 @@ const TextAreaWithSuggestionsAsText = ({
         onKeyDown={onKeyDown}
         style={{ minHeight: "300px" }}
       />
-      {target && chars.length > 0 && (
+      {target && activeList.length > 0 && (
         <Portal>
           <div
             ref={suggestionRef}
             className="-left-full -top-full absolute z-10 p-1 border border-gray-300 bg-white rounded-md shadow-sm dark:bg-dark-back dark:border-slate-600 dark:text-slate-200"
             data-cy="suggestions-portal"
           >
-            {chars.map((char, i) => (
+            {activeList.map((item, i) => (
               <button
-                key={char}
+                key={item}
                 onClick={() => {
-                  insertSuggestion(char);
+                  insertSuggestion(item);
                 }}
                 className={clsx("block w-full text-left cursor-pointer py-px px-1 rounded-sm", {
                   "bg-blue-600 text-white": i === index,
                 })}
               >
-                {char}
+                {item}
               </button>
             ))}
           </div>
