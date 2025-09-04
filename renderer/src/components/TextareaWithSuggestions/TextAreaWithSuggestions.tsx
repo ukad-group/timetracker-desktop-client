@@ -93,14 +93,9 @@ const TextAreaWithSuggestionsAsText = ({
       Transforms.select(editor, target);
       let insertingText;
       if (isProjectsMode) {
-        // Determine if timePatternRef.current ends with ' - '
-        if (/ - $/.test(timePatternRef.current)) {
-          // Pattern: 'HH:MM - '
-          insertingText = timePatternRef.current + character + " - ";
-        } else {
-          // Pattern: 'HH:MM'
-          insertingText = timePatternRef.current + " - " + character + " - ";
-        }
+        // Always insert as 'HH:MM - project - ', never double dash
+        let normalizedTime = timePatternRef.current.replace(/\s-\s*$/, "");
+        insertingText = normalizedTime + " - " + character + " - ";
         // Remove the old time pattern (if any) before inserting
         Transforms.delete(editor, { at: target });
       } else {
@@ -178,6 +173,8 @@ const TextAreaWithSuggestionsAsText = ({
         }
       }
 
+      // No special handling for Backspace needed; dropdown logic is handled in handleOnChange
+
       if ((event.ctrlKey || event.metaKey) && event.key === "d") {
         copyCurrentActivityToTheEnd(event);
       }
@@ -210,12 +207,7 @@ const TextAreaWithSuggestionsAsText = ({
       onChange(slateValueToString(value));
       const { selection, operations } = editor;
 
-      const isInsertText = operations.some((op) => op.type === "insert_text");
-
-      if (!isInsertText) {
-        setTarget(null);
-        return;
-      }
+      // Always check for trigger patterns, regardless of operation type
 
       if (selection && Range.isCollapsed(selection)) {
         const [start] = Range.edges(selection);
@@ -224,48 +216,54 @@ const TextAreaWithSuggestionsAsText = ({
         const textBefore = Editor.string(editor, rangeBefore);
 
         const match = textBefore.match(/@(\w*)$/);
+        let matched = false;
 
         if (match) {
           setSearch(match[1]);
-
           const triggerStart = Editor.before(editor, start, {
             distance: match[0].length,
             unit: "character",
           });
-
           if (triggerStart) {
             const triggerRange = { anchor: triggerStart, focus: start };
             setTarget(triggerRange);
             setIndex(0);
             setIsProjectsMode(false);
-            return;
+            matched = true;
+          }
+        } else {
+          // Only check for project pattern if not a mention
+          const lines = textBefore.split(/\r?\n/);
+          const lastLine = lines[lines.length - 1];
+          // Match pattern: HH:MM or HH:MM - or HH:MM - <search>
+          const projectLineMatch = lastLine.match(/^([01]?\d|2[0-3]):[0-5]\d(?:\s-\s)?(.*)$/);
+          if (projectLineMatch && projects.length > 0) {
+            const projectSearch = projectLineMatch[2] ? projectLineMatch[2].trim() : "";
+            setSearch(projectSearch);
+            // timePatternRef should be only the time and dash part
+            timePatternRef.current = lastLine.slice(0, lastLine.length - projectSearch.length).trimEnd();
+            // Find the start offset of the last line within the block text
+            const blockText = Editor.string(editor, blockStart.path);
+            const lastLineOffset = blockText.lastIndexOf(lastLine);
+            const triggerStart = {
+              path: start.path,
+              offset: lastLineOffset,
+            };
+            const triggerRange = { anchor: triggerStart, focus: start };
+            setIsProjectsMode(true);
+            setTarget(triggerRange);
+            setIndex(0);
+            matched = true;
           }
         }
-        // Only trigger project pattern on the last line after 'HH:MM' or 'HH:MM - '
-        const lines = textBefore.split(/\r?\n/);
-        const lastLine = lines[lines.length - 1];
-        // Match pattern: HH:MM (at end of last line)
-        const projectPattern1 = /^([01]?\d|2[0-3]):[0-5]\d$/;
-        // Match pattern: HH:MM - (at end of last line)
-        const projectPattern2 = /^([01]?\d|2[0-3]):[0-5]\d\s-\s$/;
-        if ((projectPattern1.test(lastLine) || projectPattern2.test(lastLine)) && projects.length > 0) {
-          setSearch(""); // Show all projects
-          timePatternRef.current = lastLine; // Store the matched time pattern
-          // Find the start offset of the last line within the block text
-          const blockText = Editor.string(editor, blockStart.path);
-          const lastLineOffset = blockText.lastIndexOf(lastLine);
-          const triggerStart = {
-            path: start.path,
-            offset: lastLineOffset,
-          };
-          const triggerRange = { anchor: triggerStart, focus: start };
-          setIsProjectsMode(true);
-          setTarget(triggerRange);
-          setIndex(0);
-          return;
+        if (!matched) {
+          setTarget(null);
+          setIsProjectsMode(false);
         }
+      } else {
+        setTarget(null);
+        setIsProjectsMode(false);
       }
-      setTarget(null);
     },
     [editor],
   );
