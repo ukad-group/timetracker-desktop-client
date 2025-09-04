@@ -116,16 +116,30 @@ const TextAreaWithSuggestionsAsText = ({
               runningLength += blockLines[i].length + 1;
             }
             const lineText = blockLines[lineIdx];
-            // Replace only the project part: ' - oldProject - '
-            const projectPattern = /^((?:[01]?\d|2[0-3]):[0-5]\d)\s-\s([^\-]*)\s-\s/;
+            // Replace only the project part: ' - oldProject' or ' - oldProject -' or directly after time
+            const projectPatternFull = /^((?:[01]?\d|2[0-3]):[0-5]\d)\s-\s([^\-]*)\s-\s/;
+            const projectPatternPartial = /^((?:[01]?\d|2[0-3]):[0-5]\d)\s-\s([^\n]*)$/;
+            const projectPatternNoSpace = /^((?:[01]?\d|2[0-3]):[0-5]\d)([^\s-][^\n]*)$/;
             let newLine = lineText;
             let cursorOffset = 0;
-            if (projectPattern.test(lineText)) {
+            if (projectPatternFull.test(lineText)) {
               // Extract the time part for cursor calculation
-              const match = lineText.match(projectPattern);
+              const match = lineText.match(projectPatternFull);
               const fullTime = match ? match[1] : "";
-              newLine = lineText.replace(projectPattern, (_m, _fullTime) => `${fullTime} - ${character} - `);
+              newLine = lineText.replace(projectPatternFull, (_m, _fullTime) => `${fullTime} - ${character} - `);
               cursorOffset = `${fullTime} - ${character} - `.length;
+            } else if (projectPatternPartial.test(lineText)) {
+              // Handle '19:00 - tim' (no trailing dash)
+              const match = lineText.match(projectPatternPartial);
+              const fullTime = match ? match[1] : "";
+              newLine = `${fullTime} - ${character} - `;
+              cursorOffset = newLine.length;
+            } else if (projectPatternNoSpace.test(lineText)) {
+              // Handle '19:00tim' (no space or dash)
+              const match = lineText.match(projectPatternNoSpace);
+              const fullTime = match ? match[1] : "";
+              newLine = `${fullTime} - ${character} - `;
+              cursorOffset = newLine.length;
             } else {
               // fallback: if line is just time, or time plus dash, format as 'HH:MM - project - '
               const timeOnlyPattern = /^([01]?\d|2[0-3]):[0-5]\d$/;
