@@ -8,7 +8,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Editor, Transforms, Range, createEditor, Descendant, Text, Path, Element as SlateElement } from "slate";
+import { Editor, Transforms, Range, createEditor, Descendant, Text, Path, Element as SlateElement, Node } from "slate";
 import { withHistory } from "slate-history";
 import { Editable, ReactEditor, RenderElementProps, RenderLeafProps, Slate, withReact } from "slate-react";
 import { CustomEditor } from "./types";
@@ -91,20 +91,78 @@ const TextAreaWithSuggestionsAsText = ({
       if (!target) return;
 
       Transforms.select(editor, target);
-      let insertingText;
+
       if (isProjectsMode) {
-        // Always insert as 'HH:MM - project - ', never double dash
-        let normalizedTime = timePatternRef.current.replace(/\s-\s*$/, "");
-        insertingText = normalizedTime + " - " + character + " - ";
-        // Remove the old time pattern (if any) before inserting
-        Transforms.delete(editor, { at: target });
+        // Find the current block (paragraph) and the current line
+        const { selection } = editor;
+        if (selection) {
+          const blockEntry = Editor.above(editor, {
+            match: (n) => SlateElement.isElement(n) && Editor.isBlock(editor, n),
+          });
+          if (blockEntry) {
+            const [blockNode, blockPath] = blockEntry;
+            const blockText = Node.string(blockNode);
+            // Find the current line in the block
+            const { anchor } = selection;
+            const blockLines = blockText.split(/\r?\n/);
+            // Calculate the offset of the anchor in the block
+            let runningLength = 0;
+            let lineIdx = 0;
+            for (let i = 0; i < blockLines.length; i++) {
+              if (anchor.offset <= runningLength + blockLines[i].length) {
+                lineIdx = i;
+                break;
+              }
+              runningLength += blockLines[i].length + 1;
+            }
+            const lineText = blockLines[lineIdx];
+            // Replace only the project part: ' - oldProject - '
+            const projectPattern = /^((?:[01]?\d|2[0-3]):[0-5]\d)\s-\s([^\-]*)\s-\s/;
+            let newLine = lineText;
+            let cursorOffset = 0;
+            if (projectPattern.test(lineText)) {
+              // Extract the time part for cursor calculation
+              const match = lineText.match(projectPattern);
+              const fullTime = match ? match[1] : "";
+              newLine = lineText.replace(projectPattern, (_m, _fullTime) => `${fullTime} - ${character} - `);
+              cursorOffset = `${fullTime} - ${character} - `.length;
+            } else {
+              // fallback: if line is just time, or time plus dash, format as 'HH:MM - project - '
+              const timeOnlyPattern = /^([01]?\d|2[0-3]):[0-5]\d$/;
+              const timeDashPattern = /^([01]?\d|2[0-3]):[0-5]\d\s-\s?$/;
+              if (timeOnlyPattern.test(lineText.trim())) {
+                newLine = `${lineText.trim()} - ${character} - `;
+                cursorOffset = newLine.length;
+              } else if (timeDashPattern.test(lineText.trim())) {
+                newLine = `${lineText.trim()} ${character} - `;
+                cursorOffset = newLine.length;
+              } else {
+                // fallback: just insert at the start
+                newLine = `${character} - ${lineText}`;
+                cursorOffset = `${character} - `.length;
+              }
+            }
+            // Replace only the current line in the block
+            blockLines[lineIdx] = newLine;
+            const newBlockText = blockLines.join("\n");
+            // Replace the block node's text
+            Transforms.select(editor, Editor.range(editor, blockPath));
+            Transforms.delete(editor, { at: Editor.range(editor, blockPath) });
+            Transforms.insertText(editor, newBlockText);
+            // Move cursor to just after ' - project - '
+            const lineStartOffset = blockLines.slice(0, lineIdx).join("\n").length + (lineIdx > 0 ? 1 : 0);
+            const cursorPosition = lineStartOffset + cursorOffset;
+            const blockStartPoint = Editor.start(editor, blockPath);
+            const point = { path: blockStartPoint.path, offset: cursorPosition };
+            Transforms.select(editor, { anchor: point, focus: point });
+          }
+        }
       } else {
-        insertingText = "@" + character.split("-")[0].trim();
+        const insertingText = "@" + character.split("-")[0].trim();
+        Transforms.insertText(editor, insertingText);
       }
-      Transforms.insertText(editor, insertingText);
 
       Transforms.collapse(editor, { edge: "end" });
-
       setTarget(null);
       setIsProjectsMode(false);
       timePatternRef.current = "";
