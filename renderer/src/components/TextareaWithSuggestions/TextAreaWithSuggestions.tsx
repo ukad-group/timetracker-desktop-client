@@ -62,7 +62,7 @@ const TextAreaWithSuggestionsAsText = ({
   const [search, setSearch] = useState("");
   const [isProjectsMode, setIsProjectsMode] = useState(false);
   const [mentions, setMentions] = useState([]);
-  const projects = props.projects;
+  const [dynamicProjects, setDynamicProjects] = useState<string[]>(props.projects);
   const renderElement = useCallback((props: RenderElementProps) => <Element {...props} />, []);
   const renderLeaf = useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
   const editor = useMemo(() => withReact(withHistory(createEditor())) as CustomEditor, []);
@@ -75,9 +75,9 @@ const TextAreaWithSuggestionsAsText = ({
   const projectsList = useMemo(
     () =>
       search.length > 0
-        ? projects.filter((c) => c.toLowerCase().startsWith(search.toLowerCase())).slice(0, 10)
-        : projects,
-    [search, projects],
+        ? dynamicProjects.filter((c) => c.toLowerCase().startsWith(search.toLowerCase())).slice(0, 10)
+        : dynamicProjects,
+    [search, dynamicProjects],
   );
 
   // Unify active suggestion list for navigation and selection
@@ -276,24 +276,35 @@ const TextAreaWithSuggestionsAsText = ({
 
   const handleOnChange = useCallback(
     (value: Descendant[]) => {
-      onChange(slateValueToString(value));
-      const { selection, operations } = editor;
+      const text = slateValueToString(value);
+      onChange(text);
 
-      // Always check for trigger patterns, regardless of operation type
+      // Extract all project names from the textarea
+      const projectRegex = /(?:[01]?\d|2[0-3]):[0-5]\d\s-\s([^\-\n]+)\s-\s/g;
+      const foundProjects = new Set<string>(props.projects);
+      let match;
+      while ((match = projectRegex.exec(text)) !== null) {
+        const project = match[1].trim();
+        if (project && !foundProjects.has(project)) {
+          foundProjects.add(project);
+        }
+      }
+      setDynamicProjects(Array.from(foundProjects).sort((a, b) => a.localeCompare(b)));
 
+      const { selection } = editor;
       if (selection && Range.isCollapsed(selection)) {
         const [start] = Range.edges(selection);
         const blockStart = Editor.start(editor, start.path);
         const rangeBefore = { anchor: blockStart, focus: start };
         const textBefore = Editor.string(editor, rangeBefore);
 
-        const match = textBefore.match(/@(\w*)$/);
+        const matchMention = textBefore.match(/@(\w*)$/);
         let matched = false;
 
-        if (match) {
-          setSearch(match[1]);
+        if (matchMention) {
+          setSearch(matchMention[1]);
           const triggerStart = Editor.before(editor, start, {
-            distance: match[0].length,
+            distance: matchMention[0].length,
             unit: "character",
           });
           if (triggerStart) {
@@ -309,7 +320,7 @@ const TextAreaWithSuggestionsAsText = ({
           const lastLine = lines[lines.length - 1];
           // Match pattern: HH:MM or HH:MM - or HH:MM - <search>
           const projectLineMatch = lastLine.match(/^([01]?\d|2[0-3]):[0-5]\d(?:\s-\s)?(.*)$/);
-          if (projectLineMatch && projects.length > 0) {
+          if (projectLineMatch && dynamicProjects.length > 0) {
             const projectSearch = projectLineMatch[2] ? projectLineMatch[2].trim() : "";
             setSearch(projectSearch);
             // timePatternRef should be only the time and dash part
@@ -337,7 +348,7 @@ const TextAreaWithSuggestionsAsText = ({
         setIsProjectsMode(false);
       }
     },
-    [editor],
+    [editor, props.projects, dynamicProjects],
   );
 
   return (
