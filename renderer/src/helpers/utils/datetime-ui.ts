@@ -115,8 +115,8 @@ export function mathOvertimeUndertime(
 }
 
 export function extractDatesFromPeriod(period: ApiDayOff, holidays: DayOff[]) {
-  const dateStart = new Date(new Date(period?.dateFrom).toISOString().slice(0, -1));
-  const dateEnd = new Date(new Date(period?.dateTo).toISOString().slice(0, -1));
+  const dateStart = new Date(period?.dateFrom);
+  const dateEnd = new Date(period?.dateTo);
   const vacationRange = generateDateRange(dateStart, dateEnd);
 
   return vacationRange
