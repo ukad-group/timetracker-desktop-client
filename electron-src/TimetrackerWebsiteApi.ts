@@ -1,4 +1,4 @@
-import { Options } from "./helpers/API/office365Api";
+import { Options, AzureTokenSuccess, AzureTokenError, AzureTokenResponse } from "./helpers/API/office365Api";
 
 export const getAzureAuthUrl = (options: Options) => {
   const { clientId, scope, redirectUri } = options;
@@ -43,7 +43,7 @@ export const getAzureAuthUrl = (options: Options) => {
 // };
 
 export const getAzureTokens = async (authCode: string, options: Options) => {
-  if (!authCode) return;
+  if (!authCode) throw new Error("Missing authorization code.");
 
   const { clientId, clientSecret, redirectUri, scope } = options;
   const response = await fetch(
@@ -57,9 +57,14 @@ export const getAzureTokens = async (authCode: string, options: Options) => {
     },
   );
 
-  if (!response.ok) throw new Error();
+  const data: AzureTokenResponse = await response.json();
 
-  return response.json();
+  if (!response.ok) {
+    const errorMsg = (data as AzureTokenError)?.error_description || `${response.status} ${response.statusText}`;
+    throw new Error(errorMsg);
+  }
+
+  return data as AzureTokenSuccess;
 };
 
 export const getRefreshedUserInfoToken = async (refreshToken: string, options: Options) => {
