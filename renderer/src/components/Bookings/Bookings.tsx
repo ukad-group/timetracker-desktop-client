@@ -19,7 +19,7 @@ const Bookings = ({ calendarDate }: BookingsProps) => {
     global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER),
   );
 
-  if (!showBookings) return;
+  if (!showBookings) return null;
 
   const [loading, setLoading] = useState(false);
   const [bookedProjects, setBookedProjects] = useState<BookingFromApi[]>([]);
@@ -40,7 +40,7 @@ const Bookings = ({ calendarDate }: BookingsProps) => {
       global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER),
     );
 
-    if (!TTUserInfo) return;
+    if (!TTUserInfo) return [];
 
     const { cookie, userName, refreshToken } = TTUserInfo;
 
@@ -55,7 +55,7 @@ const Bookings = ({ calendarDate }: BookingsProps) => {
       );
 
       if (allLoggedProjects === "invalid_token") {
-        if (!refreshToken) return;
+        if (!refreshToken) return [];
 
         const updatedCreds = await global.ipcRenderer.invoke(
           IPC_MAIN_CHANNELS.TIMETRACKER_REFRESH_USER_INFO_TOKEN,
@@ -86,13 +86,11 @@ const Bookings = ({ calendarDate }: BookingsProps) => {
       return allLoggedProjects.filter((project: BookingFromApi) => {
         const projectBooking = project?.plans[0];
 
-        if (
+        return (
           projectBooking?.hours !== 0 &&
           projectBooking?.month === calendarDate?.getMonth() + 1 &&
           projectBooking?.year === calendarDate?.getFullYear()
-        ) {
-          return project;
-        }
+        );
       });
     } catch (error) {
       console.log(error);
@@ -102,6 +100,7 @@ const Bookings = ({ calendarDate }: BookingsProps) => {
       if (!online) {
         console.log(OFFLINE_MESSAGE);
       }
+      return [];
     } finally {
       setLoading(false);
     }
@@ -114,19 +113,23 @@ const Bookings = ({ calendarDate }: BookingsProps) => {
         reportsFolder,
         calendarDate,
       );
-      const oneMonthLocalReports = monthLocalReports.filter((report) => {
+      const oneMonthLocalReports = monthLocalReports.filter((report: ParsedReport) => {
         return (
           report.reportDate.split("").slice(4, 6).join("") === (calendarDate.getMonth() + 1).toString().padStart(2, "0")
         );
       });
 
       const monthParsedActivities = oneMonthLocalReports.map((report: ParsedReport) => {
-        return (parseReport(report?.data)[0] || []).filter((activity: ReportActivity) => !activity.isBreak);
+        return (parseReport(report?.data)[0] || []).filter(
+          (activity: Partial<ReportActivity>): activity is ReportActivity =>
+            !activity.isBreak && activity.id !== undefined && !!activity.from && !!activity.to,
+        );
       });
 
       return monthParsedActivities.flat();
     } catch (error) {
       console.log(error);
+      return [];
     }
   };
 
@@ -208,7 +211,7 @@ const Bookings = ({ calendarDate }: BookingsProps) => {
       <tr key={i} className="border-b dark:border-gray-700">
         <td className="pr-6 py-2 text-gray-700 dark:text-dark-main">
           <Tooltip
-            tooltipText={(project.isOvertime && "Overtime") || (project.isUndertime && "Undertime")}
+            tooltipText={project.isOvertime ? "Overtime" : project.isUndertime ? "Undertime" : undefined}
             disabled={!(project.isOvertime || project.isUndertime)}
           >
             <span

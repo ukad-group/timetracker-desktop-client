@@ -2,7 +2,7 @@ import { ReportActivity } from "@/helpers/utils/types";
 
 export type ActivitiesTableProps = {
   activities: ReportActivity[];
-  onEditActivity: (activity: ReportActivity) => void;
+  onEditActivity: (activity: (Partial<ReportActivity> & { from: string; to: string }) | "new") => void;
   selectedDate: Date;
   latestProjAndAct: Record<string, [string]>;
   events: ReportActivity[];

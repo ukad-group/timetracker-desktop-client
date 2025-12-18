@@ -1,11 +1,11 @@
-import { KeyboardEvent, SetStateAction } from "react";
+import { KeyboardEvent, SetStateAction, Dispatch } from "react";
 
 export type ManualInputFormProps = {
   saveReportTrigger: boolean;
   onSave: (selectedDateReport: SetStateAction<string>, shouldAutosave: SetStateAction<boolean>) => void;
   selectedDateReport: string | null;
   selectedDate: Date;
-  setSelectedDateReport: (value: string) => void;
+  setSelectedDateReport: Dispatch<SetStateAction<string | null>>;
   isFileExist: boolean;
   setIsFileExist: (value: boolean) => void;
   isToday: boolean;

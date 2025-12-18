@@ -23,4 +23,19 @@ export type ReportActivity = {
   isNewProject?: boolean;
 };
 
+export type ActivitiesTableContextType = {
+  totalDuration: number;
+  tableActivities: ReportActivity[];
+  selectedDate: Date;
+  isLoading: boolean;
+  ctrlPressed: boolean;
+  copyToClipboardHandle: (e: React.MouseEvent) => void;
+  onEditActivity: (activity: (Partial<ReportActivity> & { from: string; to: string }) | "new") => void;
+  activities: ReportActivity[];
+  firstKey: string | null;
+  secondKey: string | null;
+  handleEditActivity: (activity: Partial<ReportActivity> & { from: string; to: string }) => void;
+  handleCopyActivity: (activity: ReportActivity) => void;
+};
+
 export type ReportAndNotes = [Array<Partial<ReportActivity>>, string];

@@ -22,7 +22,7 @@ import { StoredSection } from "@/components/WidgetOrderSection/types";
 import Link from "next/link";
 import { Cog8ToothIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
-import { ReportAndNotes } from "@/helpers/utils/types";
+import { ReportAndNotes, ReportActivity } from "@/helpers/utils/types";
 import { checkIsToday } from "@/helpers/utils/datetime-ui";
 
 const MainPage = ({
@@ -92,7 +92,7 @@ const MainPage = ({
     try {
       if (shouldAutosave) {
         const serializedReport =
-          serializeReport(selectedDateActivities) +
+          serializeReport(selectedDateActivities || []) +
           (!reportAndNotes[1] || reportAndNotes[1].startsWith("undefined") ? "" : reportAndNotes[1]);
 
         saveSerializedReport(serializedReport);
@@ -109,12 +109,17 @@ const MainPage = ({
   }, [selectedDateActivities]);
 
   useEffect(() => {
-    if (selectedDateReport?.length > 0) {
+    if (selectedDateReport && selectedDateReport.length > 0) {
       const parsedReportsAndNotes = parseReport(selectedDateReport);
       const parsedActivities = parsedReportsAndNotes[0];
 
       setReportAndNotes(parsedReportsAndNotes);
-      setSelectedDateActivities(parsedActivities);
+      // Filter out incomplete activities to match ReportActivity type
+      setSelectedDateActivities(
+        parsedActivities.filter(
+          (activity): activity is ReportActivity => activity.id !== undefined && !!activity.from && !!activity.to,
+        ) as ReportActivity[],
+      );
 
       return;
     }
@@ -156,8 +161,12 @@ const MainPage = ({
     }
   };
 
-  const handleSave = (report: string, shouldAutosave: boolean) => {
-    setSelectedDateReport(report);
+  const handleSave = (
+    report: string | ((prev: string) => string),
+    shouldAutosave: boolean | ((prev: boolean) => boolean),
+  ) => {
+    const reportValue = typeof report === "string" ? report : report(selectedDateReport || "");
+    setSelectedDateReport(reportValue);
     setShouldAutosave(shouldAutosave);
   };
 
@@ -203,7 +212,7 @@ const MainPage = ({
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
             isDropboxConnected={isDropboxConnected}
-            selectedDateReport={selectedDateReport}
+            selectedDateReport={selectedDateReport || ""}
           />
         </section>
       ),
@@ -233,7 +242,7 @@ const MainPage = ({
           <ManualInputForm
             saveReportTrigger={saveReportTrigger}
             onSave={handleSave}
-            selectedDateReport={selectedDateReport}
+            selectedDateReport={selectedDateReport || ""}
             selectedDate={selectedDate}
             setSelectedDateReport={setSelectedDateReport}
             isFileExist={isFileExist}
@@ -255,7 +264,7 @@ const MainPage = ({
             setSelectedDate={setSelectedDate}
             calendarDate={calendarDate}
             setCalendarDate={setCalendarDate}
-            selectedDateReport={selectedDateReport}
+            selectedDateReport={selectedDateReport || ""}
           />
         </section>
       ),

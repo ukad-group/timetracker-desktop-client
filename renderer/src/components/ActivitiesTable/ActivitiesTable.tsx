@@ -24,10 +24,10 @@ const ActivitiesTable = ({
   validatedActivities,
 }: ActivitiesTableProps) => {
   const [ctrlPressed, setCtrlPressed] = useState(false);
-  const [firstKey, setFirstKey] = useState(null);
-  const [secondKey, setSecondtKey] = useState(null);
-  const [firstKeyPressTime, setFirstKeyPressTime] = useState(null);
-  const [timerId, setTimerId] = useState(null);
+  const [firstKey, setFirstKey] = useState<string | null>(null);
+  const [secondKey, setSecondtKey] = useState<string | null>(null);
+  const [firstKeyPressTime, setFirstKeyPressTime] = useState<number | null>(null);
+  const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null);
   const [scheduledEvents] = useScheduledEventsStore((state) => [state.event, state.setEvent], shallow);
   const { screenSizes } = useScreenSizes();
   const showAsMain = global.ipcRenderer.sendSync(
@@ -36,7 +36,7 @@ const ActivitiesTable = ({
   )
     ? JSON.parse(
         global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.WIDGET_ORDER),
-      ).find((section) => section.id === "Activities Table").side === "left"
+      ).find((section: { id: string; side: string }) => section.id === "Activities Table").side === "left"
     : true;
 
   const totalDuration = useMemo(
@@ -58,13 +58,14 @@ const ActivitiesTable = ({
     const formattedEvents: ReportActivity[] = formatEvents(actualEvents, latestProjAndAct);
 
     for (let i = 0; i < formattedEvents.length; i++) {
-      if (Object.keys(scheduledEvents).includes(formattedEvents[i].description)) {
+      const description = formattedEvents[i].description;
+      if (description && Object.keys(scheduledEvents).includes(description)) {
         formattedEvents[i].project = formattedEvents[i].project
           ? formattedEvents[i].project
-          : scheduledEvents[formattedEvents[i].description].project;
+          : scheduledEvents[description]?.project || "";
         formattedEvents[i].activity = formattedEvents[i].activity
           ? formattedEvents[i].activity
-          : scheduledEvents[formattedEvents[i].description].activity;
+          : scheduledEvents[description]?.activity || "";
       }
     }
     return formattedEvents && formattedEvents.length > 0
@@ -72,52 +73,53 @@ const ActivitiesTable = ({
       : badgedActivities;
   }, [validatedActivities, events]);
 
-  const copyToClipboardHandle = (e) => {
-    const cell = e.target;
-    const originaValue = cell.textContent;
-    const cellColumnName = cell.getAttribute("data-column");
-    let modifiedValue: string | number;
+  const copyToClipboardHandle = (e: React.MouseEvent) => {
+    const cell = e.target as HTMLElement;
+    const originaValue = cell.textContent || "";
+    const cellColumnName = cell.getAttribute("data-column") || "";
+    let modifiedValue: string | number | undefined;
 
     if (cellColumnName === "duration" || cellColumnName === "total") {
       if (originaValue.includes("h")) {
-        modifiedValue = originaValue.slice(0, -1);
+        modifiedValue = parseFloat(originaValue.slice(0, -1));
       } else if (originaValue.includes("m")) {
-        const minutes = originaValue.slice(0, -1);
+        const minutes = parseFloat(originaValue.slice(0, -1));
         modifiedValue = Math.floor((minutes / 60) * 100) / 100;
       }
     }
 
     navigator.clipboard
-      .writeText(modifiedValue ? modifiedValue : originaValue)
+      .writeText(modifiedValue !== undefined ? String(modifiedValue) : originaValue)
       .then(() => {
         const range = document.createRange();
         range.selectNodeContents(cell);
 
         const selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-
-        setTimeout(() => {
+        if (selection) {
           selection.removeAllRanges();
-        }, 100);
+          selection.addRange(range);
+
+          setTimeout(() => {
+            selection.removeAllRanges();
+          }, 100);
+        }
       })
       .catch((error) => {
         console.error("Clipboard write error:", error);
       });
   };
 
-  const handleCopyActivity = (activity) => {
+  const handleCopyActivity = (activity: ReportActivity) => {
     global.ipcRenderer.send(IPC_MAIN_CHANNELS.ANALYTICS_DATA, TRACK_ANALYTICS.COPY_REGISTRATION);
+    const lastActivity = activities[activities.length - 2];
     onEditActivity({
       ...activity,
-      id: null,
-      from: activities[activities.length - 2].to,
-      to: checkIsToday(selectedDate) ? getCeiledTime() : "",
-      duration: null,
+      from: lastActivity?.to || activity.from,
+      to: checkIsToday(selectedDate) ? getCeiledTime() : activity.to,
     });
   };
 
-  const handleKeyDown = (event) => {
+  const handleKeyDown = (event: KeyboardEvent) => {
     if ((event.ctrlKey && event.key === KEY_CODES.ARROW_UP) || (event.metaKey && event.key === KEY_CODES.ARROW_UP)) {
       if (validatedActivities.length > 0) {
         const lastActivity = validatedActivities[validatedActivities.length - 1];
@@ -139,7 +141,6 @@ const ActivitiesTable = ({
           if (selectedActivity.calendarId) {
             onEditActivity({
               ...selectedActivity,
-              id: null,
             });
           } else {
             onEditActivity(selectedActivity);
@@ -149,24 +150,21 @@ const ActivitiesTable = ({
         setFirstKeyPressTime(Date.now());
       }
 
-      if (Date.now() - firstKeyPressTime < 500) {
-        clearTimeout(timerId);
+      if (firstKeyPressTime !== null && Date.now() - firstKeyPressTime < 500) {
+        if (timerId !== null) {
+          clearTimeout(timerId);
+        }
         setSecondtKey(event.key);
         const selectedActivity = tableActivities[Number(firstKey + event.key) - 1];
 
         if (selectedActivity) {
-          if (selectedActivity.calendarId) {
-            onEditActivity({
-              ...selectedActivity,
-              id: null,
-            });
-          } else onEditActivity(selectedActivity);
+          onEditActivity(selectedActivity);
         }
       }
     }
   };
 
-  const handleKeyUp = (event) => {
+  const handleKeyUp = (event: KeyboardEvent) => {
     if (event.key === KEY_CODES.CONTROL || event.key === KEY_CODES.META) {
       setFirstKey(null);
       setSecondtKey(null);
@@ -174,22 +172,17 @@ const ActivitiesTable = ({
     }
   };
 
-  const handleEditActivity = (activity) => {
+  const handleEditActivity = (activity: Partial<ReportActivity> & { from: string; to: string }) => {
     global.ipcRenderer.send(IPC_MAIN_CHANNELS.ANALYTICS_DATA, TRACK_ANALYTICS.EDIT_REGISTRATION);
     if (activity.calendarId) {
-      onEditActivity({
-        ...activity,
-        id: null,
-      });
       global.ipcRenderer.send(IPC_MAIN_CHANNELS.ANALYTICS_DATA, TRACK_ANALYTICS.REGISTRATIONS, {
         registration: TRACK_ANALYTICS.GOOGLE_CALENDAR_EVENT_REGISTRATION,
       });
       global.ipcRenderer.send(IPC_MAIN_CHANNELS.ANALYTICS_DATA, TRACK_ANALYTICS.REGISTRATIONS, {
         registration: TRACK_ANALYTICS.ALL_CALENDAR_EVENT_REGISTRATION,
       });
-    } else {
-      onEditActivity(activity);
     }
+    onEditActivity(activity);
   };
 
   useEffect(() => {

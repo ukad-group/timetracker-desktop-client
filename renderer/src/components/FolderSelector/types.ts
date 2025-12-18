@@ -1,4 +1,4 @@
 export type FolderSelectorProps = {
-  folderLocation?: string;
+  folderLocation?: string | null;
   setFolderLocation: (location: string) => void;
 };

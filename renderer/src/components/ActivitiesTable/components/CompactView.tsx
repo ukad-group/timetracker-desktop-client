@@ -8,7 +8,9 @@ import { ActivitiesTableContext } from "../context";
 import CompactViewTable from "./CompactViewTable";
 
 const CompactView = () => {
-  const { totalDuration, tableActivities, selectedDate, isLoading } = useContext(ActivitiesTableContext);
+  const context = useContext(ActivitiesTableContext);
+  if (!context) return null;
+  const { totalDuration, tableActivities, selectedDate, isLoading } = context;
 
   return (
     <>

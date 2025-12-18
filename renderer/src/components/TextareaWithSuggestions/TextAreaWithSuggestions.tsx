@@ -59,14 +59,14 @@ const TextAreaWithSuggestionsAsText = ({
   const [target, setTarget] = useState<Range | null>(null);
   const [index, setIndex] = useState(0);
   const [search, setSearch] = useState("");
-  const [mentions, setMentions] = useState([]);
+  const [mentions, setMentions] = useState<string[]>([]);
   const renderElement = useCallback((props: RenderElementProps) => <Element {...props} />, []);
   const renderLeaf = useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
   const editor = useMemo(() => withReact(withHistory(createEditor())) as CustomEditor, []);
 
   const chars = useMemo(
-    () => mentions.filter((c) => c.toLowerCase().startsWith(search.toLowerCase())).slice(0, 10),
-    [search],
+    () => mentions.filter((c: string) => c.toLowerCase().startsWith(search.toLowerCase())).slice(0, 10),
+    [search, mentions],
   );
 
   const insertSuggestion = useCallback(

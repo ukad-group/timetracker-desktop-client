@@ -59,10 +59,10 @@ const UpdateDescription = () => {
   const isOpenToggle = () => {
     if (isOpen) {
       setIsOpen(false);
-      setUpdate({ age: "old", description: update?.description });
+      setUpdate({ age: "old", description: update?.description ?? null });
     } else {
       setIsOpen(true);
-      setUpdate({ age: "new", description: update?.description });
+      setUpdate({ age: "new", description: update?.description ?? null });
     }
     changeHintConditions(progress, setProgress, [
       {

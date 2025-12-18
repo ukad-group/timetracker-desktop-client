@@ -23,7 +23,7 @@ const ManualInputForm = ({
 }: ManualInputFormProps) => {
   const [report, setReport] = useState("");
   const [saveBtnStatus, setSaveBtnStatus] = useState("disabled");
-  const textareaRef = useRef(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showDeleteMessage, setShowDeleteMessage] = useState(false);
   const [showDeleteButton, setShowDeleteButton] = useState(false);
   const [cursorPosition, setCursorPosition] = useState(0);
@@ -88,13 +88,13 @@ const ManualInputForm = ({
   }, [isFileExist, report]);
 
   useEffect(() => {
-    setReport(selectedDateReport);
+    setReport(selectedDateReport || "");
   }, [selectedDateReport]);
 
   useEffect(() => {
     setReport(report);
 
-    if (cursorPosition) {
+    if (cursorPosition && textareaRef.current) {
       textareaRef.current.setSelectionRange(cursorPosition, cursorPosition);
     }
 
@@ -183,7 +183,10 @@ const ManualInputForm = ({
           onFocus={handleOnFocus}
           onChange={(value) => setReport(value)}
           spellCheck={true}
-          setSelectedDateReport={setSelectedDateReport}
+          setSelectedDateReport={(value) => {
+            const newValue = typeof value === "string" ? value : value(selectedDateReport || "");
+            setSelectedDateReport(newValue);
+          }}
           disabled={isFieldDisabled}
           report={report}
         />
@@ -194,7 +197,11 @@ const ManualInputForm = ({
             setShowDeleteButton={setShowDeleteButton}
             setShowDeleteMessage={setShowDeleteMessage}
             selectedDate={selectedDate}
-            setSelectedDateReport={setSelectedDateReport}
+            setSelectedDateReport={(value) => {
+              const newValue =
+                typeof value === "string" ? value : (value as (prev: string) => string)(selectedDateReport || "");
+              setSelectedDateReport(newValue);
+            }}
           />
         )}
         <div className="flex flex-col justify-stretch">

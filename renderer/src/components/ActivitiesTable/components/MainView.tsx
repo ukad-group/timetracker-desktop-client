@@ -8,8 +8,9 @@ import MainViewTable from "./MainViewTable";
 import { ActivitiesTableContext } from "../context";
 
 const MainView = () => {
-  const { copyToClipboardHandle, totalDuration, tableActivities, selectedDate, isLoading } =
-    useContext(ActivitiesTableContext);
+  const context = useContext(ActivitiesTableContext);
+  if (!context) return null;
+  const { copyToClipboardHandle, totalDuration, tableActivities, selectedDate, isLoading } = context;
 
   return (
     <table className="min-w-full divide-y divide-gray-300 table-fixed dark:divide-gray-600">

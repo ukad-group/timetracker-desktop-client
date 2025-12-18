@@ -2,20 +2,20 @@ import { ReportActivity } from "@/helpers/utils/types";
 import { Dispatch, SetStateAction } from "react";
 
 export type TrackTimeButtonProps = {
-  onEditActivity: (activity: ReportActivity | "new") => void;
+  onEditActivity: (activity: (Partial<ReportActivity> & { from: string; to: string }) | "new") => void;
 };
 
 export type ActivitiesSectionProps = {
-  onEditActivity: (activity: ReportActivity | "new") => void;
+  onEditActivity: (activity: (Partial<ReportActivity> & { from: string; to: string }) | "new") => void;
   activities: Array<ReportActivity>;
   selectedDate: Date;
   latestProjAndAct: Record<string, [string]>;
-  setSelectedDateReport: Dispatch<SetStateAction<String>>;
+  setSelectedDateReport: Dispatch<SetStateAction<string | null>>;
 };
 
 export type PlaceholderProps = {
-  onEditActivity: (activity: ReportActivity | "new") => void;
+  onEditActivity: (activity: (Partial<ReportActivity> & { from: string; to: string }) | "new") => void;
   backgroundError?: string;
   selectedDate: Date;
-  setSelectedDateReport: Dispatch<SetStateAction<String>>;
+  setSelectedDateReport: Dispatch<SetStateAction<string | null>>;
 };

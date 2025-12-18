@@ -13,7 +13,9 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedDateActivities, setSelectedDateActivities] = useState<Array<ReportActivity> | null>([]);
   const [shouldAutosave, setShouldAutosave] = useState(false);
-  const [trackTimeModalActivity, setTrackTimeModalActivity] = useState<ReportActivity | "new">(null);
+  const [trackTimeModalActivity, setTrackTimeModalActivity] = useState<
+    (Partial<ReportActivity> & { from: string; to: string }) | "new" | null
+  >(null);
   const [latestProjAndAct, setLatestProjAndAct] = useState<Record<string, [string]>>({});
   const [latestProjAndDesc, setLatestProjAndDesc] = useState<Record<string, [string]>>({});
   const [lastRenderedDay, setLastRenderedDay] = useState(new Date().getDate());
@@ -58,7 +60,7 @@ export default function Home() {
   const submitActivity = (activity: ReportActivity) => {
     const tempActivities: Array<ReportActivity> = [];
 
-    if (!selectedDateActivities.length) {
+    if (!selectedDateActivities || !selectedDateActivities.length) {
       activity.id = 1;
       tempActivities.push(activity);
       setSelectedDateActivities(tempActivities);

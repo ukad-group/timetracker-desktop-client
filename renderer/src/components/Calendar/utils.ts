@@ -14,13 +14,13 @@ import { parseReport, validation } from "@/helpers/utils/reports";
 import isOnline from "is-online";
 import { ReportActivity } from "@/helpers/utils/types";
 
-export const loadHolidaysAndVacations = async (calendarDate: Date) => {
+export const loadHolidaysAndVacations = async (calendarDate: Date): Promise<DayOff[]> => {
   try {
     const TTUserInfo: TTUserInfoProps = await JSON.parse(
       global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER),
     );
 
-    if (!TTUserInfo) return;
+    if (!TTUserInfo) return [];
 
     const { accessToken, userEmail, refreshToken } = TTUserInfo;
 
@@ -66,9 +66,9 @@ export const loadHolidaysAndVacations = async (calendarDate: Date) => {
     if (nextYearVacationsPromise) userPromises.push(nextYearVacationsPromise);
     if (prevYearVacationsPromise) userPromises.push(prevYearVacationsPromise);
 
-    const userFetchedData = await Promise.all(userPromises);
+    const userFetchedData = (await Promise.all(userPromises)) as (VacationSickDaysData | string)[];
 
-    if (userFetchedData.includes("invalid_token")) {
+    if (userFetchedData.some((data) => data === "invalid_token")) {
       const refreshedPlannerCreds = await global.ipcRenderer.invoke(
         IPC_MAIN_CHANNELS.TIMETRACKER_REFRESH_PLANNER_TOKEN,
         refreshToken,
@@ -91,7 +91,11 @@ export const loadHolidaysAndVacations = async (calendarDate: Date) => {
 
     const vacationsAndSickdays: ApiDayOff[] = [];
 
-    userFetchedData.forEach((data) => data.periods.forEach((period: ApiDayOff) => vacationsAndSickdays.push(period)));
+    userFetchedData.forEach((data) => {
+      if (typeof data !== "string" && data.periods) {
+        data.periods.forEach((period: ApiDayOff) => vacationsAndSickdays.push(period));
+      }
+    });
 
     const userDaysOff: DayOff[] = [];
 
@@ -130,15 +134,18 @@ export const loadHolidaysAndVacations = async (calendarDate: Date) => {
     if (!online) {
       console.log(OFFLINE_MESSAGE);
     }
+    return [];
   }
 };
 
 export const getFormattedReports = (reports: ParsedReport[]) => {
   return reports.map((report) => {
     const { reportDate, data } = report;
-    const activities: ReportActivity[] = validation(
-      (parseReport(data)[0] || []).filter((activity: ReportActivity) => !activity.isBreak),
+    const parsedActivities = (parseReport(data)[0] || []).filter(
+      (activity: Partial<ReportActivity>): activity is ReportActivity =>
+        activity.id !== undefined && !!activity.from && !!activity.to && !activity.isBreak,
     );
+    const activities: ReportActivity[] = validation(parsedActivities);
     const workDurationMs = activities.reduce((acc, { duration }) => acc + (duration || 0), 0);
 
     return {
@@ -151,7 +158,7 @@ export const getFormattedReports = (reports: ParsedReport[]) => {
 };
 
 export const getSumWorkDurationByWeek = (dataArray: FormattedReport[]): SumWorkDurationByWeekProps => {
-  const result = {};
+  const result: SumWorkDurationByWeekProps = {};
 
   dataArray.forEach((item) => {
     if (result[item.week]) {

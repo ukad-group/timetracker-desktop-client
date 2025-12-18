@@ -3,7 +3,7 @@ import { ReportActivity } from "@/helpers/utils/types";
 export type TrackTimeModalProps = {
   activities: Array<ReportActivity> | null;
   isOpen: boolean;
-  editedActivity: ReportActivity | "new";
+  editedActivity: (Partial<ReportActivity> & { from: string; to: string }) | "new";
   latestProjAndAct: Record<string, [string]>;
   latestProjAndDesc: Record<string, [string]>;
   close: () => void;

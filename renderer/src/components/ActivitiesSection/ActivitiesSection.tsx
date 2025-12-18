@@ -9,6 +9,7 @@ import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import Placeholder from "./Placeholder";
 import TrackTimeButton from "./TrackTimeButton";
 import { KEY_CODES, LOCAL_STORAGE_VARIABLES } from "@/helpers/constants";
+import { ReportActivity } from "@/helpers/utils/types";
 
 const ActivitiesSection = ({
   onEditActivity,
@@ -17,7 +18,7 @@ const ActivitiesSection = ({
   latestProjAndAct,
   setSelectedDateReport,
 }: ActivitiesSectionProps) => {
-  const [events, setEvents] = useState([]);
+  const [events, setEvents] = useState<ReportActivity[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const isGoogleEventsShown = JSON.parse(
     global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.SHOW_GOOGLE_EVENTS),
@@ -90,7 +91,13 @@ const ActivitiesSection = ({
       <div>
         <div className="px-4 py-5 sm:px-6">
           <ActivitiesTable
-            onEditActivity={onEditActivity}
+            onEditActivity={(activity) => {
+              if (activity === "new") {
+                onEditActivity("new");
+              } else {
+                onEditActivity(activity);
+              }
+            }}
             activities={activities}
             selectedDate={selectedDate}
             latestProjAndAct={latestProjAndAct}

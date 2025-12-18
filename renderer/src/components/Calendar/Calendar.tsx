@@ -40,7 +40,7 @@ export const Calendar = ({
   const [parsedQuarterReports, setParsedQuarterReports] = useState<ParsedReport[]>([]);
   const [formattedQuarterReports, setFormattedQuarterReports] = useState<FormattedReport[]>([]);
   const [loading, setLoading] = useState(false);
-  const calendarRef = useRef(null);
+  const calendarRef = useRef<FullCalendar>(null);
   const allCalendarRef = useRef(null);
   const totalTimeRef = useRef(null);
   const weekNumberRef = useRef(null);
@@ -56,7 +56,10 @@ export const Calendar = ({
   const timetrackerUserInfo: TTUserInfoProps = JSON.parse(
     global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER),
   );
-  const getCalendarApi = () => calendarRef.current.getApi();
+  const getCalendarApi = () => {
+    if (!calendarRef.current) throw new Error("Calendar ref is not initialized");
+    return calendarRef.current.getApi();
+  };
 
   const monthWorkedHours = useMemo(() => {
     return formatDuration(getMonthWorkHours(formattedQuarterReports, calendarDate));
@@ -65,7 +68,8 @@ export const Calendar = ({
   const monthRequiredHours = useMemo(() => {
     const lastDayOfMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 0);
 
-    return formatDuration(getRequiredHours(calendarDate, daysOff, lastDayOfMonth));
+    const requiredHours = getRequiredHours(calendarDate, daysOff, lastDayOfMonth);
+    return requiredHours !== undefined ? formatDuration(requiredHours) : "0h";
   }, [daysOff, calendarDate]);
 
   const workRequiredHours = useMemo(() => {
@@ -76,9 +80,11 @@ export const Calendar = ({
       selectedDate,
     );
 
-    const daysRequiredHours = formatDuration(getRequiredHours(calendarDate, daysOff, selectedDate));
+    const selectedDateRequiredHours = getRequiredHours(calendarDate, daysOff, selectedDate);
+    const daysRequiredHours =
+      selectedDateRequiredHours !== undefined ? formatDuration(selectedDateRequiredHours) : "0h";
 
-    if (!getRequiredHours(calendarDate, daysOff, selectedDate)) return;
+    if (!selectedDateRequiredHours) return;
 
     return (
       <p>
@@ -162,7 +168,8 @@ export const Calendar = ({
       if (!online) {
         alert(OFFLINE_MESSAGE);
       } else {
-        setDaysOff(await loadHolidaysAndVacations(calendarDate));
+        const daysOffResult = await loadHolidaysAndVacations(calendarDate);
+        setDaysOff(daysOffResult || []);
       }
     } catch (error) {
       console.log(error);
@@ -212,7 +219,8 @@ export const Calendar = ({
 
     global.ipcRenderer.on(IPC_MAIN_CHANNELS.WINDOW_FOCUSED, () => {
       (async () => {
-        setDaysOff(await loadHolidaysAndVacations(calendarDate));
+        const daysOffResult = await loadHolidaysAndVacations(calendarDate);
+        setDaysOff(daysOffResult || []);
       })();
     });
 

@@ -9,7 +9,7 @@ export type MainPageProps = {
   shouldAutosave: boolean;
   setSelectedDate: Dispatch<SetStateAction<Date>>;
   latestProjAndAct: Record<string, [string]>;
-  setTrackTimeModalActivity: Dispatch<SetStateAction<ReportActivity | "new">>;
+  setTrackTimeModalActivity: Dispatch<SetStateAction<(Partial<ReportActivity> & { from: string; to: string }) | "new">>;
 };
 
 export type Section = {

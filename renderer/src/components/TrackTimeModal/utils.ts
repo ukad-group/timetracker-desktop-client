@@ -202,7 +202,7 @@ export function saveSheduledEvents(
   scheduledEvents: ScheduledEvents,
   setScheduledEvents: (e: ScheduledEvents) => void,
   dashedDescription: string,
-  editedActivity: ReportActivity | "new",
+  editedActivity: (Partial<ReportActivity> & { from: string; to: string }) | "new",
   project: string,
   activity: string,
 ) {
@@ -275,7 +275,7 @@ export function handleKey(
 export function addNewActivity(
   progress: TutorialProgress,
   setProgress: (event: TutorialProgress) => void,
-  editedActivity: ReportActivity | "new",
+  editedActivity: (Partial<ReportActivity> & { from: string; to: string }) | "new",
   activities: Array<ReportActivity> | null,
   setFrom: Dispatch<SetStateAction<string>>,
   setTo: Dispatch<SetStateAction<string>>,

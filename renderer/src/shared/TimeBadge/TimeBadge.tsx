@@ -52,6 +52,8 @@ const TimeBadge = ({ hours, startTime, selectedDate }: TimeBadgeProps) => {
       </span>
     );
   }
+
+  return null;
 };
 
 export default TimeBadge;
