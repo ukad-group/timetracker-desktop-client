@@ -21,17 +21,5 @@ module.exports = {
         sourceType: "module",
       },
     },
-    {
-      files: ["**/*.js", "**/*.jsx"],
-      parser: "@babel/eslint-parser",
-      parserOptions: {
-        requireConfigFile: false,
-        ecmaVersion: 2023,
-        sourceType: "module",
-        babelOptions: {
-          presets: ["@babel/preset-env", "@babel/preset-react"],
-        },
-      },
-    },
   ],
 };

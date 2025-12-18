@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { useEffect, useState } from "react";
 import { LOCAL_STORAGE_VARIABLES } from "@/helpers/constants";
 import { StoredSection } from "./types";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import DragNDropIcon from "@/shared/DragNDropIcon/DragNDropIcon";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 
