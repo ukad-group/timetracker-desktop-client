@@ -29,6 +29,7 @@ A cross-platform desktop application for creating and managing time tracking rep
 ## Features
 
 ### Core Functionality
+
 - 📁 **Report Management**: Choose custom location for time tracker reports
 - 📅 **Date Selection**: Select any date for report creation and editing
 - 📝 **Activity Tracking**: Create activity reports with time, project, activity, and description fields
@@ -36,6 +37,7 @@ A cross-platform desktop application for creating and managing time tracking rep
 - 📊 **Time Totals**: Automatic calculation and display of time totals by project, activity, and description
 
 ### Integrations
+
 - 📆 **Google Calendar**: Import and track events from Google Calendar
 - 🎫 **Jira**: Connect to Jira to track issues and tasks
 - 📋 **Trello**: Import cards from Trello boards for time tracking
@@ -43,6 +45,7 @@ A cross-platform desktop application for creating and managing time tracking rep
 - 🌐 **Timetracker Website**: Connect to Timetracker web service for projects, bookings, and holidays
 
 ### User Interface
+
 - 🎨 **Theme Management**: Light and dark mode with OS theme detection
 - 📱 **Widget Customization**: Drag-and-drop widget ordering
 - 📅 **Calendar View**: Visual calendar with bookings, holidays, and vacation days
@@ -51,6 +54,7 @@ A cross-platform desktop application for creating and managing time tracking rep
 - 💡 **Hints & Tutorials**: Built-in hints and tutorial system for new users
 
 ### Advanced Features
+
 - 🔄 **Auto-update**: Automatic updates with beta channel support
 - 📂 **File Watching**: Real-time file monitoring for external changes
 - 🗂️ **Report Parsing**: Smart parsing of existing report files
@@ -60,6 +64,7 @@ A cross-platform desktop application for creating and managing time tracking rep
 ### Report Format
 
 Reports are stored as plain text files with the following format:
+
 - **File name**: Date in format `yyyymmdd` (e.g., `20241218.txt`)
 - **Report format**: `hh:mm - project - activity - description`
   - `hh:mm` represents the start time of the activity
@@ -77,39 +82,31 @@ Reports are stored as plain text files with the following format:
 ## Prerequisites
 
 - **Node.js** >= 16.x (recommended: 18.x or higher)
-- **npm**, **yarn**, or **pnpm** package manager
+- **npm** package manager
 - **Git** for version control
 
 For building macOS distributions:
+
 - macOS with Xcode Command Line Tools
 - `dmg-license` package (optional, for DMG creation)
 
 ## Installation
 
 1. Clone the repository
+
    ```sh
    git clone https://github.com/ukad-group/timetracker-desktop-client.git
    cd timetracker-desktop-client
    ```
 
-2. Install dependencies using your preferred package manager:
+2. Install dependencies:
 
-   **Using npm:**
    ```sh
    npm install
    ```
 
-   **Using yarn:**
-   ```sh
-   yarn install
-   ```
-
-   **Using pnpm (recommended):**
-   ```sh
-   pnpm install
-   ```
-
 3. (Optional) Install dmg-license for macOS builds:
+
    ```sh
    npm install -g dmg-license
    # or
@@ -124,11 +121,10 @@ Run the application in development mode:
 
 ```sh
 npm run dev
-# or
-pnpm run dev
 ```
 
 This will:
+
 - Build the Electron main process
 - Start the Next.js development server
 - Launch the Electron application with hot-reload
@@ -144,6 +140,7 @@ npm run dist
 This creates distributable packages for all platforms (Windows, macOS, Linux).
 
 For platform-specific builds:
+
 ```sh
 npm run dist-win    # Windows only
 npm run dist-macos  # macOS only
@@ -152,12 +149,14 @@ npm run dist-macos  # macOS only
 ## Available Scripts
 
 ### Development
+
 - `dev` - Build Electron and run in development mode
 - `build` - Build both renderer (Next.js) and Electron processes
 - `build-renderer` - Build only the Next.js renderer process
 - `build-electron` - Build only the Electron main process TypeScript code
 
 ### Building & Packaging
+
 - `pack-app` - Build and create unpacked application (faster, good for testing)
 - `dist` - Build and create production distribution packages for all platforms
 - `dist-win` - Build and create Windows installer (NSIS)
@@ -165,6 +164,7 @@ npm run dist-macos  # macOS only
 - `build-client` - Platform-specific build (automatically detects OS)
 
 ### Code Quality
+
 - `test` - Run Jest test suite
 - `coverage` - Run tests with coverage report
 - `lint` - Lint code using ESLint (with auto-fix)
@@ -172,6 +172,7 @@ npm run dist-macos  # macOS only
 - `prettier` - Format code using Prettier
 
 ### Maintenance
+
 - `clean` - Remove all build artifacts (dist, main, renderer/out, renderer/.next)
 
 ## Project Structure
@@ -207,6 +208,7 @@ timetracker-desktop-client/
 ### Code Style
 
 The project uses:
+
 - **ESLint** for code linting
 - **Prettier** for code formatting
 - **TypeScript** for type safety
@@ -222,6 +224,7 @@ FEATURE | ISSUE | NONE: commit message
 ```
 
 Examples:
+
 - `FEATURE: add widget customization`
 - `ISSUE: fix calendar date calculation`
 - `NONE: update dependencies`
@@ -257,27 +260,32 @@ npm run coverage
 ```
 
 Tests are located in:
+
 - `renderer/src/**/__tests__/` - Component and utility tests
 - `renderer/src/**/*.test.ts` - Unit tests
 
 ## Building for Production
 
 1. **Clean previous builds** (optional):
+
    ```sh
    npm run clean
    ```
 
 2. **Build the application**:
+
    ```sh
    npm run build
    ```
 
 3. **Create distribution packages**:
+
    ```sh
    npm run dist
    ```
 
 The built applications will be in the `dist/` directory:
+
 - Windows: `Timetracker-Setup-{version}.exe`
 - macOS: `Timetracker-{version}.dmg`
 - Linux: `Timetracker_{version}.deb`
@@ -287,6 +295,7 @@ The built applications will be in the `dist/` directory:
 ### Versioning
 
 The app version in `package.json` is automatically updated by GitHub Actions when a tag is pushed:
+
 - Tag format: `v{major}.{minor}.{patch}` (e.g., `v1.52.0`)
 - Package.json version: `{major}.{minor}.{patch}` (e.g., `1.52.0`)
 - For beta releases: `v1.53.0-beta.10` → `1.53.0-beta.10`
@@ -294,6 +303,7 @@ The app version in `package.json` is automatically updated by GitHub Actions whe
 ### Release Process
 
 1. Create and push a tag:
+
    ```sh
    git tag v1.52.0
    git push origin v1.52.0
@@ -311,6 +321,7 @@ The app version in `package.json` is automatically updated by GitHub Actions whe
 ### Commit Pattern
 
 All commits should follow this pattern:
+
 ```sh
 FEATURE | ISSUE | NONE: commit message
 ```
@@ -329,6 +340,7 @@ FEATURE | ISSUE | NONE: commit message
 ### Port Already in Use
 
 If you see an error about port 51432 being in use:
+
 - The app now uses dynamic port allocation (beta version)
 - Restart the application
 - If issues persist, check for other Electron processes running
@@ -336,6 +348,7 @@ If you see an error about port 51432 being in use:
 ### Build Errors
 
 **Missing dependencies:**
+
 ```sh
 # Clean and reinstall
 npm run clean
@@ -344,11 +357,13 @@ npm install
 ```
 
 **TypeScript errors:**
+
 ```sh
 npm run type-check
 ```
 
 **Linting errors:**
+
 ```sh
 npm run lint
 ```
@@ -357,10 +372,13 @@ npm run lint
 
 1. Check Node.js version: `node --version` (should be >= 16)
 2. Rebuild Electron dependencies:
+
    ```sh
    npm run postinstall
    ```
+
 3. Clear cache and rebuild:
+
    ```sh
    npm run clean
    npm run build
@@ -376,6 +394,7 @@ npm run lint
 ### macOS Build Issues
 
 If DMG creation fails:
+
 ```sh
 npm install -g dmg-license
 ```
@@ -394,10 +413,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 <!-- MARKDOWN LINKS & IMAGES -->
 [forks-shield]: https://img.shields.io/github/forks/ukad-group/timetracker-desktop-client.svg?style=for-the-badge
 [forks-url]: https://github.com/ukad-group/timetracker-desktop-client/network/members
-[stars-shield]: https://img.shields.io/github/stars/ukad-group/timetracker-desktop-client.svg?style=for-the-badge
-[stars-url]: https://github.com/ukad-group/timetracker-desktop-client/stargazers
 [license-shield]: https://img.shields.io/github/license/ukad-group/timetracker-desktop-client.svg?style=for-the-badge
 [license-url]: https://github.com/ukad-group/timetracker-desktop-client/blob/master/LICENSE
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/mmmykhailo
-[product-screenshot]: resources/app-screenshot.png
