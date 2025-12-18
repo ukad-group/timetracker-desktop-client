@@ -9,3 +9,4 @@ out
 /coverage.data
 /coverage/
 *.env
+*.tsbuildinfo

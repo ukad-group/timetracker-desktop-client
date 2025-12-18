@@ -12,12 +12,21 @@ export enum SidebarNavItem {
   VersionSelect = "Version",
 }
 
-export const SETTING_SECTIONS = {
-  [SidebarNavItem.Connections]: <ConnectionsSection />,
-  [SidebarNavItem.Help]: <HelpSection />,
-  [SidebarNavItem.ReportsFolder]: <ReportsFolderSection />,
-  [SidebarNavItem.Layout]: <LayoutSection />,
-  [SidebarNavItem.VersionSelect]: <VersionSection />,
+export const getSettingSection = (item: SidebarNavItem) => {
+  switch (item) {
+    case SidebarNavItem.Connections:
+      return <ConnectionsSection />;
+    case SidebarNavItem.Help:
+      return <HelpSection />;
+    case SidebarNavItem.ReportsFolder:
+      return <ReportsFolderSection />;
+    case SidebarNavItem.Layout:
+      return <LayoutSection />;
+    case SidebarNavItem.VersionSelect:
+      return <VersionSection />;
+    default:
+      return null;
+  }
 };
 
 export const LOCAL_STORAGE_VARIABLES = {

@@ -3,13 +3,13 @@ import Link from "next/link";
 import { MenuItem } from "@/shared/MenuItem";
 import { ButtonTransparent } from "@/shared/ButtonTransparent";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
-import { SidebarNavItem, SETTING_SECTIONS } from "@/helpers/constants";
+import { SidebarNavItem, getSettingSection } from "@/helpers/constants";
 import { closeWindowIfNeeded } from "@/helpers/utils/utils";
 import useColorTheme from "@/helpers/hooks/useTheme";
 
 const SettingsPageContent = () => {
   const [currentMenuItem, setCurrentMenuItem] = useState<SidebarNavItem>(SidebarNavItem.Connections);
-  const settingSection = SETTING_SECTIONS[currentMenuItem];
+  const settingSection = getSettingSection(currentMenuItem);
 
   useEffect(() => {
     closeWindowIfNeeded();
