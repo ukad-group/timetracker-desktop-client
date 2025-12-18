@@ -2,7 +2,7 @@
   "private": true,
   "name": "timetracker",
   "description": "Timetracker app",
-  "version": "1.53.0-beta.10",
+  "version": "1.53.0-beta.11",
   "author": "mmmykhailo <mmmykhailo@proton.me>",
   "main": "main/index.js",
   "scripts": {
@@ -65,6 +65,7 @@
   },
   "dependencies": {
     "@aptabase/electron": "^0.2.2",
+    "@floating-ui/dom": "^1.7.4",
     "@floating-ui/react": "^0.26.5",
     "@fullcalendar/core": "^6.1.8",
     "@fullcalendar/daygrid": "^6.1.8",
@@ -91,6 +92,7 @@
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18.2.0",
+    "slate": "^0.114.0",
     "slate-history": "^0.113.1",
     "slate-react": "^0.114.2",
     "zustand": "^4.3.9"

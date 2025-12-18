@@ -111,7 +111,7 @@ autoUpdater.on("error", (e: Error, message?: string) => {
   mainWindow?.webContents.send(
     IPC_MAIN_CHANNELS.BACKEND_ERROR,
     "Updater error. An error was encountered during the download of the latest version. ",
-    message,
+    message || null,
   );
 });
 
@@ -394,13 +394,15 @@ app.on("ready", async () => {
 
     if (mainWindow) {
       app.whenReady().then(() => {
-        protocol.handle(process.env.NEXT_PUBLIC_PROTOCOL as string, (request) => {
-          const localUrl = request.url.replace(
-            process.env.NEXT_PUBLIC_PROTOCOL_SERVER_ADDRESS || "",
-            getServerAddress(),
-          );
-          return net.fetch(localUrl);
-        });
+        if (process.env.NEXT_PUBLIC_PROTOCOL) {
+          protocol.handle(process.env.NEXT_PUBLIC_PROTOCOL as string, (request) => {
+            const localUrl = request.url.replace(
+              process.env.NEXT_PUBLIC_PROTOCOL_SERVER_ADDRESS || "",
+              getServerAddress(),
+            );
+            return net.fetch(localUrl);
+          });
+        }
 
         if (process.platform === "darwin") return;
 
@@ -646,7 +648,14 @@ app.on("window-all-closed", () => {
 });
 
 ipcMain.handle(IPC_MAIN_CHANNELS.STORAGE_GET, (_, storageName: string) => {
-  return fs.readFileSync(`${userDataDirectory}/${storageName}`, "utf8");
+  try {
+    return fs.readFileSync(`${userDataDirectory}/${storageName}`, "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
 });
 
 ipcMain.handle(IPC_MAIN_CHANNELS.STORAGE_SET, (_, storageName: string, value: string) => {
@@ -654,7 +663,14 @@ ipcMain.handle(IPC_MAIN_CHANNELS.STORAGE_SET, (_, storageName: string, value: st
 });
 
 ipcMain.handle(IPC_MAIN_CHANNELS.STORAGE_DELETE, (_, storageName: string) => {
-  fs.unlinkSync(`${userDataDirectory}/${storageName}`);
+  try {
+    fs.unlinkSync(`${userDataDirectory}/${storageName}`);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw error;
+    }
+    // File doesn't exist, which is fine for delete operations
+  }
 });
 
 ipcMain.handle(IPC_MAIN_CHANNELS.APP_SELECT_FOLDER, async () => {
