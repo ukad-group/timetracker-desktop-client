@@ -103,7 +103,9 @@ const Totals = ({ selectedDate }) => {
           break;
       }
 
-      textForCopying.length > 0 && acc.push(textForCopying);
+      if (textForCopying.length > 0) {
+        acc.push(textForCopying);
+      }
 
       return acc;
     }, []);

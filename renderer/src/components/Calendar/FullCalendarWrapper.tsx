@@ -111,20 +111,23 @@ const FullCalendarWrapper = ({
     return (
       <div>
         {info.dayNumberText}
-        {cloneElement(icon, { title })}
+        {cloneElement(icon, { title } as any)}
       </div>
     );
   };
 
   const renderChildren = () => {
     return Children.map(children, (child) => {
-      return cloneElement(child, {
-        dateClick: dateClickHandle,
-        eventContent: renderEventContent,
-        dayCellClassNames: addCellClassNameHandle,
-        weekNumberContent: renderWeekNumberContent,
-        dayCellContent: getDayCellContent,
-      });
+      return cloneElement(
+        child as ReactElement,
+        {
+          dateClick: dateClickHandle,
+          eventContent: renderEventContent,
+          dayCellClassNames: addCellClassNameHandle,
+          weekNumberContent: renderWeekNumberContent,
+          dayCellContent: getDayCellContent,
+        } as any,
+      );
     });
   };
 

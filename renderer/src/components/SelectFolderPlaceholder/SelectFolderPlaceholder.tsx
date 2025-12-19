@@ -1,4 +1,3 @@
-import React from "react";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import { shallow } from "zustand/shallow";
 import { useMainStore } from "@/store/mainStore";

@@ -72,7 +72,7 @@ export function parseEventTitle(event, latestProjAndAct: Record<string, [string]
       }
       break;
 
-    case 3:
+    case 3: {
       const project = items[0].toLowerCase();
       const activity = items[1];
       const description = items[2];
@@ -88,6 +88,7 @@ export function parseEventTitle(event, latestProjAndAct: Record<string, [string]
       event.project = project;
       event.description = description;
       break;
+    }
 
     default:
       if (items) {

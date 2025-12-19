@@ -1,8 +1,7 @@
-import { render, fireEvent } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import Office365Connection from "../Office365Connection";
 import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";
-import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import React from "react";
 
 jest.mock("electron", () => ({

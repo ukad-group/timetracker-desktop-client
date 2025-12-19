@@ -69,7 +69,7 @@ const MainViewTable = () => {
     ]);
   }, []);
 
-  const prevTableActivities = usePrevious(tableActivities) || [];
+  const prevTableActivities: ReportActivity[] = usePrevious(tableActivities) || [];
 
   useEffect(() => {
     const isNewActivity = tableActivities?.length - prevTableActivities?.length === 1;

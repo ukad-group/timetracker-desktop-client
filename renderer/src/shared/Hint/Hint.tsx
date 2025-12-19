@@ -67,7 +67,9 @@ function Hint({
     }
 
     const unsubscribe = useTutorialProgressStore.subscribe((newProgress) => {
-      newProgress[groupName]?.length ? setGroupSize(newProgress[groupName]?.length) : null;
+      if (newProgress[groupName]?.length) {
+        setGroupSize(newProgress[groupName]?.length);
+      }
 
       if (
         (!newProgress.progress.hasOwnProperty(groupName) &&
@@ -95,7 +97,9 @@ function Hint({
   }, []);
 
   useEffect(() => {
-    progress[groupName]?.length ? setGroupSize(progress[groupName]?.length) : null;
+    if (progress[groupName]?.length) {
+      setGroupSize(progress[groupName]?.length);
+    }
 
     if (progress.hasOwnProperty(groupName) && progress[groupName][order - 1]) {
       setShowHint(false);

@@ -70,7 +70,7 @@ export const getOffice365Events = async () => {
 };
 
 export const getOffice365EventByUser = async (accessToken: string, refreshToken: string, userId: string) => {
-  let res = await global.ipcRenderer.invoke(IPC_MAIN_CHANNELS.OFFICE365_GET_TODAY_EVENTS, accessToken);
+  const res = await global.ipcRenderer.invoke(IPC_MAIN_CHANNELS.OFFICE365_GET_TODAY_EVENTS, accessToken);
 
   if (res?.error?.code === "MailboxNotEnabledForRESTAPI") {
     return [];

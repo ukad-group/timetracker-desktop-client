@@ -195,7 +195,11 @@ export function setTimeOnOpen(
     setFrom(`${hours}:${floorMinutes}`);
   }
 
-  isToday ? setTo(`${ceilHours}:${ceilMinutes}`) : setTo("");
+  if (isToday) {
+    setTo(`${ceilHours}:${ceilMinutes}`);
+  } else {
+    setTo("");
+  }
 }
 
 export function saveSheduledEvents(
@@ -309,9 +313,11 @@ export function addNewActivity(
   if (editedActivity?.calendarId) {
     const lastRegistrationTo = activities[activities?.length - 2]?.to;
 
-    padStringToMinutes(lastRegistrationTo) > padStringToMinutes(editedActivity?.from)
-      ? setFrom(lastRegistrationTo || "")
-      : setFrom(editedActivity?.from || "");
+    if (padStringToMinutes(lastRegistrationTo) > padStringToMinutes(editedActivity?.from)) {
+      setFrom(lastRegistrationTo || "");
+    } else {
+      setFrom(editedActivity?.from || "");
+    }
   } else {
     setFrom(editedActivity?.from || "");
   }

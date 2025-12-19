@@ -46,7 +46,9 @@ const ActivitiesSection = ({
       const allEvents = [...googleEvents, ...office365Events];
 
       setIsLoading(false);
-      isAvailable.isAvailable && setEvents(allEvents);
+      if (isAvailable.isAvailable) {
+        setEvents(allEvents);
+      }
     } else {
       setEvents([]);
     }

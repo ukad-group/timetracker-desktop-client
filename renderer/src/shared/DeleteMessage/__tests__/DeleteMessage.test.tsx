@@ -13,7 +13,7 @@ describe("GIVEN DeleteMessage", () => {
   });
 
   it("renders without errors", () => {
-    // @ts-ignore
+    // @ts-expect-error
     useMainStore.mockReturnValue([null, jest.fn()]);
     render(
       <DeleteMessage
@@ -28,7 +28,7 @@ describe("GIVEN DeleteMessage", () => {
   it("handles cancel button click", () => {
     const setShowDeleteMessageMock = jest.fn();
 
-    // @ts-ignore
+    // @ts-expect-error
     useMainStore.mockReturnValue([null, jest.fn()]);
     render(
       <DeleteMessage

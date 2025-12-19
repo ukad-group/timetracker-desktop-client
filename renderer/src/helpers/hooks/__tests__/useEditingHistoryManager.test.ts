@@ -14,7 +14,7 @@ describe("GIVEN EditingHistoryReducer", () => {
       value: "newValue",
     };
 
-    // @ts-ignore
+    // @ts-expect-error
     const newState = EditingHistoryReducer(initialState, action);
 
     expect(newState).toEqual({

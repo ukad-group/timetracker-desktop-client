@@ -12,9 +12,11 @@ export type MainPageProps = {
   setTrackTimeModalActivity: Dispatch<SetStateAction<(Partial<ReportActivity> & { from: string; to: string }) | "new">>;
 };
 
+import { ReactElement } from "react";
+
 export type Section = {
   sectionName: string;
-  section: JSX.Element;
+  section: ReactElement;
   order: number;
   side: "left" | "right";
 };

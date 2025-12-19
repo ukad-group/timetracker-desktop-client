@@ -12,7 +12,7 @@ export function parseReport(fileContent: string) {
   const dateRegex = /^\s*[0-9]{4}-[0-9]{2}-[0-9]{2}\s*/;
   const separatorRegex = /^[\s]*-[\s]*/;
   const workingTimeRegex = /^![\w]*/;
-  const textRegex = /^[\w+\s*\w*\.]+/;
+  const textRegex = /^[\w+\s*\w*.]+/;
   const lines = fileContent.split("\n");
   const reportItems: Array<Partial<ReportActivity>> = [];
   const reportAndNotes: ReportAndNotes = [reportItems, reportComments];
@@ -77,7 +77,7 @@ export function parseReport(fileContent: string) {
         reportCount++;
         continue;
       }
-      let projectName = currentLine.match(textRegex) ? currentLine.match(textRegex)[0] : "";
+      const projectName = currentLine.match(textRegex) ? currentLine.match(textRegex)[0] : "";
 
       if (projectName) {
         registration.project = projectName.trim().toLowerCase();
@@ -95,7 +95,7 @@ export function parseReport(fileContent: string) {
       const isEmptyActivity = currentLine.startsWith("- ");
 
       if (activityInTheLineRegex.test(currentLine) || isEmptyActivity) {
-        let activityName = isEmptyActivity ? " " : currentLine.match(activityInTheLineRegex)[1].trim();
+        const activityName = isEmptyActivity ? " " : currentLine.match(activityInTheLineRegex)[1].trim();
 
         registration.activity = startTime > new Date(2016, 7, 26) ? activityName : activityName.toLowerCase();
 
@@ -152,10 +152,14 @@ export function serializeReport(activities: Array<Partial<ReportActivity>>) {
 
       const nextActivity = activities[i + 1];
       if (nextActivity && nextActivity.from !== activity.to) {
-        activity.to ? (report += `${activity.to} - !\n`) : "";
+        if (activity.to) {
+          report += `${activity.to} - !\n`;
+        }
       }
       if (!nextActivity) {
-        activity.to ? (report += `${activity.to} - \n`) : "";
+        if (activity.to) {
+          report += `${activity.to} - \n`;
+        }
       }
     }
 
@@ -273,7 +277,7 @@ export function validation(activities: Array<ReportActivity>) {
     for (let i = 0; i < activities.length; i++) {
       const [toHours, toMinutes] = activities[i].to ? activities[i].to.split(":").map((item) => Number(item)) : [];
       const [fromHours, fromMinutes] = activities[i].from
-        ? activities[i].from?.split(":")?.map((item) => Number(item))
+        ? activities[i].from.split(":").map((item) => Number(item))
         : [];
       activities[i].validation = { isValid: true };
 

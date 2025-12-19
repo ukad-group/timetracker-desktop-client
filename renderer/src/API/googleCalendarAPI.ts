@@ -9,10 +9,6 @@ const getRedirectUri = () => {
 };
 
 export const getGoogleAuthUrl = () => {
-  if (!clientId) {
-    throw new Error("Google Client ID is not configured");
-  }
-
   const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/auth");
 
   const params = new URLSearchParams({
@@ -31,9 +27,6 @@ export const getGoogleAuthUrl = () => {
 
 export const getGoogleCredentials = async (authCode: string) => {
   if (!authCode) return;
-  if (!clientId || !clientSecret) {
-    throw new Error("Google Client ID or Client Secret is not configured");
-  }
 
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
@@ -50,9 +43,6 @@ export const getGoogleCredentials = async (authCode: string) => {
 
 export const updateGoogleCredentials = async (refreshToken: string) => {
   if (!refreshToken) return;
-  if (!clientId || !clientSecret) {
-    throw new Error("Google Client ID or Client Secret is not configured");
-  }
 
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",

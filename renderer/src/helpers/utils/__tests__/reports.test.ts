@@ -140,7 +140,7 @@ describe("parseReport function", () => {
       "https://trello.com/c/lU3qqXF0",
     ];
 
-    for (let description of descriptions) {
+    for (const description of descriptions) {
       const dayReport = parsedReport("18:00 2013-05-05 - pro.ject - act.ivity - " + description + "\n19:00 2013-05-05");
       const registration = dayReport[0];
 

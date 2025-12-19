@@ -73,10 +73,17 @@ export default function Home() {
     if (isEdit) return;
 
     const isPastTime = addPastTime(activity, tempActivities, selectedDateActivities, setSelectedDateActivities);
-    tempActivities.forEach((act, i) => ((act.id = i), act.isBreak ? (act.to = "") : (act.to = act.to)));
+    tempActivities.forEach((act, i) => {
+      act.id = i;
+      if (act.isBreak) {
+        act.to = "";
+      }
+    });
 
     if (tempActivities.length === selectedDateActivities.length) {
-      !isPastTime && tempActivities.push(activity);
+      if (!isPastTime) {
+        tempActivities.push(activity);
+      }
       setSelectedDateActivities(tempActivities.filter((act) => act.duration));
     }
 

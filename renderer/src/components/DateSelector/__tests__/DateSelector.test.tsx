@@ -1,6 +1,5 @@
-import React from "react";
 import "@testing-library/jest-dom";
-import { render, fireEvent, cleanup, screen, getByTestId } from "@testing-library/react";
+import { render, fireEvent, cleanup, screen } from "@testing-library/react";
 import DateSelector from "../DateSelector";
 
 describe("GIVEN DateSelector", () => {

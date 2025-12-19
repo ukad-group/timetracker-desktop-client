@@ -79,7 +79,7 @@ const UpdateDescription = () => {
     tempDiv.innerHTML = htmlString;
 
     const links = tempDiv.getElementsByTagName("a");
-    for (var i = 0; i < links.length; i++) {
+    for (let i = 0; i < links.length; i++) {
       links[i].target = "_blank";
     }
 

@@ -24,7 +24,7 @@ import { createWindow } from "./helpers/create-window";
 import { parseReportsInfo, Activity } from "./helpers/parseReportsInfo";
 import { getPathFromDate, getWeeksAroundDate, getWeeksInMonth } from "./helpers/datetime";
 import { createDirByPath, searchReadFiles } from "./helpers/fs";
-import chokidar from "chokidar";
+import chokidar, { type FSWatcher } from "chokidar";
 import { initialize, trackEvent } from "@aptabase/electron/main";
 import {
   callProfileInfoGraph,
@@ -162,7 +162,12 @@ ipcMain.on(IPC_MAIN_CHANNELS.REDIRECT, (_, link: string) => {
 });
 
 //defined the store
-let electronStore = new Store();
+let electronStore = new Store() as Store & {
+  get: (key: string) => unknown;
+  set: (key: string, value: unknown) => void;
+  delete: (key: string) => void;
+  clear: () => void;
+};
 
 ipcMain.on(IPC_MAIN_CHANNELS.GET_CURRENT_PORT, async (_) => {
   _.returnValue = getServerPort();
@@ -501,7 +506,7 @@ app.on("ready", async () => {
 
       // common scope watchers for the start/stop-folder-watcher functions
       const watchers: {
-        [key: string]: chokidar.FSWatcher | undefined;
+        [key: string]: FSWatcher | undefined;
       } = {};
 
       ipcMain.on(IPC_MAIN_CHANNELS.START_FILE_WATCHER, (_, reportsFolder: string, selectedDate: Date) => {

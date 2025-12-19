@@ -20,6 +20,10 @@ describe("GIVEN AutocompleteSelector", () => {
     spellCheck: false,
   };
 
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it("renders AutocompleteSelector correctly", () => {
     render(<AutocompleteSelector {...mockProps} />);
 
@@ -42,6 +46,8 @@ describe("GIVEN AutocompleteSelector", () => {
 
     fireEvent.click(suggestionItems[0]);
 
+    // The component now handles Headless UI v2 behavior where clicking an option
+    // might pass the input value, and automatically matches it to the first option
     expect(mockProps.setSelectedItem).toHaveBeenCalledWith("Item1");
   });
 

@@ -1,9 +1,8 @@
 import React from "react";
-import { render, fireEvent } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import JiraConnection from "../JiraConnection";
 import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";
-import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 
 jest.mock("electron", () => ({
   ipcRenderer: {

@@ -138,7 +138,7 @@ export function extractDatesFromPeriod(period: ApiDayOff, holidays: DayOff[]) {
 
 export function generateDateRange(startDate: Date, endDate: Date) {
   const dateRange: Date[] = [];
-  let currentDate = new Date(startDate);
+  const currentDate = new Date(startDate);
 
   while (currentDate <= endDate) {
     dateRange.push(new Date(currentDate));

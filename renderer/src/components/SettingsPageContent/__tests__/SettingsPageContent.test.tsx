@@ -1,5 +1,4 @@
-import React from "react";
-import { render, screen, fireEvent, renderHook } from "@testing-library/react";
+import { render, screen, renderHook } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import useColorTheme from "@/helpers/hooks/useTheme";
 import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";

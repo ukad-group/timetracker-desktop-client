@@ -1,4 +1,4 @@
-import { FormEvent, useState, useRef, ChangeEvent, useEffect } from "react";
+import { useState, useRef, ChangeEvent, useEffect } from "react";
 import { ChevronUpDownIcon } from "@heroicons/react/24/solid";
 import { Combobox } from "@headlessui/react";
 import clsx from "clsx";
@@ -90,8 +90,23 @@ const AutocompleteSelector = ({
       newValue = newValue.slice(5);
     }
 
+    // In Headless UI v2, when clicking an option, onChange might receive the input value
+    // instead of the option value. If the value matches the start of an option, select that option.
+    if (allItems && newValue && newValue !== selectedItem) {
+      const matchingOption = allItems.find((item) => item.toLowerCase().startsWith(newValue.toLowerCase()));
+      if (matchingOption && matchingOption !== newValue) {
+        // Only override if we have a clear match and it's different from the input
+        // This handles the case where clicking an option passes the input value
+        newValue = matchingOption;
+      }
+    }
+
     setSelectedItem(newValue);
     editingHistoryManager.setValue(newValue);
+  };
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    handleOnChange(e.target.value);
   };
 
   const handleOnBlur = (e: ChangeEvent<HTMLInputElement>) => {
@@ -144,7 +159,7 @@ const AutocompleteSelector = ({
               "border-red-300 text-red-900 placeholder-red-300": required && isValidationEnabled && !selectedItem,
             },
           )}
-          onChange={(e) => handleOnChange(e.target.value)}
+          onChange={handleInputChange}
           tabIndex={tabIndex}
           onBlur={handleOnBlur}
         />

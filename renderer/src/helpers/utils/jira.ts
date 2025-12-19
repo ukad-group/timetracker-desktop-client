@@ -3,7 +3,7 @@ import { LOCAL_STORAGE_VARIABLES, TRACK_ANALYTICS } from "../constants";
 import { Office365User } from "./office365";
 import { trackConnections } from "./utils";
 
-export interface JiraUser extends Office365User {}
+export type JiraUser = Office365User;
 
 interface JiraResource {
   id: string;

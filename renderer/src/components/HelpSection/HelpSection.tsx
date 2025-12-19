@@ -7,7 +7,7 @@ const HelpSection = () => {
   const [progress, setProgress] = useTutorialProgressStore((state) => [state.progress, state.setProgress], shallow);
 
   const restartTutorial = () => {
-    for (let key in progress) {
+    for (const key in progress) {
       if (!progress.hasOwnProperty(key) || key === "skipAll") continue;
       const hintArray = progress[key];
       if (key.split("").slice(-10).join("") === "Conditions") {

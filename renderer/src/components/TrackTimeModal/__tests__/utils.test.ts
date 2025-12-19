@@ -1,7 +1,6 @@
 import {
   changeHours,
   changeMinutesAndHours,
-  getTimetrackerYearProjects,
   addSuggestions,
   setTimeOnOpen,
   saveSheduledEvents,
@@ -12,7 +11,6 @@ import {
 import { getDateTimeData } from "@/helpers/utils/datetime-ui";
 import { KEY_CODES } from "@/helpers/constants";
 import { globalIpcRendererMock } from "@/tests/mocks/electron";
-import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 
 jest.mock("electron", () => ({
   ipcRenderer: {
@@ -110,7 +108,7 @@ describe("GIVEN addSuggestions", () => {
     const latestProjAndDesc: Record<string, [string]> = { project1: ["Description 2"] };
     const latestProjAndAct: Record<string, [string]> = { project1: ["Activity 2"] };
 
-    const webTrackerProjects = [];
+    const webTrackerProjects: string[] = [];
 
     const setUniqueWebTrackerProjects = jest.fn();
     const setLatestProjects = jest.fn();
