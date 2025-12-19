@@ -137,13 +137,29 @@ Create a production build for your platform:
 npm run dist
 ```
 
-This creates distributable packages for all platforms (Windows, macOS, Linux).
+This creates distributable packages for the current platform only.
+
+For building all platforms at once:
+
+```sh
+npm run dist:all
+```
 
 For platform-specific builds:
 
 ```sh
 npm run dist-win    # Windows only
-npm run dist-macos  # macOS only
+npm run dist-macos   # macOS only
+npm run dist-linux   # Linux only
+```
+
+For quick builds (without clean step, faster iteration):
+
+```sh
+npm run build-client        # Auto-detects platform
+npm run build-client:win32  # Windows only
+npm run build-client:darwin # macOS only
+npm run build-client:linux  # Linux only
 ```
 
 ## Available Scripts
@@ -158,10 +174,29 @@ npm run dist-macos  # macOS only
 ### Building & Packaging
 
 - `pack-app` - Build and create unpacked application (faster, good for testing)
-- `dist` - Build and create production distribution packages for all platforms
+- `dist` - Build and create production distribution package for current platform
+- `dist:all` - Build and create production distribution packages for all platforms (Windows, macOS, Linux)
 - `dist-win` - Build and create Windows installer (NSIS)
 - `dist-macos` - Build and create macOS DMG package
-- `build-client` - Platform-specific build (automatically detects OS)
+- `dist-linux` - Build and create Linux DEB package
+- `build-client` - Platform-specific build (automatically detects OS, no clean step)
+
+**Architecture-specific builds:**
+
+- `dist-win:x64` - Windows x64 build
+- `dist-win:ia32` - Windows 32-bit build
+- `dist-win:arm64` - Windows ARM64 build
+- `dist-macos:x64` - macOS Intel build
+- `dist-macos:arm64` - macOS Apple Silicon build
+- `dist-macos:universal` - macOS Universal binary (Intel + Apple Silicon)
+- `dist-linux:x64` - Linux x64 build
+- `dist-linux:arm64` - Linux ARM64 build
+
+**Quick builds (without clean step):**
+
+- `build-client:win32` - Quick Windows build
+- `build-client:darwin` - Quick macOS build
+- `build-client:linux` - Quick Linux build
 
 ### Code Quality
 
@@ -280,8 +315,29 @@ Tests are located in:
 
 3. **Create distribution packages**:
 
+   **For current platform:**
    ```sh
    npm run dist
+   ```
+
+   **For all platforms:**
+   ```sh
+   npm run dist:all
+   ```
+
+   **For specific platform:**
+   ```sh
+   npm run dist-win    # Windows
+   npm run dist-macos  # macOS
+   npm run dist-linux  # Linux
+   ```
+
+   **For specific architecture:**
+   ```sh
+   npm run dist-win:x64        # Windows x64
+   npm run dist-macos:arm64    # macOS Apple Silicon
+   npm run dist-macos:universal # macOS Universal
+   npm run dist-linux:x64      # Linux x64
    ```
 
 The built applications will be in the `dist/` directory:
@@ -289,6 +345,12 @@ The built applications will be in the `dist/` directory:
 - Windows: `Timetracker-Setup-{version}.exe`
 - macOS: `Timetracker-{version}.dmg`
 - Linux: `Timetracker_{version}.deb`
+
+**Note:** Cross-platform building (building for a different platform than your current OS) may require additional setup:
+- Windows → macOS/Linux: Requires Wine
+- macOS → Windows/Linux: Requires Wine (Windows builds only)
+- Linux → Windows: Requires Wine
+- Building macOS from non-macOS systems is not supported
 
 ## GitHub Actions (CI/CD)
 

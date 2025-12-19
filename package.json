@@ -18,18 +18,28 @@
     "build-renderer": "next build renderer",
     "build-electron": "tsc -p electron-src",
     "build": "npm run build-renderer && npm run build-electron",
-    "pack-app": "npm run build && electron-builder --dir",
-    "dist": "npm run build && electron-builder",
-    "dist-win": "npm run build && electron-builder --win",
-    "dist-macos": "npm run build && electron-builder  --macos",
-    "build-client": "run-script-os",
+    "pack-app": "npm run clean && npm run build && electron-builder --dir",
+    "dist": "npm run clean && npm run build && electron-builder",
+    "dist:all": "npm run clean && npm run build && electron-builder --win --mac --linux",
+    "dist-win": "npm run clean && npm run build && electron-builder --win",
+    "dist-macos": "npm run clean && npm run build && electron-builder --mac",
+    "dist-linux": "npm run clean && npm run build && electron-builder --linux",
+    "dist-win:x64": "npm run clean && npm run build && electron-builder --win --x64",
+    "dist-win:ia32": "npm run clean && npm run build && electron-builder --win --ia32",
+    "dist-win:arm64": "npm run clean && npm run build && electron-builder --win --arm64",
+    "dist-macos:x64": "npm run clean && npm run build && electron-builder --mac --x64",
+    "dist-macos:arm64": "npm run clean && npm run build && electron-builder --mac --arm64",
+    "dist-macos:universal": "npm run clean && npm run build && electron-builder --mac --universal",
+    "dist-linux:x64": "npm run clean && npm run build && electron-builder --linux --x64",
+    "dist-linux:arm64": "npm run clean && npm run build && electron-builder --linux --arm64",
+    "build-client": "node scripts/build-client.js",
     "build-client:win32": "electron-builder --win",
     "build-client:darwin": "npm list -g dmg-license || sudo npm i -g dmg-license && electron-builder --mac",
+    "build-client:linux": "electron-builder --linux",
     "type-check": "tsc -p ./renderer/tsconfig.json && tsc -p ./electron-src/tsconfig.json",
     "format": "prettier --write \"./renderer/src/**/*.{ts,tsx}\"",
     "lint": "eslint \"./renderer/src/**/*.{ts,tsx}\"",
-    "lint:fix": "eslint \"./renderer/src/**/*.{ts,tsx}\" --fix",
-    "prepare": "husky install"
+    "lint:fix": "eslint \"./renderer/src/**/*.{ts,tsx}\" --fix"
   },
   "lint-staged": {
     "./renderer/src/**/*.{ts,tsx}": [
@@ -50,7 +60,10 @@
     "asar": true,
     "files": [
       "main",
-      "renderer"
+      "renderer/out/**/*",
+      "!renderer/.next/**/*",
+      "!renderer/src/**/*",
+      "!renderer/node_modules/**/*"
     ],
     "directories": {
       "output": "dist",
@@ -125,7 +138,6 @@
     "prettier": "^3.7.4",
     "react-test-renderer": "^19.2.3",
     "rimraf": "^6.1.2",
-    "run-script-os": "^1.1.6",
     "tailwindcss": "^3.4.19",
     "ts-jest": "^29.4.6",
     "typescript": "^5.9.3",
