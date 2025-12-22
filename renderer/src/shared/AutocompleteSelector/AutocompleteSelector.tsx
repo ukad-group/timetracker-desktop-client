@@ -90,16 +90,15 @@ const AutocompleteSelector = ({
       newValue = newValue.slice(5);
     }
 
+    // TODO: uncomment if needed first item auto selection
     // In Headless UI v2, when clicking an option, onChange might receive the input value
     // instead of the option value. If the value matches the start of an option, select that option.
-    if (allItems && newValue && newValue !== selectedItem) {
-      const matchingOption = allItems.find((item) => item.toLowerCase().startsWith(newValue.toLowerCase()));
-      if (matchingOption && matchingOption !== newValue) {
-        // Only override if we have a clear match and it's different from the input
-        // This handles the case where clicking an option passes the input value
-        newValue = matchingOption;
-      }
-    }
+    // if (allItems && newValue && newValue !== selectedItem) {
+    //   const matchingOption = allItems.find((item) => item.toLowerCase().startsWith(newValue.toLowerCase()));
+    //   if (matchingOption && matchingOption !== newValue) {
+    //     newValue = matchingOption;
+    //   }
+    // }
 
     setSelectedItem(newValue);
     editingHistoryManager.setValue(newValue);
