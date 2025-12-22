@@ -4,6 +4,7 @@ import { shallow } from "zustand/shallow";
 import { useScheduledEventsStore } from "@/store/googleEventsStore";
 import { concatSortArrays } from "@/helpers/utils/utils";
 import useScreenSizes from "@/helpers/hooks/useScreenSizes";
+import { useClipboard } from "@/helpers/hooks/useClipboard";
 import { ActivitiesTableProps } from "./types";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import { SCREENS } from "@/constants";
@@ -73,41 +74,7 @@ const ActivitiesTable = ({
       : badgedActivities;
   }, [validatedActivities, events]);
 
-  const copyToClipboardHandle = (e: React.MouseEvent) => {
-    const cell = e.target as HTMLElement;
-    const originaValue = cell.textContent || "";
-    const cellColumnName = cell.getAttribute("data-column") || "";
-    let modifiedValue: string | number | undefined;
-
-    if (cellColumnName === "duration" || cellColumnName === "total") {
-      if (originaValue.includes("h")) {
-        modifiedValue = parseFloat(originaValue.slice(0, -1));
-      } else if (originaValue.includes("m")) {
-        const minutes = parseFloat(originaValue.slice(0, -1));
-        modifiedValue = Math.floor((minutes / 60) * 100) / 100;
-      }
-    }
-
-    navigator.clipboard
-      .writeText(modifiedValue !== undefined ? String(modifiedValue) : originaValue)
-      .then(() => {
-        const range = document.createRange();
-        range.selectNodeContents(cell);
-
-        const selection = window.getSelection();
-        if (selection) {
-          selection.removeAllRanges();
-          selection.addRange(range);
-
-          setTimeout(() => {
-            selection.removeAllRanges();
-          }, 100);
-        }
-      })
-      .catch((error) => {
-        console.error("Clipboard write error:", error);
-      });
-  };
+  const { copyToClipboardHandle } = useClipboard();
 
   const handleCopyActivity = (activity: ReportActivity) => {
     global.ipcRenderer.send(IPC_MAIN_CHANNELS.ANALYTICS_DATA, TRACK_ANALYTICS.COPY_REGISTRATION);

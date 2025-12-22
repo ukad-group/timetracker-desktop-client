@@ -7,12 +7,11 @@ import { formatDuration } from "@/helpers/utils/reports";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import { ActivitiesTableContext } from "../context";
 import { Hint } from "@/shared/Hint";
-import { useTutorialProgressStore } from "@/store/tutorialProgressStore";
-import { shallow } from "zustand/shallow";
 import { HINTS_GROUP_NAMES, HINTS_ALERTS } from "@/helpers/constants";
-import { changeHintConditions } from "@/helpers/utils/utils";
 import usePrevious from "@/helpers/hooks/usePrevious";
 import { ReportActivity } from "@/helpers/utils/types";
+import { useTutorialHints } from "@/helpers/hooks/useTutorialHints";
+import useScreenSizes from "@/helpers/hooks/useScreenSizes";
 
 const CompactViewTable = () => {
   const context = useContext(ActivitiesTableContext);
@@ -37,91 +36,22 @@ const CompactViewTable = () => {
   const calendarEventRef = useRef(null);
   const [dublicateIndex, setDublicateIndex] = useState(-1);
 
-  const [progress, setProgress] = useTutorialProgressStore((state) => [state.progress, state.setProgress], shallow);
-
-  useEffect(() => {
-    changeHintConditions(progress, setProgress, [
-      {
-        groupName: HINTS_GROUP_NAMES.SHORTCUTS_EDITING,
-        newConditions: [false, false],
-        existingConditions: [false, false],
-      },
-      {
-        groupName: HINTS_GROUP_NAMES.COPY_BUTTON,
-        newConditions: [true, false],
-        existingConditions: ["same", false],
-      },
-      {
-        groupName: HINTS_GROUP_NAMES.ONLINE_CALENDAR_EVENT,
-        newConditions: [false],
-        existingConditions: [false],
-      },
-    ]);
-  }, []);
-
+  const { screenSizes } = useScreenSizes();
   const prevTableActivities: ReportActivity[] = usePrevious(tableActivities) || [];
 
-  useEffect(() => {
-    const isNewActivity = tableActivities?.length - prevTableActivities?.length === 1;
-    if (
-      prevTableActivities &&
-      tableActivities &&
-      isNewActivity &&
-      progress[`${HINTS_GROUP_NAMES.COPY_BUTTON}Conditions`] &&
-      progress[`${HINTS_GROUP_NAMES.COPY_BUTTON}Conditions`].includes(false)
-    ) {
-      const description = tableActivities[tableActivities.length - 1].description;
-      tableActivities.forEach((item: ReportActivity, index: number) => {
-        if (index !== tableActivities.length - 1 && item.description === description) {
-          setDublicateIndex(index);
-          changeHintConditions(progress, setProgress, [
-            {
-              groupName: HINTS_GROUP_NAMES.COPY_BUTTON,
-              newConditions: [true, true],
-              existingConditions: ["same", true],
-            },
-          ]);
-          return;
-        }
-      });
-    }
-    changeHintConditions(progress, setProgress, [
-      {
-        groupName: HINTS_GROUP_NAMES.EDITING_BUTTON,
-        newConditions: [!isLoading],
-        existingConditions: [!isLoading],
-      },
-      {
-        groupName: HINTS_GROUP_NAMES.ONLINE_CALENDAR_EVENT,
-        newConditions: progress[HINTS_GROUP_NAMES.EDITING_BUTTON]
-          ? [progress[HINTS_GROUP_NAMES.EDITING_BUTTON][0] && !isLoading]
-          : [false],
-        existingConditions: progress[HINTS_GROUP_NAMES.EDITING_BUTTON]
-          ? [progress[HINTS_GROUP_NAMES.EDITING_BUTTON][0] && !isLoading]
-          : [false],
-      },
-    ]);
-  }, [tableActivities]);
+  const { progress, updateEditHint, updateCopyHint } = useTutorialHints(
+    tableActivities,
+    isLoading,
+    prevTableActivities,
+  );
 
   const handleEditClick = (activity: ReportActivity) => {
-    changeHintConditions(progress, setProgress, [
-      {
-        groupName: HINTS_GROUP_NAMES.SHORTCUTS_EDITING,
-        newConditions: [true, false],
-        existingConditions: [true, false],
-      },
-    ]);
+    updateEditHint();
     handleEditActivity(activity);
   };
 
   const handleCopyClick = (activity: ReportActivity) => {
-    changeHintConditions(progress, setProgress, [
-      {
-        groupName: HINTS_GROUP_NAMES.COPY_BUTTON,
-        newConditions: [false, false],
-        existingConditions: [false, false],
-      },
-    ]);
+    updateCopyHint();
     const lastActivity = activities[activities.length - 2];
     onEditActivity({
       ...activity,
