@@ -235,6 +235,8 @@ export function formatDurationAsDecimals(ms: number): string {
 export function addDurationToTime(fromTime: string, duration: string) {
   const [fromHours, fromMinutes] = fromTime.split(":").map(Number);
 
+  if (isNaN(fromHours) || isNaN(fromMinutes)) return "";
+
   let totalMinutes = fromHours * 60 + fromMinutes;
   try {
     if (duration.includes("m") || parseInt(duration) > 24) {
@@ -326,13 +328,16 @@ export function validation(activities: Array<ReportActivity>) {
         activities[i].validation.cell = "time";
         activities[i].validation.description = "Impossible time";
       }
+
       if (
         activities[i].project &&
         !activities[i].project.startsWith("!") &&
         !activities[i].activity &&
         !activities[i].description
       ) {
-        activities[i].mistakes += "No activity or description";
+        activities[i].validation.isValid = false;
+        activities[i].validation.cell = "activity";
+        activities[i].validation.description = "No activity or description";
       }
     }
 

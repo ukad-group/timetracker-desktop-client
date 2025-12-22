@@ -230,7 +230,7 @@ export function handleDashedDescription(
   activity: string,
   setActivity: Dispatch<SetStateAction<string>>,
 ) {
-  if (description.includes(" - ") && !activity) {
+  if (description && description.includes(" - ") && !activity) {
     setActivity(" ");
     return " ";
   }

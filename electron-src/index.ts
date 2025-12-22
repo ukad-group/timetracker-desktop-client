@@ -17,8 +17,8 @@ import {
   protocol,
   net,
 } from "electron";
-import url from "node:url";
 import { autoUpdater, UpdateInfo } from "electron-updater";
+import semver from "semver";
 import isDev from "electron-is-dev";
 import { createWindow } from "./helpers/create-window";
 import { parseReportsInfo, Activity } from "./helpers/parseReportsInfo";
@@ -73,7 +73,7 @@ let updateVersion = "";
 autoUpdater.autoDownload = false;
 autoUpdater.autoInstallOnAppQuit = true;
 
-ipcMain.on(IPC_MAIN_CHANNELS.BETA_CHANNEL, (event: any, isBeta: boolean) => {
+ipcMain.on(IPC_MAIN_CHANNELS.BETA_CHANNEL, (_event: any, isBeta: boolean) => {
   try {
     autoUpdater.allowPrerelease = isBeta;
     autoUpdater.checkForUpdates();
@@ -88,25 +88,7 @@ function setUpdateStatus(status: "available" | "downloaded", version: string) {
   updateVersion = version;
 }
 
-function isLaterVersion(currentVersion: string, updateVersion: string) {
-  const currentParts = currentVersion.split(".").map(Number);
-  const updateParts = updateVersion.split(".").map(Number);
-
-  for (let i = 0; i < Math.max(currentParts.length, updateParts.length); i++) {
-    const currentPart = currentParts[i] || 0;
-    const updatePart = updateParts[i] || 0;
-
-    if (currentPart > updatePart) {
-      return true;
-    }
-    if (currentPart < updatePart) {
-      return false;
-    }
-  }
-  return false;
-}
-
-autoUpdater.allowDowngrade = true;
+autoUpdater.allowDowngrade = false;
 autoUpdater.on("error", (e: Error, message?: string) => {
   mainWindow?.webContents.send(
     IPC_MAIN_CHANNELS.BACKEND_ERROR,
@@ -116,20 +98,23 @@ autoUpdater.on("error", (e: Error, message?: string) => {
 });
 
 ipcMain.on(IPC_MAIN_CHANNELS.GET_CURRENT_VERSION, () => {
-  mainWindow && mainWindow.webContents.send(IPC_MAIN_CHANNELS.CURRENT_VERSION, app.getVersion());
+  if (mainWindow) {
+    mainWindow.webContents.send(IPC_MAIN_CHANNELS.CURRENT_VERSION, app.getVersion())
+  }
 });
 
 autoUpdater.on("update-available", (info: UpdateInfo) => {
   setUpdateStatus("available", info.version);
 
-  const lowerCurrentVersion = app.getVersion().toLowerCase();
-  const lowerNewVersion = info.version.toLowerCase();
-  const shouldSkipDownloading =
-    isLaterVersion(lowerCurrentVersion, lowerNewVersion) &&
-    (!lowerCurrentVersion.includes("beta") ||
-      (lowerCurrentVersion.includes("beta") && lowerNewVersion.includes("beta")));
+  const currentVersion = app.getVersion();
+  const newVersion = info.version;
 
-  if (shouldSkipDownloading) {
+  // semver.compare(v1, v2):
+  // Return 0 if v1 == v2, or 1 if v1 is greater, or -1 if v2 is greater.
+  // We want to update only if newVersion > currentVersion
+  const isUpdate = semver.compare(newVersion, currentVersion) === 1;
+
+  if (!isUpdate) {
     return;
   }
 
@@ -162,7 +147,7 @@ ipcMain.on(IPC_MAIN_CHANNELS.REDIRECT, (_, link: string) => {
 });
 
 //defined the store
-let electronStore = new Store() as Store & {
+const electronStore = new Store() as Store & {
   get: (key: string) => unknown;
   set: (key: string, value: unknown) => void;
   delete: (key: string) => void;
@@ -174,7 +159,7 @@ ipcMain.on(IPC_MAIN_CHANNELS.GET_CURRENT_PORT, async (_) => {
 });
 
 ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, async (_, val) => {
-  var value = electronStore.get(val);
+  const value = electronStore.get(val);
   _.returnValue = value ? value : null;
 });
 
@@ -216,13 +201,13 @@ const gotTheLock = app.requestSingleInstanceLock();
 let server: Server<typeof IncomingMessage, typeof ServerResponse>;
 
 const getServerPort = () => {
-  let address = server?.address() as AddressInfo;
-  let serverPort = address?.port ? address.port : 0;
+  const address = server?.address() as AddressInfo;
+  const serverPort = address?.port ? address.port : 0;
   return serverPort;
 };
 
 const getServerAddress = () => {
-  var address =
+  const address =
     process.env.NEXT_PUBLIC_SERVER_ADDRESS?.replace(
       process.env.NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME || "",
       getServerPort().toString(),
@@ -335,8 +320,8 @@ app.on("ready", async () => {
     const parsedUrl = parse(req.url, true);
     requestHandler(req, res, parsedUrl);
   }).listen(0, "127.0.0.1", () => {
-    let address: AddressInfo | null | string = server.address();
-    let port = (address as AddressInfo).port;
+    const address: AddressInfo | null | string = server.address();
+    const port = (address as AddressInfo).port;
     process.env.NEXT_PUBLIC_PORT = `${port}`;
 
     console.log(`> Ready on http://localhost:${process.env.NEXT_PUBLIC_PORT}`);
@@ -345,8 +330,8 @@ app.on("ready", async () => {
   const restartServer = () => {
     server.close(() => {
       server.listen(0, "127.0.0.1", () => {
-        let address: AddressInfo | null | string = server.address();
-        let port = (address as AddressInfo).port;
+        const address: AddressInfo | null | string = server.address();
+        const port = (address as AddressInfo).port;
         process.env.NEXT_PUBLIC_PORT = `${port}`;
 
         console.log(`> Ready on http://127.0.0.1:${port}}`);
@@ -360,9 +345,9 @@ app.on("ready", async () => {
       const options: Electron.MessageBoxOptions = {
         type: "error",
         title: error.message,
-        message: `Can't start server at http://localhost:${getServerPort()}. To resolve the server error, follow these steps: 
+        message: `Can't start server at http://localhost:${getServerPort()}. To resolve the server error, follow these steps:
   1. Restart the application.
-  2. Check if port ${getServerPort()} is available. 
+  2. Check if port ${getServerPort()} is available.
   3. If the issue persists Reset Windows NAT:
       - Open Command Prompt as Administrator
       - Type "net stop winnat" and press Enter
@@ -524,7 +509,7 @@ app.on("ready", async () => {
 
               if (currentSelectedDate === selectedDate.toDateString()) {
                 readDataFromFile(timereportPath, (data: string | null) => {
-                  mainWindow && mainWindow.webContents.send(IPC_MAIN_CHANNELS.FILE_CHANGED, data);
+                  if (mainWindow) mainWindow.webContents.send(IPC_MAIN_CHANNELS.FILE_CHANGED, data);
                 });
               }
             });
@@ -727,7 +712,7 @@ ipcMain.handle(IPC_MAIN_CHANNELS.APP_DELETE_FILE, async (_, reportsFolder: strin
     await deleteFile(timereportPath);
 
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 });

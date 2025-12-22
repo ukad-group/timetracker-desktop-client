@@ -39,7 +39,7 @@ const AutocompleteSelector = ({
   );
 
   const fullSuggestionsList = useMemo(() => {
-    return selectedItem.trim() === "" ? filteredList : [selectedItem, ...filteredList];
+    return (selectedItem || "").trim() === "" ? filteredList : [selectedItem, ...filteredList];
   }, [selectedItem, filteredList]);
 
   const handleKey = (e) => {
@@ -86,7 +86,7 @@ const AutocompleteSelector = ({
   const handleOnChange = (value: string) => {
     let newValue = value;
 
-    if (value.startsWith("TT:: ") || value.startsWith("JI:: ")) {
+    if (value && (value.startsWith("TT:: ") || value.startsWith("JI:: "))) {
       newValue = newValue.slice(5);
     }
 
@@ -132,15 +132,14 @@ const AutocompleteSelector = ({
   return (
     <Combobox className={className} as="div" value={selectedItem} onChange={handleOnChange}>
       <Combobox.Label className="flex items-center gap-1 text-sm font-medium text-gray-700 dark:text-dark-main ">
-        {title}{" "}
+        {title}
         {title === "Activity" && (
-          <QuestionMarkCircleIcon
-            className="w-4 h-4 inline-block"
-            title="You can write whatever you want in the activity, or write nothing. Sometimes the project manager will provide information on when and how to fill this field."
-          />
+          <div title="You can write whatever you want in the activity, or write nothing. Sometimes the project manager will provide information on when and how to fill this field.">
+            <QuestionMarkCircleIcon className="cursor-help w-4 h-4 text-gray-400 dark:text-gray-500" />
+          </div>
         )}
         {isNew && (
-          <span className="text-center mb-1 w-fit text-xs px-1.5 py-0.5 rounded-full bg-green-100 text-green-800 dark:text-green-400 dark:bg-green-400/20 ">
+          <span className="text-center w-fit text-xs px-1.5 py-0.5 rounded-full bg-green-100 text-green-800 dark:text-green-400 dark:bg-green-400/20 ">
             New
           </span>
         )}

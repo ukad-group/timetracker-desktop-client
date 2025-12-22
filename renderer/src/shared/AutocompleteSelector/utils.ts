@@ -22,7 +22,7 @@ export const filterList = ({ selectedItem, availableItems, additionalItems, show
             if (
               !duplicate &&
               current.toLowerCase().includes((selectedItem || "").toLowerCase()) &&
-              current.toLowerCase() !== selectedItem.toLowerCase()
+              current.toLowerCase() !== (selectedItem || "").toLowerCase()
             ) {
               accumulator.push(current);
             }
