@@ -167,7 +167,7 @@ export function addSuggestions(
       for (let i = 0; i < webTrackerProjects.length; i++) {
         if (!tempLatestProj.includes(webTrackerProjects[i])) {
           tempWebTrackerProjects.push(webTrackerProjects[i]);
-          global.ipcRenderer.send(IPC_MAIN_CHANNELS.DICTIONATY_UPDATE, webTrackerProjects[i]);
+          global.ipcRenderer.send(IPC_MAIN_CHANNELS.DICTIONARY_UPDATE, webTrackerProjects[i]);
         }
       }
       setUniqueWebTrackerProjects(tempWebTrackerProjects);

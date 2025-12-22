@@ -1,7 +1,7 @@
 import React from "react";
 import { render } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import TimetrackerWebsiteConnection from "../TimetrackerWebsiteConncetion";
+import TimetrackerWebsiteConnection from "../TimetrackerWebsiteConnection";
 import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";
 
 jest.mock("next/router", () => ({

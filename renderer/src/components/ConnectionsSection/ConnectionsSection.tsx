@@ -2,7 +2,7 @@ import { TrelloConnection } from "../TrelloConnection";
 import { GoogleConnection } from "../GoogleConnection";
 import { Office365Connection } from "../Office365Connection";
 import { JiraConnection } from "../JiraConnection";
-import { TimetrackerWebsiteConnection } from "../TimetrackerWebsiteConncetion";
+import { TimetrackerWebsiteConnection } from "../TimetrackerWebsiteConnection";
 
 const ConnectionsSection = () => (
   <section className="h-full">

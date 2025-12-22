@@ -5,7 +5,7 @@ export const IPC_MAIN_CHANNELS = {
   GET_CURRENT_VERSION: "get-current-version",
   INSTALL_VERSION: "install-version",
   FRONTEND_ERROR: "front-error",
-  DICTIONATY_UPDATE: "dictionaty-update",
+  DICTIONARY_UPDATE: "dictionary-update",
   START_FILE_WATCHER: "start-file-watcher",
   START_FOLDER_WATCHER: "start-folder-watcher",
   CHECK_DROPBOX_CONNECTION: "check-dropbox-connection",
