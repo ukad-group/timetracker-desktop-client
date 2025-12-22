@@ -10,3 +10,5 @@ out
 /coverage/
 *.env
 *.tsbuildinfo
+
+repomix-output.xml
