@@ -59,6 +59,7 @@ import {
 import { IPC_MAIN_CHANNELS } from "./helpers/constants";
 import { getGoogleAuthUrl } from "./helpers/API/googleApi";
 import Store from "electron-store";
+import serveHandler from "serve-handler";
 
 initialize("A-EU-9361517871");
 ipcMain.on(IPC_MAIN_CHANNELS.ANALYTICS_DATA, (_, analyticsEvent: string, data?: Record<string, string>) => {
@@ -297,6 +298,7 @@ app.on("ready", async () => {
     dev: isDev,
     dir: app.getAppPath() + "/renderer",
   });
+  const requestHandler = nextApp.getRequestHandler();
 
   app.on("browser-window-focus", () => {
     globalShortcut.register("CommandOrControl+Q", () => {
@@ -312,13 +314,19 @@ app.on("ready", async () => {
     globalShortcut.unregisterAll();
   });
 
-  const requestHandler = nextApp.getRequestHandler();
+  if (isDev) {
+    await nextApp.prepare();
+  }
 
-  await nextApp.prepare();
-
-  server = createServer((req: any, res: any) => {
-    const parsedUrl = parse(req.url, true);
-    requestHandler(req, res, parsedUrl);
+  server = createServer(async (req: any, res: any) => {
+    if (isDev) {
+      const parsedUrl = parse(req.url, true);
+      requestHandler(req, res, parsedUrl);
+    } else {
+      await serveHandler(req, res, {
+        public: path.join(app.getAppPath(), "renderer/out"),
+      });
+    }
   }).listen(0, "127.0.0.1", () => {
     const address: AddressInfo | null | string = server.address();
     const port = (address as AddressInfo).port;
