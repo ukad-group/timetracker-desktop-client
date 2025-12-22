@@ -13,7 +13,7 @@ const TrelloConnection = () => {
   );
 
   const handleSignInButton = async () => {
-    const online = isOnline();
+    const online = await isOnline();
 
     if (online) {
       global.ipcRenderer.send(IPC_MAIN_CHANNELS.OPEN_CHILD_WINDOW, "trello");
