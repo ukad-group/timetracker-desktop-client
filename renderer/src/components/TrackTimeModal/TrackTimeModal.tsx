@@ -1,26 +1,15 @@
 import clsx from "clsx";
-import { FormEvent, useEffect, useMemo, useState, useRef } from "react";
-import { useTimeInput } from "@/helpers/hooks";
-import { calcDurationBetweenTimes, formatDurationAsDecimals, addDurationToTime } from "@/helpers/utils/reports";
+import { FormEvent, useEffect, useState, useRef } from "react";
+import { useTrackTimeForm } from "@/helpers/hooks/useTrackTimeForm";
 import { AutocompleteSelector } from "@/shared/AutocompleteSelector";
 import { shallow } from "zustand/shallow";
 import { useTutorialProgressStore } from "@/store/tutorialProgressStore";
 import { useScheduledEventsStore } from "@/store/googleEventsStore";
-import { getJiraCardsFromAPI } from "@/helpers/utils/jira";
-import { getAllTrelloCardsFromApi } from "@/helpers/utils/trello";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import { TrackTimeModalProps } from "./types";
 import { Modal } from "@/shared/Modal";
 import { TextField } from "@/shared/TextField";
-import {
-  getTimetrackerYearProjects,
-  addSuggestions,
-  setTimeOnOpen,
-  handleDashedDescription,
-  saveSheduledEvents,
-  handleKey,
-  addNewActivity,
-} from "./utils";
+import { handleDashedDescription, saveSheduledEvents, handleKey } from "./utils";
 import { Hint } from "@/shared/Hint";
 import { HINTS_GROUP_NAMES, HINTS_ALERTS } from "@/helpers/constants";
 import { SCREENS } from "@/constants";
@@ -38,88 +27,54 @@ const TrackTimeModal = ({
   submitActivity,
   selectedDate,
 }: TrackTimeModalProps) => {
-  const [from, onFromChange, onFromBlur, setFrom] = useTimeInput();
-  const [to, onToChange, onToBlur, setTo] = useTimeInput();
-  const [formattedDuration, setFormattedDuration] = useState("");
-  const [project, setProject] = useState("");
-  const [activity, setActivity] = useState("");
-  const [description, setDescription] = useState("");
-  const [isTypingFromDuration, setIsTypingFromDuration] = useState(false);
-  const [isValidationEnabled, setIsValidationEnabled] = useState(false);
-  const [userTrelloTasks, setUserTrelloTasks] = useState([]);
-  const [otherTrelloTasks, setOtherTrelloTasks] = useState([]);
-  const [userJiraTasks, setUserJiraTasks] = useState([]);
-  const [otherJiraTasks, setOtherJiraTasks] = useState([]);
   const [progress, setProgress] = useTutorialProgressStore((state) => [state.progress, state.setProgress], shallow);
   const [scheduledEvents, setScheduledEvents] = useScheduledEventsStore(
     (state) => [state.event, state.setEvent],
     shallow,
   );
-  const [latestProjects, setLatestProjects] = useState([]);
-  const [webTrackerProjects, setWebTrackerProjects] = useState([]);
-  const [uniqueWebTrackerProjects, setUniqueWebTrackerProjects] = useState([]);
   const { screenSizes } = useScreenSizes();
   const timeInputRef = useRef(null);
   const textInputRef = useRef(null);
 
-  const duration = useMemo(() => {
-    if (!from.includes(":") || !to.includes(":")) return null;
-
-    return calcDurationBetweenTimes(from, to);
-  }, [from, to]);
-
-  const isFormInvalid = useMemo(() => {
-    return !from || !to || !duration || duration < 0 || !project || to.length < 5 || from.length < 5;
-  }, [from, to, duration, project]);
-
-  const thirdPartyItems = useMemo(() => {
-    return [...userTrelloTasks, ...userJiraTasks, ...otherTrelloTasks, ...otherJiraTasks];
-  }, [userTrelloTasks, otherTrelloTasks, userJiraTasks, otherJiraTasks]);
-
-  useEffect(() => {
-    addNewActivity(
-      progress,
-      setProgress,
-      editedActivity,
-      activities,
-      setFrom,
-      setTo,
-      setFormattedDuration,
-      setProject,
-      setActivity,
-      setDescription,
-      resetModal,
-    );
-  }, [editedActivity]);
-
-  useEffect(() => {
-    if (editedActivity !== "new") {
-      return;
-    }
-    setTimeOnOpen(activities, selectedDate, setFrom, setTo);
-  }, [isOpen]);
-
-  useEffect(() => {
-    addSuggestions(
-      activities,
-      latestProjAndDesc,
-      latestProjAndAct,
-      webTrackerProjects,
-      setUniqueWebTrackerProjects,
-      setLatestProjects,
-    );
-  }, [isOpen, latestProjAndDesc, latestProjAndAct, webTrackerProjects]);
+  const {
+    from,
+    setFrom,
+    onFromChange,
+    onFromBlur,
+    to,
+    setTo,
+    onToChange,
+    onToBlur,
+    formattedDuration,
+    setFormattedDuration,
+    handleDurationChange,
+    handleDurationBlur,
+    project,
+    setProject,
+    activity,
+    setActivity,
+    description,
+    setDescription,
+    isValidationEnabled,
+    setIsValidationEnabled,
+    uniqueWebTrackerProjects,
+    latestProjects,
+    thirdPartyItems,
+    isFormInvalid,
+    duration,
+    resetModal,
+  } = useTrackTimeForm(
+    isOpen,
+    editedActivity,
+    activities,
+    selectedDate,
+    latestProjAndDesc,
+    latestProjAndAct,
+    progress,
+    setProgress,
+  );
 
   useEffect(() => {
-    if (duration === null || isTypingFromDuration) return;
-
-    setFormattedDuration(formatDurationAsDecimals(duration));
-  }, [from, to]);
-
-  useEffect(() => {
-    getBoardTasks();
-    getTimetrackerYearProjects(setWebTrackerProjects);
-
     document.addEventListener("keyup", handleCloseModal);
 
     return () => {
@@ -130,16 +85,6 @@ const TrackTimeModal = ({
   useEffect(() => {
     setProgress(progress);
   }, [screenSizes]);
-
-  const getBoardTasks = async () => {
-    const allTrelloCards = await getAllTrelloCardsFromApi();
-    setUserTrelloTasks(allTrelloCards[0]);
-    setOtherTrelloTasks(allTrelloCards[1]);
-
-    const allJiraCards = await getJiraCardsFromAPI();
-    setUserJiraTasks(allJiraCards[0]);
-    setOtherJiraTasks(allJiraCards[1]);
-  };
 
   const onSave = (e: FormEvent | MouseEvent) => {
     e.preventDefault();
@@ -178,34 +123,8 @@ const TrackTimeModal = ({
     close();
   };
 
-  const resetModal = () => {
-    setFrom("");
-    setTo("");
-    setFormattedDuration("");
-    setProject("");
-    setActivity("");
-    setDescription("");
-    setIsValidationEnabled(false);
-  };
-
   const disableTextDrag = (e: React.MouseEvent<HTMLInputElement>) => {
     e.preventDefault();
-  };
-
-  const onDurationChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-    const value = e.target.value;
-    const formatDurationRegex = /^-?(\d*\.?\d*)?[hm]?$|^-?[hm](?![hm.])$/i;
-
-    if (formatDurationRegex.test(value)) {
-      setIsTypingFromDuration(true);
-      setFormattedDuration(value);
-      setTo(addDurationToTime(from, value));
-    }
-  };
-
-  const onDurationBlur = () => {
-    setIsTypingFromDuration(false);
-    setFormattedDuration(formatDurationAsDecimals(duration));
   };
 
   const selectText = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -290,8 +209,8 @@ const TrackTimeModal = ({
             id="duration"
             label="Duration"
             onKeyDown={(event) => handleKey(event)}
-            onChange={onDurationChange}
-            onBlur={onDurationBlur}
+            onChange={handleDurationChange}
+            onBlur={handleDurationBlur}
             onFocus={selectText}
             value={formattedDuration}
             tabIndex={3}

@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { DateSelector } from "@/components/DateSelector";
+import { useReportManagement } from "@/helpers/hooks/useReportManagement";
 import { ManualInputForm } from "@/components/ManualInputForm";
 import { Calendar } from "@/components/Calendar/Calendar";
 import { Totals } from "@/components/Totals";
@@ -38,13 +39,18 @@ const MainPage = ({
   const [isDropboxConnected, setIsDropboxConnected] = useState(true);
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [reportAndNotes, setReportAndNotes] = useState<any[] | ReportAndNotes>([]);
-  const [selectedDateReport, setSelectedDateReport] = useState<null | string>(null);
   const [saveReportTrigger, setSaveReportTrigger] = useState(false);
-  const [isFileExist, setIsFileExist] = useState(false);
-  const [reportsFolder, mainStoreLoaded] = useMainStore(
-    (state) => [state.reportsFolder, state.mainStoreLoaded],
-    shallow,
-  );
+
+  const {
+    reportsFolder,
+    mainStoreLoaded,
+    selectedDateReport,
+    setSelectedDateReport,
+    isFileExist,
+    setIsFileExist,
+    saveSerializedReport,
+  } = useReportManagement(selectedDate);
+
   const [isBeta, betaUpdateStoreLoaded] = useBetaStore((state) => [state.isBeta, state.betaUpdateStoreLoaded], shallow);
   const [progress, setProgress] = useTutorialProgressStore((state) => [state.progress, state.setProgress], shallow);
   const storedSectionsOptions = JSON.parse(
@@ -52,15 +58,6 @@ const MainPage = ({
   );
   const mainPageRef = useRef(null);
   const isToday = checkIsToday(selectedDate);
-
-  useEffect(() => {
-    if (mainStoreLoaded) {
-      global.ipcRenderer.send(IPC_MAIN_CHANNELS.START_FOLDER_WATCHER, reportsFolder);
-    }
-    return () => {
-      global.ipcRenderer.send(IPC_MAIN_CHANNELS.STOP_PATH_WATCHER, reportsFolder);
-    };
-  }, [reportsFolder, mainStoreLoaded]);
 
   useEffect(() => {
     if (betaUpdateStoreLoaded) {
@@ -128,39 +125,6 @@ const MainPage = ({
     setSelectedDateActivities([]);
   }, [selectedDateReport]);
 
-  useEffect(() => {
-    readDayReport();
-
-    global.ipcRenderer.send(IPC_MAIN_CHANNELS.START_FILE_WATCHER, reportsFolder, selectedDate);
-    global.ipcRenderer.on(IPC_MAIN_CHANNELS.FILE_CHANGED, (event, data) => {
-      if (selectedDateReport != data) {
-        setSelectedDateReport(data || "");
-      }
-    });
-
-    return () => {
-      global.ipcRenderer.removeAllListeners(IPC_MAIN_CHANNELS.FILE_CHANGED);
-      global.ipcRenderer.send(IPC_MAIN_CHANNELS.STOP_PATH_WATCHER, reportsFolder, selectedDate);
-    };
-  }, [selectedDate, reportsFolder]);
-
-  const readDayReport = async () => {
-    try {
-      const dayReport = await global.ipcRenderer.invoke(
-        IPC_MAIN_CHANNELS.APP_READ_DAY_REPORT,
-        reportsFolder,
-        selectedDate,
-      );
-
-      setIsFileExist(dayReport !== null);
-      setSelectedDateReport(dayReport || "");
-    } catch (error) {
-      console.error("Failed to read day report:", error);
-      setIsFileExist(false);
-      setSelectedDateReport("");
-    }
-  };
-
   const handleSave = (
     report: string | ((prev: string) => string),
     shouldAutosave: boolean | ((prev: boolean) => boolean),
@@ -168,13 +132,6 @@ const MainPage = ({
     const reportValue = typeof report === "string" ? report : report(selectedDateReport || "");
     setSelectedDateReport(reportValue);
     setShouldAutosave(shouldAutosave);
-  };
-
-  const saveSerializedReport = (serializedReport: string) => {
-    global.ipcRenderer.send(IPC_MAIN_CHANNELS.CHECK_DROPBOX_CONNECTION);
-    global.ipcRenderer.invoke(IPC_MAIN_CHANNELS.APP_WRITE_DAY_REPORT, reportsFolder, selectedDate, serializedReport);
-
-    setSelectedDateReport(serializedReport);
   };
 
   const handleWindowFocus = () => {
