@@ -57,8 +57,6 @@ app.on("ready", async () => {
   }
 
   server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
-    console.log("req", req);
-    console.log("res", res);
     if (isDev) {
       const parsedUrl = parse(req.url, true);
       requestHandler(req, res, parsedUrl);
