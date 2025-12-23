@@ -1,7 +1,6 @@
 import clsx from "clsx";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
-import { Disclosure } from "@headlessui/react";
-import React from "react";
+import { Disclosure, DisclosureButton, DisclosurePanel } from "@headlessui/react";
 import { DisclosureSectionProps } from "./types";
 
 const DisclosureSection = (props: DisclosureSectionProps) => {
@@ -18,7 +17,7 @@ const DisclosureSection = (props: DisclosureSectionProps) => {
               },
             )}
           >
-            <Disclosure.Button className=" w-full" onClick={props.toggleFunction}>
+            <DisclosureButton className=" w-full" onClick={props.toggleFunction}>
               <div className="flex justify-between cursor-pointer">
                 <h2 className="text-lg font-medium text-gray-900 dark:text-dark-heading">{props.title}</h2>
                 <ChevronDownIcon
@@ -31,8 +30,8 @@ const DisclosureSection = (props: DisclosureSectionProps) => {
                   aria-hidden="true"
                 />
               </div>
-            </Disclosure.Button>
-            <Disclosure.Panel static>{props.children}</Disclosure.Panel>
+            </DisclosureButton>
+            <DisclosurePanel static>{props.children}</DisclosurePanel>
           </div>
         )}
       </Disclosure>

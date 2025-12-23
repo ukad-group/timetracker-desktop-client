@@ -8,7 +8,6 @@
       "name": "Nextron: Main",
       "type": "node",
       "request": "attach",
-      "protocol": "inspector",
       "port": 9292,
       "skipFiles": ["<node_internals>/**"],
       "sourceMapPathOverrides": {

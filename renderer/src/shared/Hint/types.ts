@@ -25,7 +25,7 @@ export type HintProps = {
   order: number;
   groupName: string;
   children: ReactNode;
-  referenceRef: RefObject<HTMLDivElement>;
+  referenceRef: RefObject<HTMLTextAreaElement>;
   shiftY: number;
   shiftX: number;
   width: "small" | "medium" | "large";

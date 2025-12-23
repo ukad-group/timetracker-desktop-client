@@ -7,7 +7,7 @@ import { KEY_CODES } from "@/helpers/constants";
 
 export const positioning = (
   learnHint: () => void,
-  referenceRef: RefObject<HTMLDivElement>,
+  referenceRef: RefObject<HTMLTextAreaElement>,
   floatingRef: RefObject<HTMLDivElement>,
   SVGRef: RefObject<SVGSVGElement>,
   learningMethod: "buttonClick" | "nextClick" | "ctrlArrowNumberPress",
