@@ -49,7 +49,7 @@ class WindowManager {
 
         this.mainWindow.webContents.session.setSpellCheckerLanguages(["en-US"]);
 
-        this.mainWindow.webContents.on("will-navigate", function (event, newUrl) {
+        this.mainWindow.webContents.on("will-navigate", (_event, newUrl) => {
             console.log("will-navigate", newUrl);
         });
 
