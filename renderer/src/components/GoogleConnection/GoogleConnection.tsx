@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/shared/Button";
 import { getGoogleCredentials, getGoogleUserInfo } from "@/API/googleCalendarAPI";
-import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/solid";
+import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/solid";
 import { GoogleCredentails, GoogleUser } from "./types";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import { LOCAL_STORAGE_VARIABLES } from "@/helpers/constants";
@@ -175,7 +175,7 @@ const GoogleConnection = () => {
                   onClick={() => handleSignOut(user.accountId)}
                   className="cursor-pointer bg-gray-400 hover:bg-gray-500 transition duration-300 inline-flex gap-2 px-2.5 py-0.5 rounded-full text-xs font-medium text-white dark:text-dark-heading dark:bg-dark-button-back-gray dark:hover:bg-dark-button-gray-hover"
                 >
-                  <ArrowRightOnRectangleIcon className="w-4 h-4 fill-white dark:fill-dark-heading" />
+                  <ArrowRightStartOnRectangleIcon className="w-4 h-4 fill-white dark:fill-dark-heading" />
                   Sign Out
                 </div>
               </div>

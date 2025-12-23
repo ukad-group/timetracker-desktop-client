@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/solid";
+import { useEffect, useState } from "react";
+import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/solid";
 import { Button } from "@/shared/Button";
 import { JiraUser } from "@/helpers/utils/jira";
 import { FlagIcon } from "@heroicons/react/24/outline";
@@ -117,7 +117,7 @@ const JiraConnection = () => {
                   onClick={() => handleSignOutButton(user.userId)}
                   className="cursor-pointer bg-gray-400 hover:bg-gray-500 transition duration-300 inline-flex gap-2 px-2.5 py-0.5 rounded-full text-xs font-medium text-white dark:text-dark-heading dark:bg-dark-button-back-gray dark:hover:bg-dark-button-gray-hover"
                 >
-                  <ArrowRightOnRectangleIcon className="w-4 h-4 fill-white dark:fill-dark-heading" />
+                  <ArrowRightStartOnRectangleIcon className="w-4 h-4 fill-white dark:fill-dark-heading" />
                   Sign Out
                 </div>
               </div>
