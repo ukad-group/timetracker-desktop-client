@@ -1,7 +1,7 @@
-import { MutableRefObject } from "react";
+import { RefObject } from "react";
 
 export type TextFieldProps = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & {
   id: string;
   label: string;
-  reference?: MutableRefObject<any>;
+  reference?: RefObject<HTMLInputElement>;
 };

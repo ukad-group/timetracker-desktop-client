@@ -1,4 +1,4 @@
-import { BrowserWindow, Tray, Menu, app, shell, MenuItem, ipcMain } from "electron";
+import { BrowserWindow, Tray, Menu, app, MenuItem } from "electron";
 import { createWindow } from "../helpers/create-window";
 import path from "path";
 import isDev from "electron-is-dev";
@@ -42,7 +42,7 @@ class WindowManager {
         }
 
         if (process.platform === "darwin") {
-            app.on("before-quit", (e) => {
+            app.on("before-quit", () => {
                 app.exit();
             });
         }
@@ -148,7 +148,7 @@ class WindowManager {
         this.tray = null;
     }
 
-    send(channel: string, ...args: any[]) {
+    send(channel: string, ...args: unknown[]) {
         this.mainWindow?.webContents.send(channel, ...args);
     }
 

@@ -1,4 +1,4 @@
-import { ReactNode, MutableRefObject } from "react";
+import { ReactNode, RefObject } from "react";
 
 export type Position =
   | {
@@ -25,7 +25,7 @@ export type HintProps = {
   order: number;
   groupName: string;
   children: ReactNode;
-  referenceRef: MutableRefObject<any>;
+  referenceRef: RefObject<HTMLDivElement>;
   shiftY: number;
   shiftX: number;
   width: "small" | "medium" | "large";

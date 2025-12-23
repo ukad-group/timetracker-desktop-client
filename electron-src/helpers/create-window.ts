@@ -4,8 +4,7 @@ import { join } from "path";
 export function createWindow(
   options: BrowserWindowConstructorOptions
 ): BrowserWindow {
-  let state = {};
-  let win;
+  const state = {};
 
   const browserOptions: BrowserWindowConstructorOptions = {
     ...state,
@@ -19,7 +18,7 @@ export function createWindow(
     minWidth: 360,
     minHeight: 600,
   };
-  win = new BrowserWindow(browserOptions);
+  const win = new BrowserWindow(browserOptions);
 
   return win;
 }

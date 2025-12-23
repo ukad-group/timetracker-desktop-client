@@ -1,14 +1,14 @@
 import { Fragment } from "react";
-import { Dialog, Transition } from "@headlessui/react";
+import { Dialog, DialogTitle, TransitionChild, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { Button } from "@/shared/Button";
 import { ModalProps } from "./types";
 
 const Modal = ({ isOpen, children, onSubmit, title, onClose }: ModalProps) => (
-  <Transition.Root appear={true} show={isOpen} as={Fragment}>
+  <Transition appear={true} show={isOpen} as={Fragment}>
     <Dialog as="div" className="fixed inset-0 z-10 overflow-y-auto" onClose={() => null}>
       <div className="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <Transition.Child
+        <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
           enterFrom="opacity-0"
@@ -18,11 +18,11 @@ const Modal = ({ isOpen, children, onSubmit, title, onClose }: ModalProps) => (
           leaveTo="opacity-0"
         >
           <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 dark:bg-gray-900/80" />
-        </Transition.Child>
+        </TransitionChild>
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
           &#8203;
         </span>
-        <Transition.Child
+        <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
           enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
@@ -47,9 +47,9 @@ const Modal = ({ isOpen, children, onSubmit, title, onClose }: ModalProps) => (
               </button>
             </div>
             <div className="mt-3 space-y-6 text-center sm:mt-0 sm:text-left">
-              <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 dark:text-dark-heading">
+              <DialogTitle as="h3" className="text-lg font-medium leading-6 text-gray-900 dark:text-dark-heading">
                 {title}
-              </Dialog.Title>
+              </DialogTitle>
               {children}
             </div>
             <div className="mt-6 flex justify-end">
@@ -61,10 +61,10 @@ const Modal = ({ isOpen, children, onSubmit, title, onClose }: ModalProps) => (
               </div>
             </div>
           </form>
-        </Transition.Child>
+        </TransitionChild>
       </div>
     </Dialog>
-  </Transition.Root>
+  </Transition>
 );
 
 export default Modal;

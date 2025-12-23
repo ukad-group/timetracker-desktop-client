@@ -1,12 +1,12 @@
-import { MutableRefObject } from "react";
+import { RefObject } from "react";
 import { Position } from "./types";
 import { PLACEMENTS } from "./constants";
 
 export const positioningTop = (
   position: Position,
-  floatingRef: MutableRefObject<any>,
-  SVGRef: MutableRefObject<any>,
-  TriangleRef: MutableRefObject<any>,
+  floatingRef: RefObject<HTMLDivElement>,
+  SVGRef: RefObject<SVGSVGElement>,
+  TriangleRef: RefObject<HTMLDivElement>,
   shiftY: number,
   shiftX: number,
   y: number,
@@ -39,8 +39,8 @@ export const positioningTop = (
 
     TriangleRef.current.setAttribute(
       "points",
-      `${0}, ${hintHeight - 10} 
-                ${5}, ${hintHeight} 
+      `${0}, ${hintHeight - 10}
+                ${5}, ${hintHeight}
                 ${10},  ${hintHeight - 10} `,
     );
 
@@ -60,8 +60,8 @@ export const positioningTop = (
 
     TriangleRef.current.setAttribute(
       "points",
-      `${shiftX + hintWidth / 2 - 5}, ${hintHeight - 10} 
-                ${shiftX + hintWidth / 2}, ${hintHeight} 
+      `${shiftX + hintWidth / 2 - 5}, ${hintHeight - 10}
+                ${shiftX + hintWidth / 2}, ${hintHeight}
                 ${shiftX + hintWidth / 2 + 5},  ${hintHeight - 10} `,
     );
 
@@ -76,9 +76,9 @@ export const positioningTop = (
 
 export const positioningRight = (
   position: Position,
-  floatingRef: MutableRefObject<any>,
-  SVGRef: MutableRefObject<any>,
-  TriangleRef: MutableRefObject<any>,
+  floatingRef: RefObject<HTMLDivElement>,
+  SVGRef: RefObject<SVGSVGElement>,
+  TriangleRef: RefObject<HTMLDivElement>,
   shiftY: number,
   shiftX: number,
   y: number,
@@ -108,8 +108,8 @@ export const positioningRight = (
 
   TriangleRef.current.setAttribute(
     "points",
-    `${10}, ${hintHeight / 2 + shiftY - 5} 
-              ${0}, ${hintHeight / 2 + shiftY} 
+    `${10}, ${hintHeight / 2 + shiftY - 5}
+              ${0}, ${hintHeight / 2 + shiftY}
               ${10},  ${hintHeight / 2 + shiftY + 5} `,
   );
 
@@ -133,9 +133,9 @@ export const positioningRight = (
 
 export const positioningBottom = (
   position: Position,
-  floatingRef: MutableRefObject<any>,
-  SVGRef: MutableRefObject<any>,
-  TriangleRef: MutableRefObject<any>,
+  floatingRef: RefObject<HTMLDivElement>,
+  SVGRef: RefObject<SVGSVGElement>,
+  TriangleRef: RefObject<HTMLDivElement>,
   shiftY: number,
   shiftX: number,
   y: number,
@@ -168,8 +168,8 @@ export const positioningBottom = (
 
     TriangleRef.current.setAttribute(
       "points",
-      `${0}, ${10} 
-                  ${5}, ${0} 
+      `${0}, ${10}
+                  ${5}, ${0}
                   ${10},  ${10} `,
     );
 
@@ -188,8 +188,8 @@ export const positioningBottom = (
 
     TriangleRef.current.setAttribute(
       "points",
-      `${hintWidth / 2 + shiftX - 5}, ${10} 
-                  ${hintWidth / 2 + shiftX}, ${0} 
+      `${hintWidth / 2 + shiftX - 5}, ${10}
+                  ${hintWidth / 2 + shiftX}, ${0}
                   ${hintWidth / 2 + shiftX + 5},  ${10} `,
     );
 
@@ -204,9 +204,9 @@ export const positioningBottom = (
 
 export const positioningLeft = (
   position: Position,
-  floatingRef: MutableRefObject<any>,
-  SVGRef: MutableRefObject<any>,
-  TriangleRef: MutableRefObject<any>,
+  floatingRef: RefObject<HTMLDivElement>,
+  SVGRef: RefObject<SVGSVGElement>,
+  TriangleRef: RefObject<HTMLDivElement>,
   shiftY: number,
   shiftX: number,
   y: number,
@@ -237,8 +237,8 @@ export const positioningLeft = (
 
   TriangleRef.current.setAttribute(
     "points",
-    `${hintWidth + shiftX - 10}, ${hintHeight / 2 + shiftY - 5} 
-              ${hintWidth + shiftX}, ${hintHeight / 2 + shiftY} 
+    `${hintWidth + shiftX - 10}, ${hintHeight / 2 + shiftY - 5}
+              ${hintWidth + shiftX}, ${hintHeight / 2 + shiftY}
               ${hintWidth + shiftX - 10},  ${hintHeight / 2 + shiftY + 5} `,
   );
 

@@ -5,8 +5,6 @@ import {
   getDateFromString,
   getMonthWorkHours,
   getRequiredHours,
-  extractDatesFromPeriod,
-  generateDateRange,
   getTimeFromEventObj,
   padStringToMinutes,
   convertMillisecondsToTime,

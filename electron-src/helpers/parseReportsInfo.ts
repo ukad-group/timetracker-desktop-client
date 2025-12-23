@@ -17,7 +17,7 @@ export function parseReportsInfo(
     hr: [],
   };
 
-  let currentDate = new Date(date);
+  const currentDate = new Date(date);
 
   for (let i = 0; i < 31; i++) {
     currentDate.setDate(currentDate.getDate() - 1);
@@ -37,7 +37,7 @@ export function parseReportsInfo(
 
         if (!project || project?.startsWith("!")) continue;
 
-        if (!parsedProjects.hasOwnProperty(project) && parts.length === 2) {
+        if (!Object.prototype.hasOwnProperty.call(parsedProjects, project) && parts.length === 2) {
           parsedProjects[project] = [
             {
               activity: "",
@@ -48,7 +48,7 @@ export function parseReportsInfo(
           continue;
         }
 
-        if (!parsedProjects.hasOwnProperty(project) && parts.length === 3) {
+        if (!Object.prototype.hasOwnProperty.call(parsedProjects, project) && parts.length === 3) {
           parsedProjects[project] = [
             {
               activity: "",
@@ -58,7 +58,7 @@ export function parseReportsInfo(
           ];
           continue;
         }
-        if (!parsedProjects.hasOwnProperty(project) && parts.length === 4) {
+        if (!Object.prototype.hasOwnProperty.call(parsedProjects, project) && parts.length === 4) {
           parsedProjects[project] = [
             {
               activity: activity,
@@ -84,7 +84,7 @@ export function parseReportsInfo(
 
         parsedProjects[project].push(newActivity);
       }
-    } catch (e) {
+    } catch {
       continue;
     }
   }

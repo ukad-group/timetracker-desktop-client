@@ -56,7 +56,9 @@ app.on("ready", async () => {
     await nextApp.prepare();
   }
 
-  server = createServer(async (req: any, res: any) => {
+  server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
+    console.log("req", req);
+    console.log("res", res);
     if (isDev) {
       const parsedUrl = parse(req.url, true);
       requestHandler(req, res, parsedUrl);
@@ -87,7 +89,7 @@ app.on("ready", async () => {
     }
   });
 
-  server.on("error", function (error) {
+  server.on("error", (error: Error) => {
     console.error("Server error:", error);
     // Simplified error handling - WindowManager might not be ready if server fails immediately?
     // But we only show message box if mainWindow exists.
@@ -98,7 +100,7 @@ app.on("ready", async () => {
   // App Ready continuation
   app.whenReady().then(() => {
     if (process.env.NEXT_PUBLIC_PROTOCOL) {
-      protocol.handle(process.env.NEXT_PUBLIC_PROTOCOL as string, (request) => {
+      protocol.handle(process.env.NEXT_PUBLIC_PROTOCOL as string, (request: Request) => {
         const localUrl = request.url.replace(
           process.env.NEXT_PUBLIC_PROTOCOL_SERVER_ADDRESS || "",
           getServerAddress(),

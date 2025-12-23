@@ -180,7 +180,7 @@ export const getTimetrackerVacations = async (token: string, email: string, cale
 };
 
 export const getTimetrackerCookie = async (idToken: string) => {
-  let formData = new FormData();
+  const formData = new FormData();
   formData.append("Id_Token", idToken);
   formData.append("IsShouldRedirect", "false");
 

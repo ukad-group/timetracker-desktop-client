@@ -32,7 +32,7 @@ const electronStore = new Store() as Store & {
     clear: () => void;
 };
 
-let electronSession: Record<string, any> = {};
+let electronSession: Record<string, unknown> = {};
 
 const watchers: { [key: string]: FSWatcher | undefined } = {};
 const userDataDirectory = app.getPath("userData");
@@ -118,7 +118,7 @@ export const registerIpcHandlers = () => {
         electronStore.delete(key);
     });
 
-    ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_STORE_CLEAR, (_) => {
+    ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_STORE_CLEAR, () => {
         electronStore.clear();
     });
 
@@ -135,7 +135,7 @@ export const registerIpcHandlers = () => {
         delete electronSession[key];
     });
 
-    ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_SESSION_CLEAR, (_) => {
+    ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_SESSION_CLEAR, () => {
         electronSession = {};
     });
 
@@ -279,7 +279,7 @@ export const registerIpcHandlers = () => {
 
     // App Files
     ipcMain.handle(IPC_MAIN_CHANNELS.APP_SELECT_FOLDER, async () => {
-        const { dialog } = require("electron"); // Dynamic import to avoid issues if needed, or import at top
+        const { dialog } = await import("electron"); // Dynamic import to avoid issues if needed, or import at top
         const response = await dialog.showOpenDialog({ properties: ["openDirectory"] });
         if (!response.canceled) return response.filePaths[0];
         return null;
@@ -346,7 +346,7 @@ export const registerIpcHandlers = () => {
         if (!reportsFolder || !selectedDate) return [];
         try {
             const parsedProjects = parseReportsInfo(reportsFolder, selectedDate);
-            const sortedProjAndAct: Record<string, string[]> = Object.keys(parsedProjects).sort().reduce((acc: any, key) => {
+            const sortedProjAndAct: Record<string, string[]> = Object.keys(parsedProjects).sort().reduce((acc: Record<string, string[]>, key: string) => {
                 const activitySet = new Set<string>();
                 windowManager.mainWindow?.webContents.session.addWordToSpellCheckerDictionary(key);
                 parsedProjects[key].forEach((activity: Activity) => activity.activity && activitySet.add(activity.activity));
@@ -354,7 +354,7 @@ export const registerIpcHandlers = () => {
                 return acc;
             }, {});
 
-            const descriptionsSet: Record<string, string[]> = Object.keys(parsedProjects).reduce((acc: any, key) => {
+            const descriptionsSet: Record<string, string[]> = Object.keys(parsedProjects).reduce((acc: Record<string, string[]>, key: string) => {
                 const descSet = new Set<string>();
                 parsedProjects[key]?.forEach((activity: Activity) => activity.description && descSet.add(activity.description));
                 acc[key] = Array.from(descSet);
@@ -442,7 +442,7 @@ export const registerIpcHandlers = () => {
         return await getTimetrackerBookings(cookie, name, calendarDate);
     });
 
-    // Remaining Timetracker website imports were in TimetrackerWebsiteApi directly, accessed by index.ts. 
+    // Remaining Timetracker website imports were in TimetrackerWebsiteApi directly, accessed by index.ts.
     // They are not in services yet? I need to import them from the original API file or move them to service.
     // I left getTimetrackerHolidays etc in the original API file. I should probably import them in IpcHandler for now.
     // Let's import them from the original file for simplicty to avoid moving EVERYTHING.

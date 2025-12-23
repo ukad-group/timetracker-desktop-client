@@ -1,5 +1,5 @@
 import { computePosition } from "@floating-ui/dom";
-import { Dispatch, MutableRefObject, SetStateAction } from "react";
+import { Dispatch, RefObject, SetStateAction } from "react";
 import { Position } from "./types";
 import { positioningTop, positioningRight, positioningBottom, positioningLeft } from "./utils";
 import { PLACEMENTS } from "./constants";
@@ -7,17 +7,17 @@ import { KEY_CODES } from "@/helpers/constants";
 
 export const positioning = (
   learnHint: () => void,
-  referenceRef: MutableRefObject<any>,
-  floatingRef: MutableRefObject<any>,
-  SVGRef: MutableRefObject<any>,
+  referenceRef: RefObject<HTMLDivElement>,
+  floatingRef: RefObject<HTMLDivElement>,
+  SVGRef: RefObject<SVGSVGElement>,
   learningMethod: "buttonClick" | "nextClick" | "ctrlArrowNumberPress",
   position: Position,
   showHint: boolean,
   shiftY: number,
   shiftX: number,
-  HorizontalLineRef: MutableRefObject<any>,
-  VerticalLineRef: MutableRefObject<any>,
-  TriangleRef: MutableRefObject<any>,
+  HorizontalLineRef: RefObject<HTMLDivElement>,
+  VerticalLineRef: RefObject<HTMLDivElement>,
+  TriangleRef: RefObject<HTMLDivElement>,
   setShowHint: Dispatch<SetStateAction<boolean>>,
 ): void => {
   const handleKeyDown = (e) => {
