@@ -1,6 +1,6 @@
 import { useState, useRef, ChangeEvent, useEffect } from "react";
 import { ChevronUpDownIcon } from "@heroicons/react/24/solid";
-import { Combobox } from "@headlessui/react";
+import { Combobox, ComboboxButton, ComboboxInput, ComboboxOptions, Label } from "@headlessui/react";
 import clsx from "clsx";
 import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import { useMemo } from "react";
@@ -130,7 +130,7 @@ const AutocompleteSelector = ({
 
   return (
     <Combobox className={className} as="div" value={selectedItem} onChange={handleOnChange}>
-      <Combobox.Label className="flex items-center gap-1 text-sm font-medium text-gray-700 dark:text-dark-main ">
+      <Label className="flex items-center gap-1 text-sm font-medium text-gray-700 dark:text-dark-main ">
         {title}
         {title === "Activity" && (
           <div title="You can write whatever you want in the activity, or write nothing. Sometimes the project manager will provide information on when and how to fill this field.">
@@ -142,9 +142,9 @@ const AutocompleteSelector = ({
             New
           </span>
         )}
-      </Combobox.Label>
+      </Label>
       <div className="relative mt-1">
-        <Combobox.Input
+        <ComboboxInput
           onKeyDown={(event) => handleKey(event)}
           ref={inputRef}
           value={selectedItem}
@@ -161,15 +161,15 @@ const AutocompleteSelector = ({
           tabIndex={tabIndex}
           onBlur={handleOnBlur}
         />
-        <Combobox.Button className="absolute inset-y-0 right-0 flex items-center px-2 rounded-r-md focus:outline-none">
+        <ComboboxButton className="absolute inset-y-0 right-0 flex items-center px-2 rounded-r-md focus:outline-none">
           <ChevronUpDownIcon className="w-5 h-5 text-gray-400" aria-hidden="true" />
-        </Combobox.Button>
+        </ComboboxButton>
 
         {fullSuggestionsList?.length > 0 && (
-          <Combobox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto text-base bg-white rounded-md shadow-lg max-h-40 ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-dark-container dark:shadow-lg dark:shadow-slate-900">
+          <ComboboxOptions className="absolute z-10 w-full py-1 mt-1 overflow-auto text-base bg-white rounded-md shadow-lg max-h-40 ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-dark-container dark:shadow-lg dark:shadow-slate-900">
             <div className="block text-xs text-gray-500 text-center">tab to choose</div>
             <SuggestionsList list={fullSuggestionsList} />
-          </Combobox.Options>
+          </ComboboxOptions>
         )}
       </div>
     </Combobox>

@@ -301,7 +301,7 @@ export function validation(activities: Array<ReportActivity>) {
         activities[i].validation.cell = "time";
         activities[i].validation.description = "The event has no end time";
       }
-      if (activities[i].description.startsWith("!")) {
+      if (activities[i].description && activities[i].description.startsWith("!")) {
         activities[i].mistakes += " startsWith!";
       }
       if (activities[i].to && !activities[i].project) {
