@@ -11,7 +11,7 @@ import {
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import { LOCAL_STORAGE_VARIABLES, OFFLINE_MESSAGE } from "@/helpers/constants";
 import { parseReport, validation } from "@/helpers/utils/reports";
-import isOnline from "is-online";
+import { isOnline } from "@/utils/onlineStatus";
 import { ReportActivity } from "@/helpers/utils/types";
 
 export const loadHolidaysAndVacations = async (calendarDate: Date): Promise<DayOff[]> => {
@@ -129,7 +129,7 @@ export const loadHolidaysAndVacations = async (calendarDate: Date): Promise<DayO
   } catch (error) {
     console.log(error);
 
-    const online = await isOnline();
+    const online = isOnline();
 
     if (!online) {
       console.log(OFFLINE_MESSAGE);

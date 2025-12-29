@@ -5,15 +5,15 @@ import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/solid";
 import { GoogleCredentails, GoogleUser } from "./types";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import { LOCAL_STORAGE_VARIABLES } from "@/helpers/constants";
-import isOnline from "is-online";
+import { isOnline } from "@/utils/onlineStatus";
 import { TRACK_ANALYTICS } from "@/helpers/constants";
 
 const GoogleConnection = () => {
   const [showGoogleEvents, setShowGoogleEvents] = useState(false);
   const [loggedUsers, setLoggedUsers] = useState([]);
 
-  const handleSignIn = async () => {
-    const online = await isOnline();
+  const handleSignIn = () => {
+    const online = isOnline();
 
     if (online) {
       global.ipcRenderer.send(IPC_MAIN_CHANNELS.OPEN_CHILD_WINDOW, "google");

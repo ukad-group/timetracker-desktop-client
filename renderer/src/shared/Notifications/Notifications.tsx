@@ -3,7 +3,7 @@ import { CheckIcon, ExclamationCircleIcon, XMarkIcon } from "@heroicons/react/24
 import { UpdateInfo } from "electron-updater";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import { LOCAL_STORAGE_VARIABLES } from "@/helpers/constants";
-import isOnline from "is-online";
+import { isOnline } from "@/utils/onlineStatus";
 import { ErrorPlaceholder, RenderError } from "../ErrorPlaceholder";
 import { RELEASES_LINK } from "@/components/ActivitiesSection/constants";
 
@@ -36,7 +36,7 @@ const Notifications = () => {
 
   useEffect(() => {
     (async () => {
-      const online = await isOnline();
+      const online = isOnline();
 
       if (!online) return;
 

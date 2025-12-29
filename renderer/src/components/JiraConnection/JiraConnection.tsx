@@ -5,7 +5,7 @@ import { JiraUser } from "@/helpers/utils/jira";
 import { FlagIcon } from "@heroicons/react/24/outline";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import { LOCAL_STORAGE_VARIABLES } from "@/helpers/constants";
-import isOnline from "is-online";
+import { isOnline } from "@/utils/onlineStatus";
 
 const JiraConnection = () => {
   const [users, setUsers] = useState(
@@ -13,8 +13,8 @@ const JiraConnection = () => {
       [],
   );
 
-  const handleSignInButton = async () => {
-    const online = await isOnline();
+  const handleSignInButton = () => {
+    const online = isOnline();
 
     if (online) {
       global.ipcRenderer.send(IPC_MAIN_CHANNELS.OPEN_CHILD_WINDOW, "jira");

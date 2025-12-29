@@ -4,7 +4,7 @@ import { Office365User } from "@/helpers/utils/office365";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import Users from "./Users";
 import { LOCAL_STORAGE_VARIABLES } from "@/helpers/constants";
-import isOnline from "is-online";
+import { isOnline } from "@/utils/onlineStatus";
 import { TRACK_ANALYTICS } from "@/helpers/constants";
 
 const Office365Connection = () => {
@@ -15,7 +15,7 @@ const Office365Connection = () => {
   );
   const [showEventsInTable, setShowEventsInTable] = useState(false);
 
-  const handleSignInButton = async () => {
+  const handleSignInButton = () => {
     const online = isOnline();
 
     if (online) {

@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction } from "react";
 import { LOCAL_STORAGE_VARIABLES, OFFLINE_MESSAGE } from "@/helpers/constants";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
-import isOnline from "is-online";
+import { isOnline } from "@/utils/onlineStatus";
 import { ContactPerson } from "./types";
 
 export const getTimetrackerContactPersons = async (setMentions: Dispatch<SetStateAction<string[]>>) => {
@@ -78,7 +78,7 @@ export const getTimetrackerContactPersons = async (setMentions: Dispatch<SetStat
     }
   } catch (error) {
     console.log(error);
-    const online = await isOnline();
+    const online = isOnline();
     if (!online) {
       console.log(OFFLINE_MESSAGE);
     }

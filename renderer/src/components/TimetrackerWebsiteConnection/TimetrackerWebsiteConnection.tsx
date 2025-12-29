@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import { Loader } from "@/shared/Loader";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import { LOCAL_STORAGE_VARIABLES } from "@/helpers/constants";
-import isOnline from "is-online";
+import { isOnline } from "@/utils/onlineStatus";
 
 const TimetrackerWebsiteConnection = () => {
   const router = useRouter();
@@ -16,8 +16,8 @@ const TimetrackerWebsiteConnection = () => {
   );
   const [loading, setLoading] = useState(false);
 
-  const handleSignInButton = async () => {
-    const online = await isOnline();
+  const handleSignInButton = () => {
+    const online = isOnline();
 
     if (online) {
       global.ipcRenderer.send(IPC_MAIN_CHANNELS.OPEN_CHILD_WINDOW, "timetracker-website");

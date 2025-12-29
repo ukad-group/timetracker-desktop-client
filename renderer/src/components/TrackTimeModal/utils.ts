@@ -9,7 +9,7 @@ import { formatDurationAsDecimals } from "@/helpers/utils/reports";
 import { HINTS_GROUP_NAMES } from "@/helpers/constants";
 import { TutorialProgress } from "@/store/types";
 import { ScheduledEvents } from "@/store/types";
-import isOnline from "is-online";
+import { isOnline } from "@/utils/onlineStatus";
 import { ReportActivity } from "@/helpers/utils/types";
 
 export const changeHours = (eventKey: string, hours: number) => {
@@ -106,7 +106,7 @@ export const getTimetrackerYearProjects = async (setWebTrackerProjects: Dispatch
     console.log(error);
     setWebTrackerProjects(TTUserInfo.yearProjects);
 
-    const online = await isOnline();
+    const online = isOnline();
 
     if (!online) {
       console.log(OFFLINE_MESSAGE);

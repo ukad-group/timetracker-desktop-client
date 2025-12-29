@@ -11,7 +11,7 @@ import { BookingsProps, BookingFromApi, BookedSpentStat } from "./types";
 import { LOCAL_STORAGE_VARIABLES, OFFLINE_MESSAGE } from "@/helpers/constants";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import RefreshIcon from "@/shared/RefreshIcon/RefreshIcon";
-import isOnline from "is-online";
+import { isOnline } from "@/utils/onlineStatus";
 import { ReportActivity } from "@/helpers/utils/types";
 
 const Bookings = ({ calendarDate }: BookingsProps) => {
@@ -95,7 +95,7 @@ const Bookings = ({ calendarDate }: BookingsProps) => {
     } catch (error) {
       console.log(error);
 
-      const online = await isOnline();
+      const online = isOnline();
 
       if (!online) {
         console.log(OFFLINE_MESSAGE);
@@ -182,7 +182,7 @@ const Bookings = ({ calendarDate }: BookingsProps) => {
   const handleRefreshButton = async () => {
     try {
       setLoading(true);
-      const online = await isOnline();
+      const online = isOnline();
 
       if (!online) {
         alert(OFFLINE_MESSAGE);

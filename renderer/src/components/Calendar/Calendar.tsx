@@ -26,7 +26,7 @@ import { changeHintConditions, trackConnections } from "@/helpers/utils/utils";
 import useScreenSizes from "@/helpers/hooks/useScreenSizes";
 import FullCalendarWrapper from "./FullCalendarWrapper";
 import RefreshIcon from "@/shared/RefreshIcon/RefreshIcon";
-import isOnline from "is-online";
+import { isOnline } from "@/utils/onlineStatus";
 import { Loader } from "@/shared/Loader";
 
 export const Calendar = ({
@@ -163,7 +163,7 @@ export const Calendar = ({
   const handleRefreshButton = async () => {
     try {
       setLoading(true);
-      const online = await isOnline();
+      const online = isOnline();
 
       if (!online) {
         alert(OFFLINE_MESSAGE);
