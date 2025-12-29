@@ -110,7 +110,8 @@ class WindowManager {
             parent: this.mainWindow as BrowserWindow | undefined,
             webPreferences: {
                 nodeIntegration: false,
-                contextIsolation: true
+                contextIsolation: false,
+                preload: path.join(__dirname, "../helpers/preload.js")
             },
         });
 
