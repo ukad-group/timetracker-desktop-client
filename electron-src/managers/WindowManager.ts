@@ -10,6 +10,23 @@ class WindowManager {
     private tray: Tray | null = null;
     private port: number = 0;
 
+    private getRerenderChannelForConnection(connectionName: string) {
+        switch (connectionName) {
+            case "google":
+                return IPC_MAIN_CHANNELS.GOOGLE_SHOULD_RERENDER;
+            case "jira":
+                return IPC_MAIN_CHANNELS.JIRA_SHOULD_RERENDER;
+            case "office365":
+                return IPC_MAIN_CHANNELS.OFFICE365_SHOULD_RERENDER;
+            case "timetracker-website":
+                return IPC_MAIN_CHANNELS.TIMETRACKER_SHOULD_RERENDER;
+            case "trello":
+                return IPC_MAIN_CHANNELS.TRELLO_SHOULD_RERENDER;
+            default:
+                return null;
+        }
+    }
+
     setPort(port: number) {
         this.port = port;
     }
@@ -83,7 +100,7 @@ class WindowManager {
         });
     }
 
-    createChild(url: string) {
+    createChild(url: string, connectionName?: string) {
         this.childWindow = createWindow({
             width: 1000,
             height: 700,
@@ -91,16 +108,51 @@ class WindowManager {
             show: false,
             autoHideMenuBar: true,
             parent: this.mainWindow as BrowserWindow | undefined,
-            webPreferences: {},
+            webPreferences: {
+                nodeIntegration: false,
+                contextIsolation: true
+            },
         });
 
-        this.childWindow.loadURL(url);
+        // Handle failed page loads (like "App not found")
+        const handleFailedLoad = () => {
+            console.error(`Failed to load: ${url}`);
+            this.childWindow?.close();
+        };
+
+        this.childWindow.webContents.on('did-fail-load', handleFailedLoad);
+
+        this.childWindow.loadURL(url).catch(handleFailedLoad);
+
         this.childWindow.once("ready-to-show", () => {
             this.childWindow?.show();
         });
-        this.childWindow.on("closed", () => {
-            this.childWindow = null;
+
+        this.childWindow.webContents.on("before-input-event", (event, input) => {
+            const isEscape = input.key === "Escape";
+            const isCmdOrCtrlW = (input.control || input.meta) && input.key?.toLowerCase() === "w";
+
+            if (isEscape || isCmdOrCtrlW) {
+                event.preventDefault();
+                this.childWindow?.close();
+            }
         });
+
+        const cleanup = () => {
+            if (this.childWindow) {
+                this.childWindow.webContents.off('did-fail-load', handleFailedLoad);
+                this.childWindow = null;
+            }
+
+            if (connectionName) {
+                const channel = this.getRerenderChannelForConnection(connectionName);
+                if (channel) {
+                    this.mainWindow?.webContents.send(channel);
+                }
+            }
+        };
+
+        this.childWindow.on("closed", cleanup);
     }
 
     generateTray() {

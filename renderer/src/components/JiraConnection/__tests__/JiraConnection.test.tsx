@@ -37,7 +37,7 @@ describe("GIVEN JiraConnection", () => {
   });
 
   it("displays a message when no user is authorized", () => {
-    jest.spyOn(React, "useState").mockImplementationOnce(() => [null, jest.fn()]);
+    jest.spyOn(React, "useState").mockImplementationOnce(() => [[], jest.fn()]);
 
     const { getByText } = render(<JiraConnection />);
 

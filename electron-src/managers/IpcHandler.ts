@@ -146,7 +146,7 @@ export const registerIpcHandlers = () => {
 
     // Windows
     ipcMain.on(IPC_MAIN_CHANNELS.OPEN_CHILD_WINDOW, (_, connectionName) => {
-        windowManager.createChild(getConnectionUrl(connectionName));
+        windowManager.createChild(getConnectionUrl(connectionName), connectionName);
     });
 
     ipcMain.on(IPC_MAIN_CHANNELS.CHILD_WINDOW_CLOSED, (_, componentName) => {

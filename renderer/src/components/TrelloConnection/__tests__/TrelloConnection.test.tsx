@@ -1,8 +1,12 @@
 import React from "react";
-import { render, fireEvent } from "@testing-library/react";
+import { render, fireEvent, waitFor } from "@testing-library/react";
 import TrelloConnection from "../TrelloConnection";
 import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
+
+jest.mock("is-online", () => jest.fn());
+
+import isOnline from "is-online";
 
 jest.mock("electron", () => ({
   ipcRenderer: {
@@ -28,12 +32,18 @@ describe("GIVEN TrelloConnection", () => {
     global.ipcRenderer = globalIpcRendererMock;
   });
 
-  it("handles sign in button click correctly when online", () => {
+  it("handles sign in button click correctly when online", async () => {
+    (isOnline as unknown as jest.Mock).mockResolvedValue(true);
+
     const { getByText } = render(<TrelloConnection />);
+
+    (global.ipcRenderer.send as jest.Mock).mockClear();
 
     fireEvent.click(getByText("Add account"));
 
-    expect(global.ipcRenderer.send).toHaveBeenCalledWith(IPC_MAIN_CHANNELS.OPEN_CHILD_WINDOW, "trello");
+    await waitFor(() => {
+      expect(global.ipcRenderer.send).toHaveBeenCalledWith(IPC_MAIN_CHANNELS.OPEN_CHILD_WINDOW, "trello");
+    });
   });
 
   it("displays a message when no user is authorized", () => {

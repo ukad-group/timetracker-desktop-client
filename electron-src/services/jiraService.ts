@@ -8,12 +8,21 @@ import {
 } from "../helpers/API/jiraApi";
 
 export const getJiraOptions = () => {
-    return {
-        clientId: process.env.NEXT_PUBLIC_JIRA_CLIENT_ID || "",
-        clientSecret: process.env.NEXT_PUBLIC_JIRA_CLIENT_SECRET || "",
-        redirectUri: process.env.NEXT_PUBLIC_JIRA_REDIRECT_URI || "",
-        scope: process.env.NEXT_PUBLIC_JIRA_SCOPE || "",
-    };
+    const clientId = process.env.NEXT_PUBLIC_JIRA_CLIENT_ID || "";
+    const clientSecret = process.env.NEXT_PUBLIC_JIRA_CLIENT_SECRET || "";
+    const redirectUri = process.env.NEXT_PUBLIC_JIRA_REDIRECT_URI || "";
+    const scope = process.env.NEXT_PUBLIC_JIRA_SCOPE || "";
+
+    if (!clientId || !clientSecret || !redirectUri || !scope) {
+        console.error("Missing Jira env vars", {
+            hasClientId: Boolean(clientId),
+            hasClientSecret: Boolean(clientSecret),
+            hasRedirectUri: Boolean(redirectUri),
+            hasScope: Boolean(scope),
+        });
+    }
+
+    return { clientId, clientSecret, redirectUri, scope };
 };
 
 export const getJiraLoginUrl = () => {

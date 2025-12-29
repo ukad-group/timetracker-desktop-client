@@ -7,11 +7,16 @@ import path from "path";
 import serveHandler from "serve-handler";
 import isDev from "electron-is-dev";
 import { initialize } from "@aptabase/electron/main";
+import dotenv from "dotenv";
 
 import { windowManager } from "./managers/WindowManager";
 import { registerIpcHandlers } from "./managers/IpcHandler";
 
 initialize("A-EU-9361517871");
+
+if (!isDev) {
+  dotenv.config({ path: path.join(app.getAppPath(), "renderer", ".env") });
+}
 
 // Register all IPC listeners
 registerIpcHandlers();

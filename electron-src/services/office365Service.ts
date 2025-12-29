@@ -7,16 +7,25 @@ import {
 } from "../helpers/API/office365Api";
 
 export const getOffice365Options = (port: number) => {
-    return {
-        clientId: process.env.NEXT_PUBLIC_OFFICE365_CLIENT_ID || "",
-        clientSecret: process.env.NEXT_PUBLIC_OFFICE365_CLIENT_SECRET || "",
-        redirectUri:
-            process.env.NEXT_PUBLIC_OFFICE365_REDIRECT_URI?.replace(
-                process.env.NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME || "",
-                port.toString(),
-            ) || "",
-        scope: process.env.NEXT_PUBLIC_OFFICE365_SCOPE || "",
-    };
+    const clientId = process.env.NEXT_PUBLIC_OFFICE365_CLIENT_ID || "";
+    const clientSecret = process.env.NEXT_PUBLIC_OFFICE365_CLIENT_SECRET || "";
+    const scope = process.env.NEXT_PUBLIC_OFFICE365_SCOPE || "";
+    const redirectUri =
+        process.env.NEXT_PUBLIC_OFFICE365_REDIRECT_URI?.replace(
+            process.env.NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME || "",
+            port.toString(),
+        ) || "";
+
+    if (!clientId || !clientSecret || !redirectUri || !scope) {
+        console.error("Missing Office365 env vars", {
+            hasClientId: Boolean(clientId),
+            hasClientSecret: Boolean(clientSecret),
+            hasRedirectUri: Boolean(redirectUri),
+            hasScope: Boolean(scope),
+        });
+    }
+
+    return { clientId, clientSecret, redirectUri, scope };
 };
 
 export const getOffice365LoginUrl = (port: number) => {

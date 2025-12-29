@@ -3,7 +3,6 @@ import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/solid";
 import { Button } from "@/shared/Button";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import { LOCAL_STORAGE_VARIABLES } from "@/helpers/constants";
-import isOnline from "is-online";
 
 const TrelloConnection = () => {
   const [user, setUser] = useState(
@@ -12,14 +11,8 @@ const TrelloConnection = () => {
     ) || null,
   );
 
-  const handleSignInButton = async () => {
-    const online = await isOnline();
-
-    if (online) {
-      global.ipcRenderer.send(IPC_MAIN_CHANNELS.OPEN_CHILD_WINDOW, "trello");
-    } else {
-      global.ipcRenderer.send(IPC_MAIN_CHANNELS.APP_LOAD_OFFLINE_PAGE);
-    }
+  const handleSignInButton = () => {
+    global.ipcRenderer.send(IPC_MAIN_CHANNELS.OPEN_CHILD_WINDOW, "trello");
   };
 
   const handleSignOutButton = () => {
@@ -56,7 +49,7 @@ const TrelloConnection = () => {
   };
 
   const rerenderListener = () => {
-    (async () => addUser())();
+    addUser();
   };
 
   useEffect(() => {
