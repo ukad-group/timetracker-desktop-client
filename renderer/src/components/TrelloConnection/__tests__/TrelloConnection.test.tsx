@@ -4,10 +4,6 @@ import TrelloConnection from "../TrelloConnection";
 import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 
-jest.mock("is-online", () => jest.fn());
-
-import isOnline from "is-online";
-
 jest.mock("electron", () => ({
   ipcRenderer: {
     send: jest.fn(),
@@ -33,8 +29,6 @@ describe("GIVEN TrelloConnection", () => {
   });
 
   it("handles sign in button click correctly when online", async () => {
-    (isOnline as unknown as jest.Mock).mockResolvedValue(true);
-
     const { getByText } = render(<TrelloConnection />);
 
     (global.ipcRenderer.send as jest.Mock).mockClear();

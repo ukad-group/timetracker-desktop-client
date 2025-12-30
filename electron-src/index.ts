@@ -14,9 +14,8 @@ import { registerIpcHandlers } from "./managers/IpcHandler";
 
 initialize("A-EU-9361517871");
 
-if (!isDev) {
-  dotenv.config({ path: path.join(app.getAppPath(), "renderer", ".env") });
-}
+// Load environment variables from .env file
+dotenv.config({ path: path.join(app.getAppPath(), "renderer", ".env") });
 
 // Register all IPC listeners
 registerIpcHandlers();
