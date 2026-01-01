@@ -10,11 +10,12 @@ export const getOffice365Options = (port: number) => {
     const clientId = process.env.NEXT_PUBLIC_OFFICE365_CLIENT_ID || "";
     const clientSecret = process.env.NEXT_PUBLIC_OFFICE365_CLIENT_SECRET || "";
     const scope = process.env.NEXT_PUBLIC_OFFICE365_SCOPE || "";
-    const redirectUri =
-        process.env.NEXT_PUBLIC_OFFICE365_REDIRECT_URI?.replace(
-            process.env.NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME || "",
-            port.toString(),
-        ) || "";
+    // const redirectUri =
+    //     process.env.NEXT_PUBLIC_OFFICE365_REDIRECT_URI?.replace(
+    //         process.env.NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME || "",
+    //         port.toString(),
+    //     ) || "";
+    const redirectUri = `http://localhost:${port}/settings`;
 
     if (!clientId || !clientSecret || !redirectUri || !scope) {
         console.error("Missing Office365 env vars", {
