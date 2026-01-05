@@ -78,11 +78,13 @@ const ActivitiesTable = ({
 
   const handleCopyActivity = (activity: ReportActivity) => {
     global.ipcRenderer.send(IPC_MAIN_CHANNELS.ANALYTICS_DATA, TRACK_ANALYTICS.COPY_REGISTRATION);
-    const lastActivity = activities[activities.length - 2];
+    const lastActivity = activities[activities.length - 1];
     onEditActivity({
       ...activity,
-      from: lastActivity?.to || activity.from,
-      to: checkIsToday(selectedDate) ? getCeiledTime() : activity.to,
+      id: null,
+      from: lastActivity?.to,
+      to: checkIsToday(selectedDate) ? getCeiledTime() : "",
+      duration: null,
     });
   };
 
