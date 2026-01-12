@@ -140,7 +140,7 @@ class WindowManager {
         });
 
         const cleanup = () => {
-            if (this.childWindow) {
+            if (this.childWindow && !this.childWindow.isDestroyed()) {
                 this.childWindow.webContents.off('did-fail-load', handleFailedLoad);
                 this.childWindow = null;
             }
