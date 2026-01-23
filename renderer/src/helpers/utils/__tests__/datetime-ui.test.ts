@@ -74,15 +74,15 @@ describe("GIVEN datetime-ui/getWeekNumber", () => {
   });
 
   it("returns the correct week number for a given date", () => {
-    getDateFromString("2022-02-01");
+    getDateFromString("20220201");
 
-    expect(getWeekNumber("2022-02-01", true)).toBe(49);
+    expect(getWeekNumber("20220719")).toBe(29);
   });
 
   it("handles different dates and returns the correct week number", () => {
-    getDateFromString("2022-01-10");
+    getDateFromString("20220110");
 
-    expect(getWeekNumber("2022-01-10", true)).toBe(49);
+    expect(getWeekNumber("20220110")).toBe(2);
   });
 });
 
@@ -119,8 +119,8 @@ describe("GIVEN datetime-ui/getMonthRequiredHours", () => {
   it("calculates the correct total required work hours for the month", () => {
     const calendarDate = new Date("2022-01-01");
     const daysOff = [
-      { date: new Date("2022-01-05"), duration: 4, description: "Desc", type: 1 },
-      { date: new Date("2022-01-10"), duration: 8, description: "Desc", type: 1 },
+      { date: new Date("2022-01-05"), duration: 4, description: "Desc", type: 1, status: 1 },
+      { date: new Date("2022-01-10"), duration: 8, description: "Desc", type: 1, status: 1 },
     ];
     const lastDayOfMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 0);
 

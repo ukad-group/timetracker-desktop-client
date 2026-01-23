@@ -2,6 +2,13 @@ import TimeBadge from "../TimeBadge";
 import { TimeBadgeProps } from "../types";
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
+import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";
+
+global.ipcRenderer = {
+  ...globalIpcRendererMock,
+  send: ipcRendererSendMock,
+  sendSync: ipcRendererSendMock,
+};
 
 const day = 60 * 60 * 24 * 1000;
 const today = new Date();

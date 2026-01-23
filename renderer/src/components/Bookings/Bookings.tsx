@@ -1,23 +1,31 @@
 import React, { useState, useEffect, useMemo } from "react";
+import clsx from "clsx";
 import { useMainStore } from "@/store/mainStore";
 import { shallow } from "zustand/shallow";
 import { MONTHS } from "@/helpers/utils/datetime-ui";
-import { ReportActivity, formatDurationAsDecimals, parseReport } from "@/helpers/utils/reports";
-import { ParsedReport, TTUserInfo } from "../Calendar/types";
+import { formatDurationAsDecimals, parseReport } from "@/helpers/utils/reports";
+import { ParsedReport, TTUserInfoProps } from "../Calendar/types";
 import { Loader } from "@/shared/Loader";
+import Tooltip from "@/shared/Tooltip/Tooltip";
 import { BookingsProps, BookingFromApi, BookedSpentStat } from "./types";
-import { LOCAL_STORAGE_VARIABLES } from "@/helpers/contstants";
+import { LOCAL_STORAGE_VARIABLES, OFFLINE_MESSAGE } from "@/helpers/constants";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
+import RefreshIcon from "@/shared/RefreshIcon/RefreshIcon";
+import isOnline from "is-online";
+import { ReportActivity } from "@/helpers/utils/types";
 
 const Bookings = ({ calendarDate }: BookingsProps) => {
-  const showBookings = !!JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER));
+  const showBookings = !!JSON.parse(
+    global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER),
+  );
+
   if (!showBookings) return;
+
+  const [loading, setLoading] = useState(false);
   const [bookedProjects, setBookedProjects] = useState<BookingFromApi[]>([]);
   const [bookedSpentStatistic, setBookedSpentStatistic] = useState<BookedSpentStat[]>([]);
-  const [loading, setLoading] = useState(false);
   const currentReadableMonth = MONTHS[calendarDate.getMonth()];
   const [reportsFolder] = useMainStore((state) => [state.reportsFolder, state.setReportsFolder], shallow);
-  let maxRecurse = 0;
 
   const totalBookingTime: number = useMemo(() => {
     return bookedProjects.reduce((acc, project) => acc + (project?.plans[0]?.hours || 0), 0);
@@ -27,7 +35,15 @@ const Bookings = ({ calendarDate }: BookingsProps) => {
     return bookedSpentStatistic.reduce((acc, project) => acc + (project?.spent || 0), 0);
   }, [bookedSpentStatistic]);
 
-  const getBookings = async (cookie: string, userName: string): Promise<BookingFromApi[]> => {
+  const getBookings = async (): Promise<BookingFromApi[]> => {
+    const TTUserInfo: TTUserInfoProps = JSON.parse(
+      global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER),
+    );
+
+    if (!TTUserInfo) return;
+
+    const { cookie, userName, refreshToken } = TTUserInfo;
+
     try {
       setLoading(true);
 
@@ -37,22 +53,35 @@ const Bookings = ({ calendarDate }: BookingsProps) => {
         userName,
         calendarDate,
       );
-      // console.log("Cookie", cookie);
-      if (allLoggedProjects === "invalid_token" && maxRecurse <= 3) {
-        maxRecurse += 1; // we are already refreshing the token in calendar compenent, so i just want to re execute function maximum 3 times to prevent loop
 
-        const updatedTTUserInfo: TTUserInfo = JSON.parse(
-          localStorage.getItem(LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER),
+      if (allLoggedProjects === "invalid_token") {
+        if (!refreshToken) return;
+
+        const updatedCreds = await global.ipcRenderer.invoke(
+          IPC_MAIN_CHANNELS.TIMETRACKER_REFRESH_USER_INFO_TOKEN,
+          refreshToken,
         );
-        const updatedCookie = updatedTTUserInfo?.TTCookie;
 
-        return await getBookings(updatedCookie, userName);
-      } else if (allLoggedProjects === "invalid_token") {
-        // cases when we can't update token after 3 attempts
-        return [];
+        const updatedCookie = await global.ipcRenderer.invoke(
+          IPC_MAIN_CHANNELS.TIMETRACKER_LOGIN,
+          updatedCreds?.id_token,
+        );
+
+        const updatedUser = {
+          ...TTUserInfo,
+          idToken: updatedCreds?.id_token,
+          cookie: updatedCookie,
+          refreshToken: updatedCreds?.refresh_token,
+        };
+
+        global.ipcRenderer.send(
+          IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+          LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER,
+          JSON.stringify(updatedUser),
+        );
+
+        return await getBookings();
       }
-
-      maxRecurse = 0;
 
       return allLoggedProjects.filter((project: BookingFromApi) => {
         const projectBooking = project?.plans[0];
@@ -67,6 +96,12 @@ const Bookings = ({ calendarDate }: BookingsProps) => {
       });
     } catch (error) {
       console.log(error);
+
+      const online = await isOnline();
+
+      if (!online) {
+        console.log(OFFLINE_MESSAGE);
+      }
     } finally {
       setLoading(false);
     }
@@ -96,14 +131,7 @@ const Bookings = ({ calendarDate }: BookingsProps) => {
   };
 
   const getBookedStatistic = async () => {
-    const TTUserInfo: TTUserInfo = JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER));
-
-    if (!TTUserInfo) return;
-
-    const timetrackerCookie = TTUserInfo?.TTCookie;
-    const timetrackerUserName = TTUserInfo?.name;
-
-    const bookedProjects = await getBookings(timetrackerCookie, timetrackerUserName);
+    const bookedProjects = await getBookings();
 
     if (!bookedProjects || bookedProjects?.length === 0) {
       setBookedProjects([]);
@@ -128,6 +156,8 @@ const Bookings = ({ calendarDate }: BookingsProps) => {
           project: booking?.name,
           booked: booking?.plans[0]?.hours,
           spent: spentProjectTime,
+          isOvertime: booking?.plans[0].isOvertime,
+          isUndertime: booking?.plans[0].isUndertime,
         };
       })
       .sort((a, b) => {
@@ -146,28 +176,53 @@ const Bookings = ({ calendarDate }: BookingsProps) => {
     setBookedSpentStatistic(bookedSpentStatisticArray);
   };
 
+  const handleRefreshButton = async () => {
+    try {
+      setLoading(true);
+      const online = await isOnline();
+
+      if (!online) {
+        alert(OFFLINE_MESSAGE);
+      } else {
+        getBookedStatistic();
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     getBookedStatistic();
 
-    const fileChangeListener = () => {
-      getBookedStatistic();
-    };
-
-    global.ipcRenderer.on(IPC_MAIN_CHANNELS.ANY_FILE_CHANGED, fileChangeListener);
+    global.ipcRenderer.on(IPC_MAIN_CHANNELS.ANY_FILE_CHANGED, getBookedStatistic);
 
     return () => {
-      global.ipcRenderer.removeListener(IPC_MAIN_CHANNELS.ANY_FILE_CHANGED, fileChangeListener);
+      global.ipcRenderer.removeAllListeners(IPC_MAIN_CHANNELS.ANY_FILE_CHANGED);
     };
-  }, []);
-
-  useEffect(() => {
-    getBookedStatistic();
   }, [calendarDate]);
 
   const renderProjectsHours = () =>
     bookedSpentStatistic.map((project, i) => (
       <tr key={i} className="border-b dark:border-gray-700">
-        <td className="pr-6 py-2 text-gray-700 dark:text-dark-main">{project.project}</td>
+        <td className="pr-6 py-2 text-gray-700 dark:text-dark-main">
+          <Tooltip
+            tooltipText={(project.isOvertime && "Overtime") || (project.isUndertime && "Undertime")}
+            disabled={!(project.isOvertime || project.isUndertime)}
+          >
+            <span
+              className={clsx("py-1 px-1 rounded-full font-medium -ml-1", {
+                "bg-red-100 text-red-800 dark:text-red-400 dark:bg-red-400/20": project.isOvertime,
+
+                "bg-yellow-100 text-yellow-600 dark:text-yellow-400 dark:bg-yellow-400/20": project.isUndertime,
+              })}
+            >
+              {project.project}
+            </span>
+          </Tooltip>
+        </td>
+
         <td className="px-6 py-2 text-gray-700 dark:text-dark-main">{project.booked}h</td>
         <td className="px-6 py-2 text-gray-700 dark:text-dark-main">{formatDurationAsDecimals(project.spent)}</td>
       </tr>
@@ -175,15 +230,23 @@ const Bookings = ({ calendarDate }: BookingsProps) => {
 
   return (
     <div className="relative px-4 py-5 bg-white shadow sm:rounded-lg sm:px-6 dark:bg-dark-container dark:border dark:border-dark-border">
-      <h2 className="text-lg font-medium text-gray-900 dark:text-dark-heading mb-2">
-        Bookings in {currentReadableMonth}
-      </h2>
+      <div className="flex items-center gap-2 text-gray-900 dark:text-dark-heading mb-2">
+        <h2 className="text-lg font-medium">Bookings in {currentReadableMonth}</h2>
+        <button
+          className="h-4 w-4 hover:rotate-180 duration-300"
+          onClick={handleRefreshButton}
+          title="Refresh bookings"
+          disabled={loading}
+        >
+          <RefreshIcon className="hover:stroke-blue-400" />
+        </button>
+      </div>
       {loading && (
         <div className="absolute top-5 right-4">
           <Loader />
         </div>
       )}
-      <div className="relative overflow-x-auto">
+      <div className="relative ">
         <table className="w-full text-sm text-left">
           <thead className="text-gray-900 dark:text-dark-heading border-b dark:border-gray-700">
             <tr>

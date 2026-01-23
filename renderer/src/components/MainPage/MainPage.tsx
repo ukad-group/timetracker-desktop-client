@@ -14,14 +14,17 @@ import { useMainStore } from "@/store/mainStore";
 import { useBetaStore } from "@/store/betaUpdatesStore";
 import { useTutorialProgressStore } from "@/store/tutorialProgressStore";
 import { shallow } from "zustand/shallow";
-import { parseReport, serializeReport, ReportAndNotes } from "@/helpers/utils/reports";
+import { parseReport, serializeReport } from "@/helpers/utils/reports";
 import { changeHintConditions } from "@/helpers/utils/utils";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
-import { LOCAL_STORAGE_VARIABLES, HINTS_GROUP_NAMES, HINTS_ALERTS, KEY_CODES } from "@/helpers/contstants";
+import { LOCAL_STORAGE_VARIABLES, HINTS_GROUP_NAMES, HINTS_ALERTS, KEY_CODES } from "@/helpers/constants";
 import { MainPageProps, Section } from "./types";
 import { StoredSection } from "@/components/WidgetOrderSection/types";
 import Link from "next/link";
 import { Cog8ToothIcon } from "@heroicons/react/24/solid";
+import clsx from "clsx";
+import { ReportAndNotes } from "@/helpers/utils/types";
+import { checkIsToday } from "@/helpers/utils/datetime-ui";
 
 const MainPage = ({
   selectedDate,
@@ -36,31 +39,51 @@ const MainPage = ({
   const [isDropboxConnected, setIsDropboxConnected] = useState(true);
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [reportAndNotes, setReportAndNotes] = useState<any[] | ReportAndNotes>([]);
-  const [selectedDateReport, setSelectedDateReport] = useState("");
+  const [selectedDateReport, setSelectedDateReport] = useState<null | string>(null);
   const [saveReportTrigger, setSaveReportTrigger] = useState(false);
-  const [reportsFolder] = useMainStore((state) => [state.reportsFolder, state.setReportsFolder], shallow);
-  const [isBeta] = useBetaStore((state) => [state.isBeta, state.setIsBeta], shallow);
+  const [isFileExist, setIsFileExist] = useState(false);
+  const [reportsFolder, mainStoreLoaded] = useMainStore(
+    (state) => [state.reportsFolder, state.mainStoreLoaded],
+    shallow,
+  );
+  const [isBeta, betaUpdateStoreLoaded] = useBetaStore((state) => [state.isBeta, state.betaUpdateStoreLoaded], shallow);
   const [progress, setProgress] = useTutorialProgressStore((state) => [state.progress, state.setProgress], shallow);
-  const storedSectionsOptions = JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.WIDGET_ORDER));
+  const storedSectionsOptions = JSON.parse(
+    global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.WIDGET_ORDER),
+  );
   const mainPageRef = useRef(null);
+  const isToday = checkIsToday(selectedDate);
 
   useEffect(() => {
-    global.ipcRenderer.send(IPC_MAIN_CHANNELS.START_FOLDER_WATCHER, reportsFolder);
+    if (mainStoreLoaded) {
+      global.ipcRenderer.send(IPC_MAIN_CHANNELS.START_FOLDER_WATCHER, reportsFolder);
+    }
+    return () => {
+      global.ipcRenderer.send(IPC_MAIN_CHANNELS.STOP_PATH_WATCHER, reportsFolder);
+    };
+  }, [reportsFolder, mainStoreLoaded]);
+
+  useEffect(() => {
+    if (betaUpdateStoreLoaded) {
+      global.ipcRenderer.send(IPC_MAIN_CHANNELS.BETA_CHANNEL, isBeta);
+    }
+  }, [isBeta, betaUpdateStoreLoaded]);
+
+  useEffect(() => {
     global.ipcRenderer.send(IPC_MAIN_CHANNELS.CHECK_DROPBOX_CONNECTION);
+
     if (reportsFolder) {
       global.ipcRenderer.on(IPC_MAIN_CHANNELS.CHECK_DROPBOX_CONNECTION, (event, data) => {
         setIsDropboxConnected(!reportsFolder.includes("Dropbox") || data);
       });
     }
-    // console.log("isBeta", isBeta);
-    global.ipcRenderer.send(IPC_MAIN_CHANNELS.BETA_CHANNEL, isBeta);
+
     global.ipcRenderer.on(IPC_MAIN_CHANNELS.WINDOW_FOCUSED, handleWindowFocus);
 
     document.addEventListener("keydown", handleCtrlPlus);
 
     return () => {
       global.ipcRenderer.removeAllListeners(IPC_MAIN_CHANNELS.CHECK_DROPBOX_CONNECTION);
-      global.ipcRenderer.send(IPC_MAIN_CHANNELS.STOP_PATH_WATCHER, reportsFolder);
       global.ipcRenderer.removeAllListeners(IPC_MAIN_CHANNELS.WINDOW_FOCUSED);
       document.removeEventListener("keydown", handleCtrlPlus);
     };
@@ -93,6 +116,7 @@ const MainPage = ({
 
       setReportAndNotes(parsedReportsAndNotes);
       setSelectedDateActivities(parsedActivities);
+
       return;
     }
 
@@ -102,8 +126,8 @@ const MainPage = ({
 
   useEffect(() => {
     readDayReport();
-    global.ipcRenderer.send(IPC_MAIN_CHANNELS.START_FILE_WATCHER, reportsFolder, selectedDate);
 
+    global.ipcRenderer.send(IPC_MAIN_CHANNELS.START_FILE_WATCHER, reportsFolder, selectedDate);
     global.ipcRenderer.on(IPC_MAIN_CHANNELS.FILE_CHANGED, (event, data) => {
       if (selectedDateReport != data) {
         setSelectedDateReport(data || "");
@@ -117,13 +141,20 @@ const MainPage = ({
   }, [selectedDate, reportsFolder]);
 
   const readDayReport = async () => {
-    const dayReport = await global.ipcRenderer.invoke(
-      IPC_MAIN_CHANNELS.APP_READ_DAY_REPORT,
-      reportsFolder,
-      selectedDate,
-    );
+    try {
+      const dayReport = await global.ipcRenderer.invoke(
+        IPC_MAIN_CHANNELS.APP_READ_DAY_REPORT,
+        reportsFolder,
+        selectedDate,
+      );
 
-    setSelectedDateReport(dayReport || "");
+      setIsFileExist(dayReport !== null);
+      setSelectedDateReport(dayReport || "");
+    } catch (error) {
+      console.error("Failed to read day report:", error);
+      setIsFileExist(false);
+      setSelectedDateReport("");
+    }
   };
 
   const handleSave = (report: string, shouldAutosave: boolean) => {
@@ -134,6 +165,7 @@ const MainPage = ({
   const saveSerializedReport = (serializedReport: string) => {
     global.ipcRenderer.send(IPC_MAIN_CHANNELS.CHECK_DROPBOX_CONNECTION);
     global.ipcRenderer.invoke(IPC_MAIN_CHANNELS.APP_WRITE_DAY_REPORT, reportsFolder, selectedDate, serializedReport);
+
     setSelectedDateReport(serializedReport);
   };
 
@@ -145,11 +177,13 @@ const MainPage = ({
         existingConditions: [false],
       },
     ]);
+
     progress[HINTS_GROUP_NAMES.ZOOM_IN] = [false];
+
     setProgress(progress);
   };
 
-  const handleCtrlPlus = (e) => {
+  const handleCtrlPlus = (e: KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === KEY_CODES.EQUAL_SIGN) {
       changeHintConditions(progress, setProgress, [
         {
@@ -203,6 +237,9 @@ const MainPage = ({
             selectedDateReport={selectedDateReport}
             selectedDate={selectedDate}
             setSelectedDateReport={setSelectedDateReport}
+            isFileExist={isFileExist}
+            setIsFileExist={setIsFileExist}
+            isToday={isToday}
           />
         </section>
       ),
@@ -219,6 +256,7 @@ const MainPage = ({
             setSelectedDate={setSelectedDate}
             calendarDate={calendarDate}
             setCalendarDate={setCalendarDate}
+            selectedDateReport={selectedDateReport}
           />
         </section>
       ),
@@ -327,7 +365,11 @@ const MainPage = ({
       <Link
         href="/settings"
         onClick={() => setSaveReportTrigger(true)}
-        className="z-20 h-12 w-12 bg-blue-950 rounded-full fixed right-10 bottom-10 flex items-center justify-center transition-colors duration-300 hover:bg-blue-800 hover:before:flex before:content-['Settings'] before:hidden before:absolute before:-translate-x-full before:text-blue-950 before:font-bold before:dark:text-gray-100"
+        className={clsx(
+          "z-20 h-12 w-12 bg-blue-950 rounded-full fixed right-10 bottom-10 flex items-center justify-center transition-colors duration-300",
+          "hover:bg-blue-800 hover:before:flex before:content-['Settings'] before:hidden before:absolute before:-translate-x-full",
+          "before:text-blue-950 before:font-bold before:dark:text-gray-100",
+        )}
       >
         <span className="w-8 flex items-center justify-center text-white ">
           <Cog8ToothIcon />

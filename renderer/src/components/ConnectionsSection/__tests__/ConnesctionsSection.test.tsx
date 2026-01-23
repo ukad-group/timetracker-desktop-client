@@ -2,7 +2,7 @@ import React from "react";
 import { render } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import ConnectionsSection from "../ConnectionsSection";
-import { globalIpcRendererMock } from "@/tests/mocks/electron";
+import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";
 
 jest.mock("next/router", () => ({
   useRouter: () => ({
@@ -26,7 +26,8 @@ jest.mock("next/router", () => ({
 
 global.ipcRenderer = {
   on: jest.fn(),
-  send: jest.fn(),
+  send: ipcRendererSendMock,
+  sendSync: ipcRendererSendMock,
   removeAllListeners: jest.fn(),
   ...globalIpcRendererMock,
 };

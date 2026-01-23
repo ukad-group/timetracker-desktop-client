@@ -1,5 +1,4 @@
 import { Dispatch, SetStateAction, MutableRefObject, ReactElement } from "react";
-import { BookingFromApi } from "@/components/Bookings/types";
 
 export type CalendarProps = {
   reportsFolder: string;
@@ -7,6 +6,7 @@ export type CalendarProps = {
   setCalendarDate: Dispatch<SetStateAction<Date>>;
   selectedDate: Date;
   setSelectedDate: Dispatch<SetStateAction<Date>>;
+  selectedDateReport: string;
 };
 
 export type ParsedReport = {
@@ -26,6 +26,7 @@ export type DayOff = {
   duration: number;
   description: string;
   type: number;
+  status: number;
 };
 
 export type ApiDayOff = {
@@ -34,20 +35,17 @@ export type ApiDayOff = {
   quantity: number;
   description: string;
   type: number;
+  status: number;
 };
 
-export type TTUserInfo = {
-  userInfoIdToken: string;
-  userInfoRefreshToken: string;
-  name: string;
-  email: string;
-  TTCookie: string;
-  holidays: ApiDayOff[];
-  vacationsSickdays: ApiDayOff[];
+export type TTUserInfoProps = {
+  idToken: string;
+  refreshToken: string;
+  userName: string;
+  userEmail: string;
+  cookie: string;
   yearProjects: string[];
-  plannerAccessToken: string;
-  plannerRefreshToken: string;
-  monthBookings: BookingFromApi[];
+  accessToken: string;
 };
 
 export type VacationSickDaysData = {
@@ -60,8 +58,12 @@ export type FullCalendarWrapperProps = {
   selectedDate: Date;
   setSelectedDate: Dispatch<SetStateAction<Date>>;
   daysOff: DayOff[];
-  formattedQuarterReports: FormattedReport[];
   weekNumberRef: MutableRefObject<any>;
+  workDurationByWeek: SumWorkDurationByWeekProps;
 };
 
 export type daysOffAccumulatorType = { numberedDays: string[]; hours: number };
+
+export interface SumWorkDurationByWeekProps {
+  [week: number]: number;
+}

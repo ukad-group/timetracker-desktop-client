@@ -9,7 +9,7 @@ import { shallow } from "zustand/shallow";
 import { DAY as day, formatDate } from "@/helpers/utils/datetime-ui";
 import { DateSelectorProps } from "./types";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
-import { KEY_CODES } from "@/helpers/contstants";
+import { KEY_CODES } from "@/helpers/constants";
 import DropboxIcon from "@/shared/DropboxIcon/DropboxIcon";
 import { PopupButton } from "@/shared/Popup/types";
 

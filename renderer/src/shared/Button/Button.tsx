@@ -9,6 +9,7 @@ import {
   disabledStyles,
 } from "./constants";
 
+// TODO: create separate Button component which Extend HtmlButtom props,
 const Button = ({ callback, text, disabled, status, type = "button", tabIndex, children }: ButtonProps) => {
   const saveBtnStatuses = {
     enabled: {
@@ -44,13 +45,7 @@ const Button = ({ callback, text, disabled, status, type = "button", tabIndex, c
     disabledStyles;
 
   return (
-    <button
-      onClick={callback}
-      type={type}
-      className={styles}
-      disabled={disabled ? disabled : false}
-      tabIndex={tabIndex}
-    >
+    <button onClick={callback} type={type} className={styles} disabled={disabled} tabIndex={tabIndex}>
       {children}
       {status && status === "inprogress" && <Loader />}
       {status && status === "loading" && <Loader />}

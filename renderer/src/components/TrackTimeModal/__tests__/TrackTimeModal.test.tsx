@@ -3,6 +3,15 @@ import TrackTimeModal from "../TrackTimeModal";
 import { TrackTimeModalProps } from "../types";
 import "@testing-library/jest-dom";
 
+import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";
+
+global.ipcRenderer = {
+  invoke: jest.fn(),
+  send: ipcRendererSendMock,
+  sendSync: ipcRendererSendMock,
+  ...globalIpcRendererMock,
+};
+
 const mockedActivities = [
   {
     id: 1,

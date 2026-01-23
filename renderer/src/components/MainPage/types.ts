@@ -1,5 +1,5 @@
+import { ReportActivity } from "@/helpers/utils/types";
 import { Dispatch, SetStateAction } from "react";
-import { ReportActivity } from "@/helpers/utils/reports";
 
 export type MainPageProps = {
   selectedDateActivities: Array<ReportActivity>;

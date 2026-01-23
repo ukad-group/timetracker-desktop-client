@@ -8,7 +8,7 @@ import { useEditingHistoryManager } from "@/helpers/hooks";
 import { AutocompleteProps } from "./types";
 import SuggestionsList from "./SuggestionsList";
 import { filterList } from "./utils";
-import { KEY_CODES } from "@/helpers/contstants";
+import { KEY_CODES } from "@/helpers/constants";
 
 const AutocompleteSelector = ({
   isNewCheck = false,

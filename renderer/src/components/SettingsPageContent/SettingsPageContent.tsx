@@ -3,7 +3,7 @@ import Link from "next/link";
 import { MenuItem } from "@/shared/MenuItem";
 import { ButtonTransparent } from "@/shared/ButtonTransparent";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
-import { SidebarNavItem, SETTING_SECTIONS } from "@/helpers/contstants";
+import { SidebarNavItem, SETTING_SECTIONS } from "@/helpers/constants";
 import { closeWindowIfNeeded } from "@/helpers/utils/utils";
 import useColorTheme from "@/helpers/hooks/useTheme";
 

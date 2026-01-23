@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "16"
+          node-version: "20"
 
       - name: Get Tag Info
         id: tag_info
@@ -38,7 +38,7 @@ jobs:
         run: echo "Tag message is '${{ steps.tag_info.outputs.tag_message }}'"
 
       - name: Run find-and-replace to remove 'refs/tags/v'
-        uses: mad9000/actions-find-and-replace-string@3
+        uses: mad9000/actions-find-and-replace-string@5
         id: findandreplace
         with:
           source: ${{ github.ref }}
@@ -86,6 +86,10 @@ jobs:
         run: |
           cp .env.demo .env
           sed -i 's|^NEXT_PUBLIC_PORT=.*|NEXT_PUBLIC_PORT=${{ secrets.NEXT_PUBLIC_PORT }}|g' .env
+          sed -i 's|^NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME=.*|NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME=${{ secrets.NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME }}|g' .env
+          sed -i 's|^NEXT_PUBLIC_SERVER_ADDRESS=.*|NEXT_PUBLIC_SERVER_ADDRESS=${{ secrets.NEXT_PUBLIC_SERVER_ADDRESS }}|g' .env
+          sed -i 's|^NEXT_PUBLIC_PROTOCOL=.*|NEXT_PUBLIC_PROTOCOL=${{ secrets.NEXT_PUBLIC_PROTOCOL }}|g' .env
+          sed -i 's|^NEXT_PUBLIC_PROTOCOL_SERVER_ADDRESS=.*|NEXT_PUBLIC_PROTOCOL_SERVER_ADDRESS=${{ secrets.NEXT_PUBLIC_PROTOCOL_SERVER_ADDRESS }}|g' .env
           sed -i 's|^NEXT_PUBLIC_TRELLO_KEY=.*|NEXT_PUBLIC_TRELLO_KEY=${{ secrets.NEXT_PUBLIC_TRELLO_KEY }}|g' .env
           sed -i 's|^NEXT_PUBLIC_TRELLO_REDIRECT_URI=.*|NEXT_PUBLIC_TRELLO_REDIRECT_URI=${{ secrets.NEXT_PUBLIC_TRELLO_REDIRECT_URI }}|g' .env
           sed -i 's|^NEXT_PUBLIC_GOOGLE_CLIENT_ID=.*|NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}|g' .env
@@ -107,6 +111,10 @@ jobs:
         run: |
           cp .env.demo .env
           sed -i '' 's|^NEXT_PUBLIC_PORT=.*|NEXT_PUBLIC_PORT=${{ secrets.NEXT_PUBLIC_PORT }}|g' .env
+          sed -i '' 's|^NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME=.*|NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME=${{ secrets.NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME }}|g' .env
+          sed -i '' 's|^NEXT_PUBLIC_SERVER_ADDRESS=.*|NEXT_PUBLIC_SERVER_ADDRESS=${{ secrets.NEXT_PUBLIC_SERVER_ADDRESS }}|g' .env
+          sed -i '' 's|^NEXT_PUBLIC_PROTOCOL=.*|NEXT_PUBLIC_PROTOCOL=${{ secrets.NEXT_PUBLIC_PROTOCOL }}|g' .env
+          sed -i '' 's|^NEXT_PUBLIC_PROTOCOL_SERVER_ADDRESS=.*|NEXT_PUBLIC_PROTOCOL_SERVER_ADDRESS=${{ secrets.NEXT_PUBLIC_PROTOCOL_SERVER_ADDRESS }}|g' .env
           sed -i '' 's|^NEXT_PUBLIC_TRELLO_KEY=.*|NEXT_PUBLIC_TRELLO_KEY=${{ secrets.NEXT_PUBLIC_TRELLO_KEY }}|g' .env
           sed -i '' 's|^NEXT_PUBLIC_TRELLO_REDIRECT_URI=.*|NEXT_PUBLIC_TRELLO_REDIRECT_URI=${{ secrets.NEXT_PUBLIC_TRELLO_REDIRECT_URI }}|g' .env
           sed -i '' 's|^NEXT_PUBLIC_GOOGLE_CLIENT_ID=.*|NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}|g' .env
@@ -127,7 +135,7 @@ jobs:
       - run: npm run dist
 
       - name: Publish release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         id: release
         if: (startsWith(github.ref, 'refs/tags/')) && (!(contains(github.ref, 'beta')))
         with:
@@ -151,7 +159,7 @@ jobs:
           ls -l
 
       - name: Publish pre-release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         id: pre_release
         if: (startsWith(github.ref, 'refs/tags/')) && (contains(github.ref, 'beta'))
         with:

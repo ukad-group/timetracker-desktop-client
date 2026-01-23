@@ -7,7 +7,7 @@ import { Release } from "./types";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import { SCREENS } from "@/constants";
 import { Hint } from "@/shared/Hint";
-import { HINTS_GROUP_NAMES, HINTS_ALERTS } from "@/helpers/contstants";
+import { HINTS_GROUP_NAMES, HINTS_ALERTS } from "@/helpers/constants";
 import { changeHintConditions } from "@/helpers/utils/utils";
 import useScreenSizes from "@/helpers/hooks/useScreenSizes";
 

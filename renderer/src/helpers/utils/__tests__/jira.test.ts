@@ -1,6 +1,6 @@
 import { updateJiraAccessToken, removeJiraStoredUser, updateJiraStoredUser } from "../jira";
-import { globalIpcRendererMock } from "@/tests/mocks/electron";
-import { LOCAL_STORAGE_VARIABLES } from "@/helpers/contstants";
+import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";
+import { LOCAL_STORAGE_VARIABLES } from "@/helpers/constants";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 
 jest.mock("electron", () => ({
@@ -11,6 +11,8 @@ jest.mock("electron", () => ({
 
 global.ipcRenderer = {
   invoke: jest.fn(),
+  send: ipcRendererSendMock,
+  sendSync: ipcRendererSendMock,
   ...globalIpcRendererMock,
 };
 
@@ -19,6 +21,8 @@ describe("GIVEN jira/updateJiraAccessToken", () => {
     jest.restoreAllMocks();
 
     global.ipcRenderer = globalIpcRendererMock;
+    global.ipcRenderer.send = ipcRendererSendMock;
+    global.ipcRenderer.sendSync = ipcRendererSendMock;
   });
 
   it("calls ipcRenderer.invoke with the correct arguments", async () => {

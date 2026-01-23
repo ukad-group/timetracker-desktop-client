@@ -4,16 +4,16 @@ import { formatDuration } from "@/helpers/utils/reports";
 import { DatePointApi, DayCellContentArg, EventContentArg, WeekNumberContentArg } from "@fullcalendar/core";
 import { CalendarDaysIcon, FaceFrownIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
 import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
-import { DayOff, FormattedReport, FullCalendarWrapperProps, daysOffAccumulatorType } from "./types";
+import { DayOff, FullCalendarWrapperProps, daysOffAccumulatorType } from "./types";
 
 const FullCalendarWrapper = ({
   children,
   setSelectedDate,
   calendarDate,
   selectedDate,
-  formattedQuarterReports,
   weekNumberRef,
   daysOff,
+  workDurationByWeek,
 }: FullCalendarWrapperProps) => {
   const dateClickHandle = (info: DatePointApi) => {
     info.date.setHours(1); // by default info.date is 00:00, sometimes it can cause a bug, considering the date as the previous day
@@ -47,27 +47,20 @@ const FullCalendarWrapper = ({
 
             if (
               day.date.getFullYear() === calendarDate.getFullYear() &&
-              getWeekNumber(dayOffStringDate, false) === options.num &&
+              getWeekNumber(dayOffStringDate) === options.num &&
               !acc.numberedDays.includes(dayOffStringDate)
             ) {
               acc.numberedDays.push(dayOffStringDate);
               acc.hours += day.duration;
             }
+
             return acc;
           },
           { numberedDays: [], hours: 0 },
         ).hours
       : 0;
 
-    const weekTotalHours = formatDuration(
-      formattedQuarterReports.reduce((acc: number, report: FormattedReport) => {
-        if (report.week === options.num) {
-          acc += report.workDurationMs;
-        }
-        return acc;
-      }, 0) +
-        daysOffWeekTotal * MS_PER_HOUR,
-    );
+    const weekTotalHours = formatDuration((workDurationByWeek[options.num] ?? 0) + daysOffWeekTotal * MS_PER_HOUR);
 
     return (
       <div ref={weekNumberRef} className="flex flex-col text-xs text-zinc-400">
@@ -96,16 +89,19 @@ const FullCalendarWrapper = ({
       case 0:
         icon = <CalendarDaysIcon className="absolute top-[30px] right-[2px] w-5 h-5" />;
         title = `Vacation, ${duration}`;
+
         break;
 
       case 1:
         icon = <FaceFrownIcon className="absolute top-[30px] right-[2px] w-5 h-5" />;
         title = `Sickday, ${duration}`;
+
         break;
 
       case 2:
         icon = <GlobeAltIcon className="absolute top-[30px] right-[2px] w-5 h-5" />;
         title = userDayOff?.description ? `${userDayOff?.description}, ${duration}` : "Holiday";
+
         break;
 
       default:

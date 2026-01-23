@@ -1,5 +1,4 @@
 import { useMemo, useEffect, useState } from "react";
-import { ReportActivity } from "@/helpers/utils/reports";
 import { checkIsToday, getCeiledTime } from "@/helpers/utils/datetime-ui";
 import { shallow } from "zustand/shallow";
 import { useScheduledEventsStore } from "@/store/googleEventsStore";
@@ -11,8 +10,9 @@ import { SCREENS } from "@/constants";
 import { ActivitiesTableContext } from "./context";
 import { MainView, CompactView } from "./components";
 import { getTotalDuration, formatEvents, getActualEvents } from "./utils";
-import { KEY_CODES, LOCAL_STORAGE_VARIABLES } from "@/helpers/contstants";
-import { TRACK_ANALYTICS } from "@/helpers/contstants";
+import { KEY_CODES, LOCAL_STORAGE_VARIABLES } from "@/helpers/constants";
+import { TRACK_ANALYTICS } from "@/helpers/constants";
+import { ReportActivity } from "@/helpers/utils/types";
 
 const ActivitiesTable = ({
   activities,
@@ -30,10 +30,13 @@ const ActivitiesTable = ({
   const [timerId, setTimerId] = useState(null);
   const [scheduledEvents] = useScheduledEventsStore((state) => [state.event, state.setEvent], shallow);
   const { screenSizes } = useScreenSizes();
-  const showAsMain = localStorage.getItem(LOCAL_STORAGE_VARIABLES.WIDGET_ORDER)
-    ? JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.WIDGET_ORDER)).find(
-        (section) => section.id === "Activities Table",
-      ).side === "left"
+  const showAsMain = global.ipcRenderer.sendSync(
+    IPC_MAIN_CHANNELS.ELECTRON_STORE_GET,
+    LOCAL_STORAGE_VARIABLES.WIDGET_ORDER,
+  )
+    ? JSON.parse(
+        global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.WIDGET_ORDER),
+      ).find((section) => section.id === "Activities Table").side === "left"
     : true;
 
   const totalDuration = useMemo(
@@ -41,9 +44,11 @@ const ActivitiesTable = ({
     [validatedActivities],
   );
 
-  const tableActivities = useMemo(() => {
+  const tableActivities: ReportActivity[] = useMemo(() => {
     const badgedActivities = validatedActivities.map((activity) => {
-      const userInfo = JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER));
+      const userInfo = JSON.parse(
+        global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER),
+      );
       if (userInfo && !userInfo?.yearProjects?.includes(activity.project)) {
         return { ...activity, isNewProject: true };
       }

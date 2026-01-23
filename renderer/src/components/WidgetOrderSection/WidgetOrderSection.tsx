@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
-import { LOCAL_STORAGE_VARIABLES } from "@/helpers/contstants";
+import { LOCAL_STORAGE_VARIABLES } from "@/helpers/constants";
 import { StoredSection } from "./types";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import DragNDropIcon from "@/shared/DragNDropIcon/DragNDropIcon";
+import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 
 const WidgetOrderSection = () => {
-  const sectionsOptions: StoredSection[] = JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.WIDGET_ORDER))
-    ? JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.WIDGET_ORDER))
+  const sectionsOptions: StoredSection[] = JSON.parse(
+    global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.WIDGET_ORDER),
+  )
+    ? JSON.parse(
+        global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.WIDGET_ORDER),
+      )
     : [
         { id: "Date Selector", side: "left", order: 1 },
         { id: "Activities Table", side: "left", order: 2 },
@@ -89,7 +94,11 @@ const WidgetOrderSection = () => {
   };
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_VARIABLES.WIDGET_ORDER, JSON.stringify([...leftSections, ...rightSections]));
+    global.ipcRenderer.send(
+      IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+      LOCAL_STORAGE_VARIABLES.WIDGET_ORDER,
+      JSON.stringify([...leftSections, ...rightSections]),
+    );
   }, [leftSections, rightSections]);
 
   return (

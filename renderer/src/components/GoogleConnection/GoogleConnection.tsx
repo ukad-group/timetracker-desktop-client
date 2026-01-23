@@ -4,9 +4,9 @@ import { getGoogleCredentials, getGoogleUserInfo } from "@/API/googleCalendarAPI
 import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/solid";
 import { GoogleCredentails, GoogleUser } from "./types";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
-import { LOCAL_STORAGE_VARIABLES } from "@/helpers/contstants";
+import { LOCAL_STORAGE_VARIABLES } from "@/helpers/constants";
 import isOnline from "is-online";
-import { TRACK_ANALYTICS } from "@/helpers/contstants";
+import { TRACK_ANALYTICS } from "@/helpers/constants";
 
 const GoogleConnection = () => {
   const [showGoogleEvents, setShowGoogleEvents] = useState(false);
@@ -23,15 +23,25 @@ const GoogleConnection = () => {
   };
 
   const handleSignOut = (id: string) => {
-    const loggedUsersFromLs = JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.GOOGLE_USERS));
+    const loggedUsersFromLs = JSON.parse(
+      global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.GOOGLE_USERS),
+    );
     const filteredUsers = loggedUsersFromLs.filter((user: GoogleUser) => user.accountId !== id);
 
     if (filteredUsers.length === 0) {
       setShowGoogleEvents(false);
-      localStorage.setItem(LOCAL_STORAGE_VARIABLES.SHOW_GOOGLE_EVENTS, "false");
+      global.ipcRenderer.send(
+        IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+        LOCAL_STORAGE_VARIABLES.SHOW_GOOGLE_EVENTS,
+        "false",
+      );
     }
 
-    localStorage.setItem(LOCAL_STORAGE_VARIABLES.GOOGLE_USERS, JSON.stringify(filteredUsers));
+    global.ipcRenderer.send(
+      IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+      LOCAL_STORAGE_VARIABLES.GOOGLE_USERS,
+      JSON.stringify(filteredUsers),
+    );
     setLoggedUsers(filteredUsers);
   };
 
@@ -41,7 +51,9 @@ const GoogleConnection = () => {
       const googleProfileInfo = await loadGoogleUserInfo(credentials);
       const googleProfileUsername = googleProfileInfo?.names[0]?.displayName;
       const googleProfileId = googleProfileInfo?.resourceName;
-      const googleUsersFromLs = JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.GOOGLE_USERS));
+      const googleUsersFromLs = JSON.parse(
+        global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.GOOGLE_USERS),
+      );
 
       if (
         googleUsersFromLs.some((user) => {
@@ -60,7 +72,11 @@ const GoogleConnection = () => {
           calendar: TRACK_ANALYTICS.CALENDAR_GOOGLE,
         });
         googleUsersFromLs.push(userObject);
-        localStorage.setItem(LOCAL_STORAGE_VARIABLES.GOOGLE_USERS, JSON.stringify(googleUsersFromLs));
+        global.ipcRenderer.send(
+          IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+          LOCAL_STORAGE_VARIABLES.GOOGLE_USERS,
+          JSON.stringify(googleUsersFromLs),
+        );
         setLoggedUsers(googleUsersFromLs);
       }
     } catch (e) {
@@ -79,16 +95,29 @@ const GoogleConnection = () => {
   const handleCheckboxChange = () => {
     setShowGoogleEvents((prev) => !prev);
     const reversShowGoogleEvents = !showGoogleEvents;
-    localStorage.setItem(LOCAL_STORAGE_VARIABLES.SHOW_GOOGLE_EVENTS, reversShowGoogleEvents.toString());
+    global.ipcRenderer.send(
+      IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+      LOCAL_STORAGE_VARIABLES.SHOW_GOOGLE_EVENTS,
+      reversShowGoogleEvents.toString(),
+    );
   };
 
   const rerenderListener = () => {
-    const googleUsers = JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.GOOGLE_USERS));
-    const authorizationCode = localStorage.getItem(LOCAL_STORAGE_VARIABLES.GOOGLE_AUTH_CODE);
-    localStorage.removeItem(LOCAL_STORAGE_VARIABLES.GOOGLE_AUTH_CODE);
+    const googleUsers = JSON.parse(
+      global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.GOOGLE_USERS),
+    );
+    const authorizationCode = global.ipcRenderer.sendSync(
+      IPC_MAIN_CHANNELS.ELECTRON_STORE_GET,
+      LOCAL_STORAGE_VARIABLES.GOOGLE_AUTH_CODE,
+    );
+    global.ipcRenderer.send(IPC_MAIN_CHANNELS.ELECTRON_STORE_DELETE, LOCAL_STORAGE_VARIABLES.GOOGLE_AUTH_CODE);
 
     if (!googleUsers) {
-      localStorage.setItem(LOCAL_STORAGE_VARIABLES.GOOGLE_USERS, JSON.stringify([]));
+      global.ipcRenderer.send(
+        IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+        LOCAL_STORAGE_VARIABLES.GOOGLE_USERS,
+        JSON.stringify([]),
+      );
     }
 
     if (authorizationCode) {
@@ -97,11 +126,16 @@ const GoogleConnection = () => {
   };
 
   useEffect(() => {
-    if (localStorage.getItem(LOCAL_STORAGE_VARIABLES.SHOW_GOOGLE_EVENTS) === "true") {
+    if (
+      global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.SHOW_GOOGLE_EVENTS) ===
+      "true"
+    ) {
       setShowGoogleEvents(true);
     }
 
-    const loggedUsersFromLs = JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.GOOGLE_USERS));
+    const loggedUsersFromLs = JSON.parse(
+      global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.GOOGLE_USERS),
+    );
 
     if (loggedUsersFromLs) {
       setLoggedUsers(loggedUsersFromLs);

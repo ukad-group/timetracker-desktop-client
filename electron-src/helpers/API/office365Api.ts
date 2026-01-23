@@ -5,6 +5,28 @@ export type Options = {
   scope: string;
 };
 
+export type AzureTokenSuccess = {
+  token_type: string;
+  scope: string;
+  expires_in: number;
+  ext_expires_in: number;
+  access_token: string;
+  id_token?: string;
+  refresh_token?: string;
+};
+
+export type AzureTokenError = {
+  error: string;
+  error_description: string;
+  error_codes?: number[];
+  timestamp?: string;
+  trace_id?: string;
+  correlation_id?: string;
+  error_uri?: string;
+};
+
+export type AzureTokenResponse = AzureTokenSuccess | AzureTokenError;
+
 export const getAuthUrl = (options: Options) => {
   const { clientId, scope, redirectUri } = options;
   const authUrl = new URL(

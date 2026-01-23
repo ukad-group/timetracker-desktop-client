@@ -3,7 +3,7 @@
 }
 
 .tooltip {
-  @apply absolute flex gap-1 text-white font-normal text-xs bottom-[130%] dark:bg-gray-700 rounded-md p-[10px] transition -ml-[35px];
+  @apply absolute flex gap-1 text-white font-normal text-xs bottom-[130%] bg-gray-700 rounded-md p-[10px] transition -ml-[15px];
 }
 
 .tooltip::after {

@@ -3,7 +3,7 @@ import { Dispatch, MutableRefObject, SetStateAction } from "react";
 import { Position } from "./types";
 import { positioningTop, positioningRight, positioningBottom, positioningLeft } from "./utils";
 import { PLACEMENTS } from "./constants";
-import { KEY_CODES } from "@/helpers/contstants";
+import { KEY_CODES } from "@/helpers/constants";
 
 export const positioning = (
   learnHint: () => void,

@@ -2,8 +2,22 @@ import fs from "fs";
 import path from "path";
 import next from "next";
 import { parse } from "url";
-import { createServer } from "http";
-import { app, BrowserWindow, dialog, ipcMain, Menu, MenuItem, shell, Tray, globalShortcut } from "electron";
+import { createServer, Server, IncomingMessage, ServerResponse } from "http";
+import { AddressInfo } from "net";
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  Menu,
+  MenuItem,
+  shell,
+  Tray,
+  globalShortcut,
+  protocol,
+  net,
+} from "electron";
+import url from "node:url";
 import { autoUpdater, UpdateInfo } from "electron-updater";
 import isDev from "electron-is-dev";
 import { createWindow } from "./helpers/create-window";
@@ -22,12 +36,13 @@ import {
 import { getTrelloCardsOfAllBoards, getTrelloMember, getTrelloAuthUrl } from "./helpers/API/trelloApi";
 import {
   getAzureAuthUrl,
-  getAzureAuthUrlAdditional,
+  // getAzureAuthUrlAdditional,
   getAzureTokens,
   getRefreshedPlannerToken,
   getTimetrackerCookie,
   getTimetrackerHolidays,
   getTimetrackerProjects,
+  getTimetrackerContactPersons,
   getTimetrackerVacations,
   getRefreshedUserInfoToken,
   getTimetrackerBookings,
@@ -43,13 +58,13 @@ import {
 } from "./helpers/API/jiraApi";
 import { IPC_MAIN_CHANNELS } from "./helpers/constants";
 import { getGoogleAuthUrl } from "./helpers/API/googleApi";
+import Store from "electron-store";
 
 initialize("A-EU-9361517871");
 ipcMain.on(IPC_MAIN_CHANNELS.ANALYTICS_DATA, (_, analyticsEvent: string, data?: Record<string, string>) => {
   trackEvent(analyticsEvent, data);
 });
 
-const PORT = 51432;
 let childWindow: any;
 
 let updateStatus: null | "available" | "downloaded" = null;
@@ -73,6 +88,24 @@ function setUpdateStatus(status: "available" | "downloaded", version: string) {
   updateVersion = version;
 }
 
+function isLaterVersion(currentVersion: string, updateVersion: string) {
+  const currentParts = currentVersion.split(".").map(Number);
+  const updateParts = updateVersion.split(".").map(Number);
+
+  for (let i = 0; i < Math.max(currentParts.length, updateParts.length); i++) {
+    const currentPart = currentParts[i] || 0;
+    const updatePart = updateParts[i] || 0;
+
+    if (currentPart > updatePart) {
+      return true;
+    }
+    if (currentPart < updatePart) {
+      return false;
+    }
+  }
+  return false;
+}
+
 autoUpdater.allowDowngrade = true;
 autoUpdater.on("error", (e: Error, message?: string) => {
   mainWindow?.webContents.send(
@@ -88,6 +121,18 @@ ipcMain.on(IPC_MAIN_CHANNELS.GET_CURRENT_VERSION, () => {
 
 autoUpdater.on("update-available", (info: UpdateInfo) => {
   setUpdateStatus("available", info.version);
+
+  const lowerCurrentVersion = app.getVersion().toLowerCase();
+  const lowerNewVersion = info.version.toLowerCase();
+  const shouldSkipDownloading =
+    isLaterVersion(lowerCurrentVersion, lowerNewVersion) &&
+    (!lowerCurrentVersion.includes("beta") ||
+      (lowerCurrentVersion.includes("beta") && lowerNewVersion.includes("beta")));
+
+  if (shouldSkipDownloading) {
+    return;
+  }
+
   autoUpdater.downloadUpdate();
   if (mainWindow) {
     mainWindow.webContents.send(IPC_MAIN_CHANNELS.UPDATE_AVAILABLE, true, info);
@@ -116,9 +161,69 @@ ipcMain.on(IPC_MAIN_CHANNELS.REDIRECT, (_, link: string) => {
   shell.openExternal(link);
 });
 
+//defined the store
+let electronStore = new Store();
+
+ipcMain.on(IPC_MAIN_CHANNELS.GET_CURRENT_PORT, async (_) => {
+  _.returnValue = getServerPort();
+});
+
+ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, async (_, val) => {
+  var value = electronStore.get(val);
+  _.returnValue = value ? value : null;
+});
+
+ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_STORE_SET, (_, key, val) => {
+  electronStore.set(key, typeof val == "string" ? val : JSON.stringify(val));
+});
+
+ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_STORE_DELETE, (_, key) => {
+  electronStore.delete(key);
+});
+
+ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_STORE_CLEAR, (_) => {
+  electronStore.clear();
+});
+
+//defined the session
+let electronSession: Record<string, any> = {};
+
+ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_SESSION_GET, (_, key) => {
+  _.returnValue = electronSession[key] ?? null;
+});
+
+ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_SESSION_SET, (_, key, value) => {
+  electronSession[key] = typeof value === "string" ? value : JSON.stringify(value);
+});
+
+ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_SESSION_DELETE, (_, key) => {
+  delete electronSession[key];
+});
+
+ipcMain.on(IPC_MAIN_CHANNELS.ELECTRON_SESSION_CLEAR, (_) => {
+  electronSession = {};
+});
+
 const userDataDirectory = app.getPath("userData");
 let mainWindow: Electron.CrossProcessExports.BrowserWindow | null = null;
 const gotTheLock = app.requestSingleInstanceLock();
+
+let server: Server<typeof IncomingMessage, typeof ServerResponse>;
+
+const getServerPort = () => {
+  let address = server?.address() as AddressInfo;
+  let serverPort = address?.port ? address.port : 0;
+  return serverPort;
+};
+
+const getServerAddress = () => {
+  var address =
+    process.env.NEXT_PUBLIC_SERVER_ADDRESS?.replace(
+      process.env.NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME || "",
+      getServerPort().toString(),
+    ) || "";
+  return address;
+};
 
 const generateWindow = () => {
   mainWindow = createWindow({
@@ -132,7 +237,7 @@ const generateWindow = () => {
   });
 
   mainWindow.maximize();
-  mainWindow.loadURL(`http://localhost:${PORT}/`);
+  mainWindow.loadURL(`http://localhost:${getServerPort()}/`);
 
   if (isDev) {
     mainWindow.webContents.openDevTools();
@@ -221,18 +326,26 @@ app.on("ready", async () => {
 
   await nextApp.prepare();
 
-  const server = createServer((req: any, res: any) => {
+  server = createServer((req: any, res: any) => {
     const parsedUrl = parse(req.url, true);
     requestHandler(req, res, parsedUrl);
-  }).listen(PORT, "127.0.0.1", () => {
-    console.log(`> Ready on http://localhost:${PORT}`);
+  }).listen(0, "127.0.0.1", () => {
+    let address: AddressInfo | null | string = server.address();
+    let port = (address as AddressInfo).port;
+    process.env.NEXT_PUBLIC_PORT = `${port}`;
+
+    console.log(`> Ready on http://localhost:${process.env.NEXT_PUBLIC_PORT}`);
   });
 
   const restartServer = () => {
     server.close(() => {
-      server.listen(PORT, "127.0.0.1", () => {
-        console.log(`> Ready on http://127.0.0.1:${PORT}`);
-        mainWindow?.loadURL(`http://localhost:${PORT}/`);
+      server.listen(0, "127.0.0.1", () => {
+        let address: AddressInfo | null | string = server.address();
+        let port = (address as AddressInfo).port;
+        process.env.NEXT_PUBLIC_PORT = `${port}`;
+
+        console.log(`> Ready on http://127.0.0.1:${port}}`);
+        mainWindow?.loadURL(`http://localhost:${port}/`);
       });
     });
   };
@@ -242,9 +355,9 @@ app.on("ready", async () => {
       const options: Electron.MessageBoxOptions = {
         type: "error",
         title: error.message,
-        message: `Can't start server at http://localhost:${PORT}. To resolve the server error, follow these steps: 
+        message: `Can't start server at http://localhost:${getServerPort()}. To resolve the server error, follow these steps: 
   1. Restart the application.
-  2. Check if port 51432 is available. 
+  2. Check if port ${getServerPort()} is available. 
   3. If the issue persists Reset Windows NAT:
       - Open Command Prompt as Administrator
       - Type "net stop winnat" and press Enter
@@ -263,250 +376,264 @@ app.on("ready", async () => {
     }
   });
 
-  if (!gotTheLock) {
-    app.quit();
-  } else {
-    app.on("second-instance", () => {
-      if (mainWindow) {
-        if (mainWindow.isMinimized()) mainWindow.restore();
-        mainWindow.show();
-        mainWindow.focus();
-      }
-    });
-    generateWindow();
-  }
+  server.on("listening", () => {
+    if (!gotTheLock) {
+      app.quit();
+    } else {
+      app.on("second-instance", () => {
+        if (mainWindow) {
+          if (mainWindow.isMinimized()) mainWindow.restore();
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      });
+      generateWindow();
+    }
 
-  let currentSelectedDate = "";
+    let currentSelectedDate = "";
 
-  if (mainWindow) {
-    app.whenReady().then(() => {
-      if (process.platform === "darwin") return;
+    if (mainWindow) {
+      app.whenReady().then(() => {
+        protocol.handle(process.env.NEXT_PUBLIC_PROTOCOL as string, (request) => {
+          const localUrl = request.url.replace(
+            process.env.NEXT_PUBLIC_PROTOCOL_SERVER_ADDRESS || "",
+            getServerAddress(),
+          );
+          return net.fetch(localUrl);
+        });
 
-      try {
-        generateTray();
-      } catch (err) {
-        console.log(err);
-        mainWindow?.webContents.send(
-          IPC_MAIN_CHANNELS.BACKEND_ERROR,
-          "Tray error. Encountered errors while integrating the application into the system tray.",
-          err,
-        );
-      }
-    });
+        if (process.platform === "darwin") return;
 
-    function createChildWindow(url: string) {
-      childWindow = createWindow({
-        width: 1000,
-        height: 700,
-        modal: true,
-        show: false,
-        autoHideMenuBar: true,
-        parent: mainWindow as BrowserWindow | undefined,
-        webPreferences: {},
+        try {
+          generateTray();
+        } catch (err) {
+          console.log(err);
+          mainWindow?.webContents.send(
+            IPC_MAIN_CHANNELS.BACKEND_ERROR,
+            "Tray error. Encountered errors while integrating the application into the system tray.",
+            err,
+          );
+        }
       });
 
-      childWindow.loadURL(url);
-      childWindow.once("ready-to-show", () => {
-        childWindow.show();
+      function createChildWindow(url: string) {
+        childWindow = createWindow({
+          width: 1000,
+          height: 700,
+          modal: true,
+          show: false,
+          autoHideMenuBar: true,
+          parent: mainWindow as BrowserWindow | undefined,
+          webPreferences: {},
+        });
+
+        childWindow.loadURL(url);
+        childWindow.once("ready-to-show", () => {
+          childWindow.show();
+        });
+        childWindow.on("closed", () => {
+          childWindow = null;
+        });
+      }
+
+      const getConnectionUrl = (connectionName: string) => {
+        switch (connectionName) {
+          case "office365":
+            return getAuthUrl(getOffice365Options());
+
+          case "jira":
+            return getJiraAuthUrl(getJiraOptions());
+
+          case "trello":
+            return getTrelloAuthUrl(getTrelloOptions());
+
+          case "google":
+            return getGoogleAuthUrl(getGoogleOptions());
+
+          case "timetracker-website":
+            const options = getOffice365Options();
+
+            const optionsWithAllScope = {
+              ...options,
+              scope:
+                "api://d7d02680-bd82-47ed-95f9-e977ab5f0487/access_as_user offline_access profile email offline_access openid User.Read Calendars.Read",
+            };
+
+            return getAzureAuthUrl(optionsWithAllScope);
+
+          default:
+            return "";
+        }
+      };
+
+      ipcMain.on(IPC_MAIN_CHANNELS.OPEN_CHILD_WINDOW, (_, connectionName) => {
+        createChildWindow(getConnectionUrl(connectionName));
       });
-      childWindow.on("closed", () => {
-        childWindow = null;
+
+      ipcMain.on(IPC_MAIN_CHANNELS.CHILD_WINDOW_CLOSED, (_, componentName) => {
+        switch (componentName) {
+          case "google":
+            mainWindow?.webContents.send(IPC_MAIN_CHANNELS.GOOGLE_SHOULD_RERENDER);
+            break;
+
+          case "jira":
+            mainWindow?.webContents.send(IPC_MAIN_CHANNELS.JIRA_SHOULD_RERENDER);
+            break;
+
+          case "office365":
+            mainWindow?.webContents.send(IPC_MAIN_CHANNELS.OFFICE365_SHOULD_RERENDER);
+            break;
+
+          case "timetracker-website":
+            mainWindow?.webContents.send(IPC_MAIN_CHANNELS.TIMETRACKER_SHOULD_RERENDER);
+            break;
+
+          case "trello":
+            mainWindow?.webContents.send(IPC_MAIN_CHANNELS.TRELLO_SHOULD_RERENDER);
+            break;
+
+          default:
+            break;
+        }
+      });
+
+      // common scope watchers for the start/stop-folder-watcher functions
+      const watchers: {
+        [key: string]: chokidar.FSWatcher | undefined;
+      } = {};
+
+      ipcMain.on(IPC_MAIN_CHANNELS.START_FILE_WATCHER, (_, reportsFolder: string, selectedDate: Date) => {
+        const timereportPath = getPathFromDate(selectedDate, reportsFolder);
+
+        try {
+          if (fs.existsSync(timereportPath)) {
+            mainWindow?.webContents.send("file-exist", true);
+
+            const fileWatcher = chokidar.watch(timereportPath);
+            watchers[timereportPath] = fileWatcher;
+
+            fileWatcher.on("change", (timereportPath) => {
+              currentSelectedDate = selectedDate.toDateString();
+
+              if (currentSelectedDate === selectedDate.toDateString()) {
+                readDataFromFile(timereportPath, (data: string | null) => {
+                  mainWindow && mainWindow.webContents.send(IPC_MAIN_CHANNELS.FILE_CHANGED, data);
+                });
+              }
+            });
+          }
+        } catch (err) {
+          console.log(err);
+          mainWindow?.webContents.send(
+            IPC_MAIN_CHANNELS.BACKEND_ERROR,
+            "Watcher error. Updates to files might not be accurately displayed within the application. ",
+            err,
+          );
+        }
+      });
+
+      ipcMain.on(IPC_MAIN_CHANNELS.START_FOLDER_WATCHER, (_, reportsFolder: string) => {
+        try {
+          if (fs.existsSync(reportsFolder)) {
+            const folderWatcher = chokidar.watch(reportsFolder, {
+              ignoreInitial: true,
+            });
+            watchers[reportsFolder] = folderWatcher;
+
+            folderWatcher
+              .on("change", () => {
+                mainWindow?.webContents.send(IPC_MAIN_CHANNELS.ANY_FILE_CHANGED);
+              })
+              .on("add", () => {
+                mainWindow?.webContents.send(IPC_MAIN_CHANNELS.ANY_FILE_CHANGED);
+              })
+              .on("unlink", () => {
+                mainWindow?.webContents.send(IPC_MAIN_CHANNELS.ANY_FILE_CHANGED);
+              });
+          }
+        } catch (err) {
+          console.log(err);
+          mainWindow?.webContents.send(
+            IPC_MAIN_CHANNELS.BACKEND_ERROR,
+            "Watcher error. Updates to files might not be accurately displayed within the application. ",
+            err,
+          );
+        }
+      });
+
+      ipcMain.on(IPC_MAIN_CHANNELS.CHECK_DROPBOX_CONNECTION, () => {
+        const command = process.platform === "win32" ? "tasklist" : "ps aux";
+        exec(command, (err, stdout, stderr) => {
+          if (err) {
+            console.log(err);
+            return;
+          }
+          if (stderr) {
+            console.log(stderr);
+            return;
+          }
+          if (stdout) {
+            const isRun = stdout.toLowerCase().includes(process.platform === "win32" ? "dropbox.exe" : "dropbox");
+            mainWindow?.webContents.send("dropbox-connection", isRun);
+          }
+        });
+      });
+
+      ipcMain.on(IPC_MAIN_CHANNELS.STOP_PATH_WATCHER, (_, reportsFolder: string, selectedDate: Date) => {
+        try {
+          if (selectedDate) {
+            const timereportPath = getPathFromDate(selectedDate, reportsFolder);
+            if (watchers[timereportPath]) {
+              watchers[timereportPath]?.close();
+              delete watchers[timereportPath];
+            }
+          } else if (watchers[reportsFolder]) {
+            watchers[reportsFolder]?.close();
+            delete watchers[reportsFolder];
+          }
+        } catch (err) {
+          console.log(err);
+          mainWindow?.webContents.send(
+            IPC_MAIN_CHANNELS.BACKEND_ERROR,
+            "Watcher error. Updates to files might not be accurately displayed within the application. ",
+            err,
+          );
+        }
+      });
+
+      mainWindow.webContents.on("will-navigate", function (event, newUrl) {
+        console.log("will-navigate", newUrl);
+      });
+
+      mainWindow.webContents.on("context-menu", (_, params) => {
+        const menu = new Menu();
+
+        for (const suggestion of params.dictionarySuggestions) {
+          menu.append(
+            new MenuItem({
+              label: suggestion,
+              click: () => mainWindow && mainWindow.webContents.replaceMisspelling(suggestion),
+            }),
+          );
+        }
+
+        if (params.misspelledWord && mainWindow) {
+          menu.append(
+            new MenuItem({
+              label: "Add to dictionary",
+              click: () =>
+                mainWindow && mainWindow.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord),
+            }),
+          );
+        }
+
+        menu.popup();
       });
     }
 
-    const getConnectionUrl = (connectionName: string) => {
-      switch (connectionName) {
-        case "office365":
-          return getAuthUrl(getOffice365Options());
-
-        case "jira":
-          return getJiraAuthUrl(getJiraOptions());
-
-        case "trello":
-          return getTrelloAuthUrl(getTrelloOptions());
-
-        case "google":
-          return getGoogleAuthUrl(getGoogleOptions());
-
-        case "timetracker-website":
-          const options = getOffice365Options();
-
-          const optionsWithAllScope = {
-            ...options,
-            scope:
-              "api://d7d02680-bd82-47ed-95f9-e977ab5f0487/access_as_user offline_access profile email offline_access openid User.Read Calendars.Read",
-          };
-
-          return getAzureAuthUrl(optionsWithAllScope);
-
-        default:
-          return "";
-      }
-    };
-
-    ipcMain.on(IPC_MAIN_CHANNELS.OPEN_CHILD_WINDOW, (_, connectionName) => {
-      createChildWindow(getConnectionUrl(connectionName));
+    mainWindow?.on("focus", () => {
+      mainWindow?.webContents.send(IPC_MAIN_CHANNELS.WINDOW_FOCUSED);
     });
-
-    ipcMain.on(IPC_MAIN_CHANNELS.CHILD_WINDOW_CLOSED, (_, componentName) => {
-      switch (componentName) {
-        case "google":
-          mainWindow?.webContents.send(IPC_MAIN_CHANNELS.GOOGLE_SHOULD_RERENDER);
-          break;
-
-        case "jira":
-          mainWindow?.webContents.send(IPC_MAIN_CHANNELS.JIRA_SHOULD_RERENDER);
-          break;
-
-        case "office365":
-          mainWindow?.webContents.send(IPC_MAIN_CHANNELS.OFFICE365_SHOULD_RERENDER);
-          break;
-
-        case "timetracker-website":
-          mainWindow?.webContents.send(IPC_MAIN_CHANNELS.TIMETRACKER_SHOULD_RERENDER);
-          break;
-
-        case "trello":
-          mainWindow?.webContents.send(IPC_MAIN_CHANNELS.TRELLO_SHOULD_RERENDER);
-          break;
-
-        default:
-          break;
-      }
-    });
-
-    // common scope watchers for the start/stop-folder-watcher functions
-    const watchers: {
-      [key: string]: chokidar.FSWatcher | undefined;
-    } = {};
-
-    ipcMain.on(IPC_MAIN_CHANNELS.START_FILE_WATCHER, (_, reportsFolder: string, selectedDate: Date) => {
-      const timereportPath = getPathFromDate(selectedDate, reportsFolder);
-
-      try {
-        if (fs.existsSync(timereportPath)) {
-          mainWindow?.webContents.send("file-exist", true);
-
-          const fileWatcher = chokidar.watch(timereportPath);
-          watchers[timereportPath] = fileWatcher;
-
-          fileWatcher.on("change", (timereportPath) => {
-            currentSelectedDate = selectedDate.toDateString();
-
-            if (currentSelectedDate === selectedDate.toDateString()) {
-              readDataFromFile(timereportPath, (data: string | null) => {
-                mainWindow && mainWindow.webContents.send(IPC_MAIN_CHANNELS.FILE_CHANGED, data);
-              });
-            }
-          });
-        }
-      } catch (err) {
-        console.log(err);
-        mainWindow?.webContents.send(
-          IPC_MAIN_CHANNELS.BACKEND_ERROR,
-          "Watcher error. Updates to files might not be accurately displayed within the application. ",
-          err,
-        );
-      }
-    });
-
-    ipcMain.on(IPC_MAIN_CHANNELS.START_FOLDER_WATCHER, (_, reportsFolder: string) => {
-      try {
-        if (fs.existsSync(reportsFolder)) {
-          const folderWatcher = chokidar.watch(reportsFolder, {
-            ignoreInitial: true,
-          });
-          watchers[reportsFolder] = folderWatcher;
-
-          folderWatcher
-            .on("change", () => {
-              mainWindow?.webContents.send(IPC_MAIN_CHANNELS.ANY_FILE_CHANGED);
-            })
-            .on("add", () => {
-              mainWindow?.webContents.send(IPC_MAIN_CHANNELS.ANY_FILE_CHANGED);
-            })
-            .on("unlink", () => {
-              mainWindow?.webContents.send(IPC_MAIN_CHANNELS.ANY_FILE_CHANGED);
-            });
-        }
-      } catch (err) {
-        console.log(err);
-        mainWindow?.webContents.send(
-          IPC_MAIN_CHANNELS.BACKEND_ERROR,
-          "Watcher error. Updates to files might not be accurately displayed within the application. ",
-          err,
-        );
-      }
-    });
-
-    ipcMain.on(IPC_MAIN_CHANNELS.CHECK_DROPBOX_CONNECTION, () => {
-      const command = process.platform === "win32" ? "tasklist" : "ps aux";
-      exec(command, (err, stdout, stderr) => {
-        if (err) {
-          console.log(err);
-          return;
-        }
-        if (stderr) {
-          console.log(stderr);
-          return;
-        }
-        if (stdout) {
-          const isRun = stdout.toLowerCase().includes(process.platform === "win32" ? "dropbox.exe" : "dropbox");
-          mainWindow?.webContents.send("dropbox-connection", isRun);
-        }
-      });
-    });
-
-    ipcMain.on(IPC_MAIN_CHANNELS.STOP_PATH_WATCHER, (_, reportsFolder: string, selectedDate: Date) => {
-      try {
-        if (selectedDate) {
-          const timereportPath = getPathFromDate(selectedDate, reportsFolder);
-          if (watchers[timereportPath]) {
-            watchers[timereportPath]?.close();
-            delete watchers[timereportPath];
-          }
-        } else if (watchers[reportsFolder]) {
-          watchers[reportsFolder]?.close();
-          delete watchers[reportsFolder];
-        }
-      } catch (err) {
-        console.log(err);
-        mainWindow?.webContents.send(
-          IPC_MAIN_CHANNELS.BACKEND_ERROR,
-          "Watcher error. Updates to files might not be accurately displayed within the application. ",
-          err,
-        );
-      }
-    });
-
-    mainWindow.webContents.on("context-menu", (_, params) => {
-      const menu = new Menu();
-
-      for (const suggestion of params.dictionarySuggestions) {
-        menu.append(
-          new MenuItem({
-            label: suggestion,
-            click: () => mainWindow && mainWindow.webContents.replaceMisspelling(suggestion),
-          }),
-        );
-      }
-
-      if (params.misspelledWord && mainWindow) {
-        menu.append(
-          new MenuItem({
-            label: "Add to dictionary",
-            click: () =>
-              mainWindow && mainWindow.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord),
-          }),
-        );
-      }
-
-      menu.popup();
-    });
-  }
-
-  mainWindow?.on("focus", () => {
-    mainWindow?.webContents.send(IPC_MAIN_CHANNELS.WINDOW_FOCUSED);
   });
 });
 
@@ -571,10 +698,6 @@ const deleteFile = (filePath: string): Promise<void> => {
     });
   });
 };
-
-ipcMain.handle(IPC_MAIN_CHANNELS.APP_UPDATE_STATUS, async () => {
-  return [updateStatus, updateVersion];
-});
 
 ipcMain.handle(IPC_MAIN_CHANNELS.APP_DELETE_FILE, async (_, reportsFolder: string, selectedDate: Date) => {
   const timereportPath = getPathFromDate(selectedDate, reportsFolder);
@@ -741,7 +864,7 @@ ipcMain.handle(IPC_MAIN_CHANNELS.APP_FIND_MONTH_PROJECTS, (_, reportsFolder: str
 });
 
 ipcMain.on(IPC_MAIN_CHANNELS.APP_LOAD_OFFLINE_PAGE, async () => {
-  mainWindow?.loadURL(`http://localhost:${PORT}/offline`);
+  mainWindow?.loadURL(`http://localhost:${getServerPort()}/offline`);
 });
 
 //#region GOOGLE FUNCTIONS
@@ -750,7 +873,7 @@ const getGoogleOptions = () => {
   return {
     clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
     clientSecret: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET || "",
-    redirectUri: `http://localhost:${PORT}/settings`,
+    redirectUri: `http://localhost:${getServerPort()}/settings`,
     scope: "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/userinfo.profile",
   };
 };
@@ -840,7 +963,11 @@ const getOffice365Options = () => {
   return {
     clientId: process.env.NEXT_PUBLIC_OFFICE365_CLIENT_ID || "",
     clientSecret: process.env.NEXT_PUBLIC_OFFICE365_CLIENT_SECRET || "",
-    redirectUri: process.env.NEXT_PUBLIC_OFFICE365_REDIRECT_URI || "",
+    redirectUri:
+      process.env.NEXT_PUBLIC_OFFICE365_REDIRECT_URI?.replace(
+        process.env.NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME || "",
+        getServerPort().toString(),
+      ) || "",
     scope: process.env.NEXT_PUBLIC_OFFICE365_SCOPE || "",
   };
 };
@@ -900,16 +1027,18 @@ ipcMain.handle(IPC_MAIN_CHANNELS.TIMETRACKER_REFRESH_USER_INFO_TOKEN, async (_, 
   return await getRefreshedUserInfoToken(refreshToken, options);
 });
 
-ipcMain.on(IPC_MAIN_CHANNELS.AZURE_LOGIN_ADDITIONAL, async () => {
-  const options = getOffice365Options();
+// TODO: remove this handler if requests to the timetracker website don't generate errors in the beta version
 
-  const optionsWithPlannerScope = {
-    ...options,
-    scope: "api://d7d02680-bd82-47ed-95f9-e977ab5f0487/access_as_user offline_access",
-  };
+// ipcMain.on(IPC_MAIN_CHANNELS.AZURE_LOGIN_ADDITIONAL, async () => {
+//   const options = getOffice365Options();
 
-  mainWindow?.loadURL(getAzureAuthUrlAdditional(optionsWithPlannerScope));
-});
+//   const optionsWithPlannerScope = {
+//     ...options,
+//     scope: "api://d7d02680-bd82-47ed-95f9-e977ab5f0487/access_as_user offline_access",
+//   };
+
+// mainWindow?.loadURL(getAzureAuthUrlAdditional(optionsWithPlannerScope));
+// });
 
 ipcMain.handle(IPC_MAIN_CHANNELS.TIMETRACKER_GET_PLANNER_TOKEN, async (_, authCode: string) => {
   const options = getOffice365Options();
@@ -948,6 +1077,10 @@ ipcMain.handle(IPC_MAIN_CHANNELS.TIMETRACKER_LOGIN, async (_, idToken: string) =
 
 ipcMain.handle(IPC_MAIN_CHANNELS.TIMETRACKER_GET_PROJECTS, async (_, cookie: string) => {
   return await getTimetrackerProjects(cookie);
+});
+
+ipcMain.handle(IPC_MAIN_CHANNELS.TIMETRACKER_GET_MENTIONS, async (_, cookie: string) => {
+  return await getTimetrackerContactPersons(cookie);
 });
 
 ipcMain.handle(

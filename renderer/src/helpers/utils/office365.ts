@@ -1,5 +1,5 @@
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
-import { LOCAL_STORAGE_VARIABLES, TRACK_ANALYTICS } from "../contstants";
+import { LOCAL_STORAGE_VARIABLES, TRACK_ANALYTICS } from "../constants";
 import { trackConnections } from "./utils";
 export interface Office365User {
   accessToken: string;
@@ -12,18 +12,28 @@ export const updateAccessToken = async (refreshToken: string) =>
   await global.ipcRenderer.invoke(IPC_MAIN_CHANNELS.OFFICE365_REFRESH_ACCESS_TOKEN, refreshToken);
 
 export const removeStoredUser = (userId: string) => {
-  const storedUsers = JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.OFFICE_365_USERS)) || [];
+  const storedUsers =
+    JSON.parse(
+      global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.OFFICE_365_USERS),
+    ) || [];
   const filteredUsers = storedUsers.filter((user: Office365User) => user.userId !== userId);
 
   if (filteredUsers.length > 0) {
-    localStorage.setItem(LOCAL_STORAGE_VARIABLES.OFFICE_365_USERS, JSON.stringify(filteredUsers));
+    global.ipcRenderer.send(
+      IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+      LOCAL_STORAGE_VARIABLES.OFFICE_365_USERS,
+      JSON.stringify(filteredUsers),
+    );
   } else {
-    localStorage.removeItem(LOCAL_STORAGE_VARIABLES.OFFICE_365_USERS);
+    global.ipcRenderer.send(IPC_MAIN_CHANNELS.ELECTRON_STORE_DELETE, LOCAL_STORAGE_VARIABLES.OFFICE_365_USERS);
   }
 };
 
 export const updateStoredUser = (userId: string, newAccessToken: string) => {
-  const storedUsers = JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.OFFICE_365_USERS)) || [];
+  const storedUsers =
+    JSON.parse(
+      global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.OFFICE_365_USERS),
+    ) || [];
   const updatedUsers = storedUsers.map((user: Office365User) => {
     if (user.userId === userId) {
       return { ...user, accessToken: newAccessToken };
@@ -32,11 +42,18 @@ export const updateStoredUser = (userId: string, newAccessToken: string) => {
     }
   });
 
-  localStorage.setItem(LOCAL_STORAGE_VARIABLES.OFFICE_365_USERS, JSON.stringify(updatedUsers));
+  global.ipcRenderer.send(
+    IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+    LOCAL_STORAGE_VARIABLES.OFFICE_365_USERS,
+    JSON.stringify(updatedUsers),
+  );
 };
 
 export const getOffice365Events = async () => {
-  const storedUsers = JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.OFFICE_365_USERS)) || [];
+  const storedUsers =
+    JSON.parse(
+      global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.OFFICE_365_USERS),
+    ) || [];
 
   if (!storedUsers.length) return [];
 

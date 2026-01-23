@@ -31,6 +31,8 @@ export type googleCalendarStoreProps = {
 export type BetaStore = {
   isBeta: boolean;
   setIsBeta: (isDownload: boolean) => void;
+  betaUpdateStoreLoaded: boolean;
+  setBetaUpdateStoreLoaded: () => void;
 };
 
 export type ScheduledEvents = Record<string, { project?: string; activity?: string }>;
@@ -43,6 +45,8 @@ export type ScheduledEventsStore = {
 export type MainStore = {
   reportsFolder: string | null;
   setReportsFolder: (folder: string) => void;
+  mainStoreLoaded: boolean;
+  setMainStoreLoaded: () => void;
 };
 
 export type Theme = { custom: "light" | "dark"; os: boolean };

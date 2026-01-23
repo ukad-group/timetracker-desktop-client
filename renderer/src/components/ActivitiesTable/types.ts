@@ -1,4 +1,4 @@
-import { ReportActivity } from "../../helpers/utils/reports";
+import { ReportActivity } from "@/helpers/utils/types";
 
 export type ActivitiesTableProps = {
   activities: ReportActivity[];

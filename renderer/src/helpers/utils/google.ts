@@ -1,6 +1,7 @@
 import { getGoogleEvents, updateGoogleCredentials } from "@/API/googleCalendarAPI";
 import { trackConnections } from "./utils";
-import { LOCAL_STORAGE_VARIABLES, TRACK_ANALYTICS } from "../contstants";
+import { LOCAL_STORAGE_VARIABLES, TRACK_ANALYTICS } from "../constants";
+import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 
 export const loadGoogleEvents = async (accessToken: string, refreshToken: string, index: number) => {
   try {
@@ -10,10 +11,16 @@ export const loadGoogleEvents = async (accessToken: string, refreshToken: string
     if (data?.error && data?.error?.code === 401) {
       const updatedCredentials = await updateGoogleCredentials(refreshToken);
       const newAccessToken = updatedCredentials?.access_token;
-      const usersLs = JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.GOOGLE_USERS));
+      const usersLs = JSON.parse(
+        global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.GOOGLE_USERS),
+      );
 
       usersLs[index].googleAccessToken = newAccessToken;
-      localStorage.setItem(LOCAL_STORAGE_VARIABLES.GOOGLE_USERS, JSON.stringify(usersLs));
+      global.ipcRenderer.send(
+        IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+        LOCAL_STORAGE_VARIABLES.GOOGLE_USERS,
+        JSON.stringify(usersLs),
+      );
 
       return await loadGoogleEvents(newAccessToken, refreshToken, index);
     }
@@ -28,7 +35,10 @@ export const loadGoogleEvents = async (accessToken: string, refreshToken: string
 };
 
 export const loadGoogleEventsFromAllUsers = async () => {
-  const storedUsers = JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.GOOGLE_USERS)) || [];
+  const storedUsers =
+    JSON.parse(
+      global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.GOOGLE_USERS),
+    ) || [];
 
   if (!storedUsers.length) return [];
 

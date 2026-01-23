@@ -3,7 +3,7 @@ import { RenderError } from "./types";
 
 const ErrorPlaceholder = ({ errorTitle, errorMessage }: RenderError) => {
   return (
-    <div className="py-16 text-center bg-white lg:col-start-1 lg:col-span-3 sm:rounded-lg h-full dark:bg-dark-container dark:border dark:border-dark-border">
+    <div className="py-2 text-center bg-white lg:col-start-1 lg:col-span-3 sm:rounded-lg h-full dark:bg-dark-container dark:border dark:border-dark-border">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 20 20"
@@ -16,8 +16,8 @@ const ErrorPlaceholder = ({ errorTitle, errorMessage }: RenderError) => {
           clipRule="evenodd"
         ></path>
       </svg>
-      <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-dark-heading">{errorTitle}</h3>
-      <p className="mt-1 px-48 text-sm text-gray-500 dark:text-dark-main">{errorMessage}</p>
+      {errorTitle && <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-dark-heading">{errorTitle}</h3>}
+      {errorMessage && <p className="mt-1 px-48 text-sm text-gray-500 dark:text-dark-main">{errorMessage}</p>}
     </div>
   );
 };

@@ -1,15 +1,16 @@
 import { Dispatch, SetStateAction } from "react";
-import { LOCAL_STORAGE_VARIABLES } from "@/helpers/contstants";
+import { LOCAL_STORAGE_VARIABLES, OFFLINE_MESSAGE } from "@/helpers/constants";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
-import { KEY_CODES } from "@/helpers/contstants";
-import { ReportActivity } from "@/helpers/utils/reports";
+import { KEY_CODES } from "@/helpers/constants";
 import { getDateTimeData } from "@/helpers/utils/datetime-ui";
 import { changeHintConditions } from "@/helpers/utils/utils";
 import { padStringToMinutes } from "@/helpers/utils/datetime-ui";
 import { formatDurationAsDecimals } from "@/helpers/utils/reports";
-import { HINTS_GROUP_NAMES } from "@/helpers/contstants";
+import { HINTS_GROUP_NAMES } from "@/helpers/constants";
 import { TutorialProgress } from "@/store/types";
 import { ScheduledEvents } from "@/store/types";
+import isOnline from "is-online";
+import { ReportActivity } from "@/helpers/utils/types";
 
 export const changeHours = (eventKey: string, hours: number) => {
   let newHours = hours;
@@ -51,25 +52,23 @@ export const changeMinutesAndHours = (eventKey: string, minutes: number, hours: 
 };
 
 export const getTimetrackerYearProjects = async (setWebTrackerProjects: Dispatch<SetStateAction<string[]>>) => {
-  const userInfo = JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER));
+  const TTUserInfo = JSON.parse(
+    global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER),
+  );
 
-  if (!userInfo) return;
+  if (!TTUserInfo) return;
 
-  const timetrackerCookie = userInfo?.TTCookie;
+  const { cookie, refreshToken } = TTUserInfo;
 
   try {
-    const yearProjects = await global.ipcRenderer.invoke(IPC_MAIN_CHANNELS.TIMETRACKER_GET_PROJECTS, timetrackerCookie);
+    const yearProjectsFromApi = await global.ipcRenderer.invoke(IPC_MAIN_CHANNELS.TIMETRACKER_GET_PROJECTS, cookie);
 
-    if (yearProjects === "invalid_token") {
-      const refresh_token = userInfo?.userInfoRefreshToken;
-
-      console.log("REFREESH PROJECTS");
-
-      if (!refresh_token) return;
+    if (yearProjectsFromApi === "invalid_token") {
+      if (!refreshToken) return;
 
       const updatedCreds = await global.ipcRenderer.invoke(
         IPC_MAIN_CHANNELS.TIMETRACKER_REFRESH_USER_INFO_TOKEN,
-        refresh_token,
+        refreshToken,
       );
 
       const updatedIdToken = updatedCreds?.id_token;
@@ -77,26 +76,41 @@ export const getTimetrackerYearProjects = async (setWebTrackerProjects: Dispatch
       const updatedCookie = await global.ipcRenderer.invoke(IPC_MAIN_CHANNELS.TIMETRACKER_LOGIN, updatedIdToken);
 
       const updatedUser = {
-        ...userInfo,
-        userInfoIdToken: updatedIdToken,
-        TTCookie: updatedCookie,
+        ...TTUserInfo,
+        idToken: updatedIdToken,
+        cookie: updatedCookie,
       };
-      console.log("updatedCookie PROJECTS", updatedCookie);
-      localStorage.setItem(LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER, JSON.stringify(updatedUser));
+
+      global.ipcRenderer.send(
+        IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+        LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER,
+        JSON.stringify(updatedUser),
+      );
+
       return await getTimetrackerYearProjects(setWebTrackerProjects);
     }
 
     const updatedUserInfo = {
-      ...userInfo,
-      yearProjects: yearProjects,
+      ...TTUserInfo,
+      yearProjects: yearProjectsFromApi,
     };
 
-    localStorage.setItem(LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER, JSON.stringify(updatedUserInfo));
+    global.ipcRenderer.send(
+      IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+      LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER,
+      JSON.stringify(updatedUserInfo),
+    );
 
-    setWebTrackerProjects(yearProjects);
+    setWebTrackerProjects(yearProjectsFromApi);
   } catch (error) {
     console.log(error);
-    setWebTrackerProjects(userInfo.yearProjects);
+    setWebTrackerProjects(TTUserInfo.yearProjects);
+
+    const online = await isOnline();
+
+    if (!online) {
+      console.log(OFFLINE_MESSAGE);
+    }
   }
 };
 
@@ -172,7 +186,6 @@ export function setTimeOnOpen(
   setTo: Dispatch<SetStateAction<string>>,
 ) {
   const { hours, floorMinutes, isToday, ceilHours, ceilMinutes } = getDateTimeData(selectedDate);
-  // const prevActivity = activities[activities?.length - 1];
 
   if (activities?.length && activities[activities?.length - 1].to) {
     setFrom(activities[activities?.length - 1].to);

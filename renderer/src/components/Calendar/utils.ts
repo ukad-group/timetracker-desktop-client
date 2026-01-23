@@ -1,26 +1,36 @@
 import { extractDatesFromPeriod, getWeekNumber, isTheSameDates } from "@/helpers/utils/datetime-ui";
-import { DayOff, ApiDayOff, TTUserInfo, ParsedReport, VacationSickDaysData } from "./types";
+import {
+  DayOff,
+  ApiDayOff,
+  TTUserInfoProps,
+  ParsedReport,
+  VacationSickDaysData,
+  FormattedReport,
+  SumWorkDurationByWeekProps,
+} from "./types";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
-import { LOCAL_STORAGE_VARIABLES } from "@/helpers/contstants";
-import { ReportActivity, parseReport, validation } from "@/helpers/utils/reports";
+import { LOCAL_STORAGE_VARIABLES, OFFLINE_MESSAGE } from "@/helpers/constants";
+import { parseReport, validation } from "@/helpers/utils/reports";
+import isOnline from "is-online";
+import { ReportActivity } from "@/helpers/utils/types";
 
 export const loadHolidaysAndVacations = async (calendarDate: Date) => {
   try {
-    const timetrackerUserInfo: TTUserInfo = await JSON.parse(
-      localStorage.getItem(LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER),
+    const TTUserInfo: TTUserInfoProps = await JSON.parse(
+      global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER),
     );
 
-    if (!timetrackerUserInfo) return;
+    if (!TTUserInfo) return;
 
-    const plannerToken = timetrackerUserInfo?.plannerAccessToken;
-    const userEmail = timetrackerUserInfo?.email;
+    const { accessToken, userEmail, refreshToken } = TTUserInfo;
+
     const userPromises = [];
     let nextYearVacationsPromise: Promise<VacationSickDaysData> | undefined;
     let prevYearVacationsPromise: Promise<VacationSickDaysData> | undefined;
 
     const vacationsPromise: Promise<VacationSickDaysData> = global.ipcRenderer.invoke(
       IPC_MAIN_CHANNELS.TIMETRACKER_GET_VACATIONS,
-      plannerToken,
+      accessToken,
       userEmail,
       calendarDate,
     );
@@ -32,7 +42,7 @@ export const loadHolidaysAndVacations = async (calendarDate: Date) => {
 
       nextYearVacationsPromise = global.ipcRenderer.invoke(
         IPC_MAIN_CHANNELS.TIMETRACKER_GET_VACATIONS,
-        plannerToken,
+        accessToken,
         userEmail,
         nextYear,
       );
@@ -45,7 +55,7 @@ export const loadHolidaysAndVacations = async (calendarDate: Date) => {
 
       prevYearVacationsPromise = global.ipcRenderer.invoke(
         IPC_MAIN_CHANNELS.TIMETRACKER_GET_VACATIONS,
-        plannerToken,
+        accessToken,
         userEmail,
         prevYear,
       );
@@ -59,21 +69,22 @@ export const loadHolidaysAndVacations = async (calendarDate: Date) => {
     const userFetchedData = await Promise.all(userPromises);
 
     if (userFetchedData.includes("invalid_token")) {
-      const refreshToken = timetrackerUserInfo?.plannerRefreshToken;
-      // console.log("REFREESH CALENDAR");
-      // console.log("timetrackerUserInfo", timetrackerUserInfo);
-
       const refreshedPlannerCreds = await global.ipcRenderer.invoke(
         IPC_MAIN_CHANNELS.TIMETRACKER_REFRESH_PLANNER_TOKEN,
         refreshToken,
       );
 
       const refreshedUserInfo = {
-        ...timetrackerUserInfo,
-        plannerAccessToken: refreshedPlannerCreds?.access_token,
+        ...TTUserInfo,
+        accessToken: refreshedPlannerCreds?.access_token,
+        refreshToken: refreshedPlannerCreds?.refresh_token,
       };
 
-      localStorage.setItem(LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER, JSON.stringify(refreshedUserInfo));
+      global.ipcRenderer.send(
+        IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+        LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER,
+        JSON.stringify(refreshedUserInfo),
+      );
 
       return await loadHolidaysAndVacations(calendarDate);
     }
@@ -89,10 +100,11 @@ export const loadHolidaysAndVacations = async (calendarDate: Date) => {
 
       if (singleDayOff) {
         userDaysOff.push({
-          date: new Date(new Date(item?.dateFrom).toISOString().slice(0, -1)), // avoid timezone
+          date: new Date(item?.dateFrom),
           duration: item?.quantity,
           description: item?.description,
           type: item?.type,
+          status: item.status,
         });
       }
     });
@@ -112,6 +124,12 @@ export const loadHolidaysAndVacations = async (calendarDate: Date) => {
     return userDaysOff;
   } catch (error) {
     console.log(error);
+
+    const online = await isOnline();
+
+    if (!online) {
+      console.log(OFFLINE_MESSAGE);
+    }
   }
 };
 
@@ -125,9 +143,23 @@ export const getFormattedReports = (reports: ParsedReport[]) => {
 
     return {
       date: reportDate,
-      week: getWeekNumber(reportDate, true),
+      week: getWeekNumber(reportDate),
       workDurationMs: workDurationMs,
       isValid: activities.every((report: ReportActivity) => report.validation.isValid),
     };
   });
+};
+
+export const getSumWorkDurationByWeek = (dataArray: FormattedReport[]): SumWorkDurationByWeekProps => {
+  const result = {};
+
+  dataArray.forEach((item) => {
+    if (result[item.week]) {
+      result[item.week] += item.workDurationMs;
+    } else {
+      result[item.week] = item.workDurationMs;
+    }
+  });
+
+  return result;
 };

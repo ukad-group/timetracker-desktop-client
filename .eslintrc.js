@@ -5,7 +5,7 @@ module.exports = {
   ],
   plugins: ['@typescript-eslint/eslint-plugin', 'prettier'],
   rules: {
-    "prettier/prettier": ["error"]
+    "prettier/prettier": ["error", { endOfLine: 'auto' }],
   },
   parserOptions: {
     sourceType: 'module',

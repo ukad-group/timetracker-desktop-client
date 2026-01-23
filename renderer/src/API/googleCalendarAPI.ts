@@ -1,8 +1,12 @@
+import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
+
 const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 const clientSecret = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET;
-const PORT = process.env.NEXT_PUBLIC_PORT;
-const redirectURI = `http://localhost:${PORT}/settings`;
 const scope = "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/userinfo.profile";
+
+const getRedirectUri = () => {
+  return `http://localhost:${global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.GET_CURRENT_PORT)}/settings`;
+};
 
 export const getGoogleAuthUrl = () => {
   const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/auth");
@@ -10,7 +14,7 @@ export const getGoogleAuthUrl = () => {
   const params = new URLSearchParams({
     client_id: clientId,
     scope: scope,
-    redirect_uri: redirectURI,
+    redirect_uri: getRedirectUri(),
     access_type: "offline",
     response_type: "code",
     state: "googlecalendarcode",
@@ -29,7 +33,7 @@ export const getGoogleCredentials = async (authCode: string) => {
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: `code=${authCode}&client_id=${clientId}&client_secret=${clientSecret}&redirect_uri=${redirectURI}&grant_type=authorization_code`,
+    body: `code=${authCode}&client_id=${clientId}&client_secret=${clientSecret}&redirect_uri=${getRedirectUri()}&grant_type=authorization_code`,
   });
 
   if (!response.ok) throw new Error();

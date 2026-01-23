@@ -1,9 +1,9 @@
-import { Options } from "./helpers/API/office365Api";
+import { Options, AzureTokenSuccess, AzureTokenError, AzureTokenResponse } from "./helpers/API/office365Api";
 
 export const getAzureAuthUrl = (options: Options) => {
   const { clientId, scope, redirectUri } = options;
   const authUrl = new URL(
-    "https://login.microsoftonline.com/22c676eb-cbe8-4058-b9da-f58799142fbe/oauth2/v2.0/authorize"
+    "https://login.microsoftonline.com/22c676eb-cbe8-4058-b9da-f58799142fbe/oauth2/v2.0/authorize",
   );
 
   const params = new URLSearchParams({
@@ -20,28 +20,30 @@ export const getAzureAuthUrl = (options: Options) => {
   return authUrl.toString();
 };
 
-export const getAzureAuthUrlAdditional = (options: Options) => {
-  const { clientId, scope, redirectUri } = options;
-  const authUrl = new URL(
-    "https://login.microsoftonline.com/22c676eb-cbe8-4058-b9da-f58799142fbe/oauth2/v2.0/authorize"
-  );
+// TODO: remove this handler if requests to the timetracker website don't generate errors in the beta version
 
-  const params = new URLSearchParams({
-    client_id: clientId,
-    scope: scope,
-    redirect_uri: redirectUri,
-    prompt: "none",
-    response_type: "code",
-    state: "azure-additional",
-  });
+// export const getAzureAuthUrlAdditional = (options: Options) => {
+//   const { clientId, scope, redirectUri } = options;
+//   const authUrl = new URL(
+//     "https://login.microsoftonline.com/22c676eb-cbe8-4058-b9da-f58799142fbe/oauth2/v2.0/authorize"
+//   );
 
-  authUrl.search = params.toString();
+//   const params = new URLSearchParams({
+//     client_id: clientId,
+//     scope: scope,
+//     redirect_uri: redirectUri,
+//     prompt: "none",
+//     response_type: "code",
+//     state: "azure-additional",
+//   });
 
-  return authUrl.toString();
-};
+//   authUrl.search = params.toString();
+
+//   return authUrl.toString();
+// };
 
 export const getAzureTokens = async (authCode: string, options: Options) => {
-  if (!authCode) return;
+  if (!authCode) throw new Error("Missing authorization code.");
 
   const { clientId, clientSecret, redirectUri, scope } = options;
   const response = await fetch(
@@ -52,18 +54,20 @@ export const getAzureTokens = async (authCode: string, options: Options) => {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: `code=${authCode}&client_id=${clientId}&client_secret=${clientSecret}&redirect_uri=${redirectUri}&grant_type=authorization_code&scope=${scope}`,
-    }
+    },
   );
 
-  if (!response.ok) throw new Error();
+  const data: AzureTokenResponse = await response.json();
 
-  return response.json();
+  if (!response.ok) {
+    const errorMsg = (data as AzureTokenError)?.error_description || `${response.status} ${response.statusText}`;
+    throw new Error(errorMsg);
+  }
+
+  return data as AzureTokenSuccess;
 };
 
-export const getRefreshedUserInfoToken = async (
-  refreshToken: string,
-  options: Options
-) => {
+export const getRefreshedUserInfoToken = async (refreshToken: string, options: Options) => {
   const { clientId, clientSecret, scope } = options;
   const response = await fetch(
     "https://login.microsoftonline.com/22c676eb-cbe8-4058-b9da-f58799142fbe/oauth2/v2.0/token",
@@ -73,7 +77,7 @@ export const getRefreshedUserInfoToken = async (
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: `refresh_token=${refreshToken}&client_id=${clientId}&client_secret=${clientSecret}&grant_type=refresh_token&scope=${scope}`,
-    }
+    },
   );
 
   if (!response.ok) throw new Error();
@@ -93,7 +97,7 @@ export const getPlannerTokens = async (authCode: string, options: Options) => {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: `code=${authCode}&client_id=${clientId}&client_secret=${clientSecret}&redirect_uri=${redirectUri}&grant_type=authorization_code&scope=${scope}`,
-    }
+    },
   );
 
   if (!response.ok) throw new Error();
@@ -101,10 +105,7 @@ export const getPlannerTokens = async (authCode: string, options: Options) => {
   return response.json();
 };
 
-export const getRefreshedPlannerToken = async (
-  refreshToken: string,
-  options: Options
-) => {
+export const getRefreshedPlannerToken = async (refreshToken: string, options: Options) => {
   const { clientId, clientSecret, scope } = options;
   const response = await fetch(
     "https://login.microsoftonline.com/22c676eb-cbe8-4058-b9da-f58799142fbe/oauth2/v2.0/token",
@@ -114,7 +115,7 @@ export const getRefreshedPlannerToken = async (
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: `refresh_token=${refreshToken}&client_id=${clientId}&client_secret=${clientSecret}&grant_type=refresh_token&scope=${scope}`,
-    }
+    },
   );
 
   if (!response.ok) throw new Error();
@@ -122,13 +123,8 @@ export const getRefreshedPlannerToken = async (
   return response.json();
 };
 
-export const getTimetrackerHolidays = async (
-  token: string,
-  calendarDate: Date
-) => {
-  const currentYear = calendarDate
-    ? calendarDate.getFullYear().toString()
-    : new Date().getFullYear().toString();
+export const getTimetrackerHolidays = async (token: string, calendarDate: Date) => {
+  const currentYear = calendarDate ? calendarDate.getFullYear().toString() : new Date().getFullYear().toString();
 
   const response = await fetch(
     `https://app-pto-planner-api-prod.azurewebsites.net/Periods/getHolidaysForYear/${currentYear}`,
@@ -139,7 +135,7 @@ export const getTimetrackerHolidays = async (
         Authorization: `Bearer ${token}`,
         "Access-Control-Allow-Origin": "*",
       },
-    }
+    },
   );
 
   if (!response.ok) {
@@ -155,14 +151,8 @@ export const getTimetrackerHolidays = async (
   return response.json();
 };
 
-export const getTimetrackerVacations = async (
-  token: string,
-  email: string,
-  calendarDate: Date
-) => {
-  const currentYear = calendarDate
-    ? calendarDate.getFullYear().toString()
-    : new Date().getFullYear().toString();
+export const getTimetrackerVacations = async (token: string, email: string, calendarDate: Date) => {
+  const currentYear = calendarDate ? calendarDate.getFullYear().toString() : new Date().getFullYear().toString();
 
   const response = await fetch(
     `https://app-pto-planner-api-prod.azurewebsites.net/Users/getUserInfoByEmail/${email}/${currentYear}`,
@@ -173,7 +163,7 @@ export const getTimetrackerVacations = async (
         Authorization: `Bearer ${token}`,
         "Access-Control-Allow-Origin": "*",
       },
-    }
+    },
   );
 
   if (!response.ok) {
@@ -209,14 +199,11 @@ export const getTimetrackerCookie = async (idToken: string) => {
 };
 
 export const getTimetrackerProjects = async (cookie: string) => {
-  const response = await fetch(
-    "https://tt-api.ukad-demo.com/json/projects/peryear",
-    {
-      headers: {
-        Cookie: cookie,
-      },
-    }
-  );
+  const response = await fetch("https://tt-api.ukad-demo.com/json/projects/peryear", {
+    headers: {
+      Cookie: cookie,
+    },
+  });
 
   if (!response.ok && response.status === 401) {
     return "invalid_token";
@@ -227,25 +214,36 @@ export const getTimetrackerProjects = async (cookie: string) => {
   return response.json();
 };
 
-export const getTimetrackerBookings = async (
-  cookie: string,
-  name: string,
-  calendarDate: Date
-) => {
+export const getTimetrackerBookings = async (cookie: string, name: string, calendarDate: Date) => {
   const date = calendarDate ? calendarDate : new Date();
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
   const day = date.getDate().toString().padStart(2, "0");
   const formattedDate = `${year}${month}${day}`;
 
-  const response = await fetch(
-    `https://tt-api.ukad-demo.com/integrations/planning/${name}/${formattedDate}`,
-    {
-      headers: {
-        Cookie: cookie,
-      },
-    }
-  );
+  const response = await fetch(`https://tt-api.ukad-demo.com/integrations/planning/${name}/${formattedDate}`, {
+    headers: {
+      Cookie: cookie,
+    },
+  });
+
+  if (!response.ok && response.status === 401) {
+    return "invalid_token";
+  } else if (!response.ok) {
+    throw new Error();
+  }
+
+  return response.json();
+};
+
+export const getTimetrackerContactPersons = async (
+  cookie: string,
+): Promise<{ id: number; name: string; email: string }[] | string> => {
+  const response = await fetch("http://tt-api.ukad-demo.com/json/contactPerson/getAll", {
+    headers: {
+      Cookie: cookie,
+    },
+  });
 
   if (!response.ok && response.status === 401) {
     return "invalid_token";

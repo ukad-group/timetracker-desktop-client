@@ -6,6 +6,14 @@ import {
   getGoogleUserInfo,
 } from "../googleCalendarAPI";
 
+import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";
+
+global.ipcRenderer = {
+  send: ipcRendererSendMock,
+  sendSync: ipcRendererSendMock,
+  ...globalIpcRendererMock,
+};
+
 describe("GIVEN API Tests", () => {
   beforeAll(() => {
     global.fetch = jest.fn();

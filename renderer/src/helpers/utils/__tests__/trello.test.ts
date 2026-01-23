@@ -1,5 +1,5 @@
 import { getAllTrelloCardsFromApi } from "../trello";
-import { globalIpcRendererMock } from "@/tests/mocks/electron";
+import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";
 
 const localStorageMock = {
   getItem: jest.fn(),
@@ -19,6 +19,8 @@ jest.mock("electron", () => ({
 
 global.ipcRenderer = {
   invoke: jest.fn(),
+  send: ipcRendererSendMock,
+  sendSync: ipcRendererSendMock,
   ...globalIpcRendererMock,
 };
 

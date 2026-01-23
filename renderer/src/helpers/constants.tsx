@@ -36,6 +36,7 @@ export const LOCAL_STORAGE_VARIABLES = {
   IS_MANUAL_INPUT_MAIN: "is-manual-input-main-section",
   VERSION_DATA: "version-data",
   WIDGET_ORDER: "sectionsOptions",
+  CLIENTS_FOR_MENTIONS: "clients-for-mentions",
   // ...Add more local storage variables as needed
 };
 
@@ -121,3 +122,5 @@ export const TRACK_ANALYTICS = {
   MANUAL_SAVE: "manuall_save",
   CALENDAR_OFFICE: "office365",
 };
+
+export const OFFLINE_MESSAGE = "You're offline! Please check your internet connection.";

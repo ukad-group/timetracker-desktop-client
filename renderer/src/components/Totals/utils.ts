@@ -1,7 +1,8 @@
 import { getMonthDates, getWeekDates } from "@/helpers/utils/datetime-ui";
 import { Activity, Total } from "@/components/Totals/types";
-import { parseReport, ReportActivity } from "@/helpers/utils/reports";
+import { parseReport } from "@/helpers/utils/reports";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
+import { ReportActivity } from "@/helpers/utils/types";
 
 export const getDates = (period, selectedDate) => {
   switch (period) {

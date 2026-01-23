@@ -8,6 +8,8 @@ export type BookingFromApi = {
     hours: number;
     month: number;
     year: number;
+    isOvertime: boolean;
+    isUndertime: boolean;
   }>;
 };
 
@@ -15,4 +17,6 @@ export type BookedSpentStat = {
   project: string;
   booked: number;
   spent: number;
+  isOvertime: boolean;
+  isUndertime: boolean;
 };

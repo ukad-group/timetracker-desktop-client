@@ -31,19 +31,21 @@ export function isTheSameDates(date1: Date, date2: Date): boolean {
 
   return firstDate.setHours(0, 0, 0, 0) === socondDate.setHours(0, 0, 0, 0);
 }
-function isLeapYear(year: number) {
-  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-}
 
-export function getWeekNumber(dateString: string, leapYearCheck: boolean) {
-  const dateObj = getDateFromString(dateString);
-  const startOfYear = new Date(dateObj.getFullYear(), 0, 1);
-  const days = Math.floor((dateObj.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
-  const year = dateObj.getFullYear();
-  const leapYearDay = isLeapYear(year) && leapYearCheck ? 0 : 1;
+export const getWeekNumber = (dateString: string) => {
+  const year = parseInt(dateString.substring(0, 4), 10);
+  const month = parseInt(dateString.substring(4, 6), 10) - 1;
+  const day = parseInt(dateString.substring(6, 8), 10);
 
-  return Math.ceil((days + startOfYear.getDay() + leapYearDay) / 7);
-}
+  const date = new Date(year, month, day);
+
+  date.setDate(date.getDate() + 4 - (date.getDay() || 7));
+
+  const yearStart = new Date(date.getFullYear(), 0, 1);
+  const weekNumber = Math.ceil(((date.getTime() - yearStart.getTime()) / DAY + 1) / 7);
+
+  return weekNumber;
+};
 
 export function getDateFromString(dateString: string) {
   const year = parseInt(dateString.slice(0, 4), 10);
@@ -68,15 +70,13 @@ export function getMonthWorkHours(monthReports: FormattedReport[], calendarDate:
 export function getRequiredHours(calendarDate: Date, daysOff: DayOff[], lastDay: Date) {
   if (!daysOff) return;
 
-  const lastDayOfMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 0);
-
   let totalWorkHours = 0;
 
   for (let i = 1; i <= lastDay.getDate(); i++) {
     const monthDay = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), i);
 
     const isWeekend = monthDay.getDay() === 0 || monthDay.getDay() === 6;
-    const dayOff = daysOff.find((day) => isTheSameDates(monthDay, day.date));
+    const dayOff = daysOff.find((day) => isTheSameDates(monthDay, day.date) && day.status !== 3);
 
     if (!isWeekend && !dayOff) {
       totalWorkHours += 8;
@@ -100,6 +100,7 @@ export function mathOvertimeUndertime(
   if (monthWorkHours - requiredHours === 0) {
     return { overUnder: "", overUnderHours: 0 };
   }
+
   if (monthWorkHours > requiredHours) {
     return {
       overUnder: "overtime",
@@ -114,8 +115,8 @@ export function mathOvertimeUndertime(
 }
 
 export function extractDatesFromPeriod(period: ApiDayOff, holidays: DayOff[]) {
-  const dateStart = new Date(new Date(period?.dateFrom).toISOString().slice(0, -1));
-  const dateEnd = new Date(new Date(period?.dateTo).toISOString().slice(0, -1));
+  const dateStart = new Date(period?.dateFrom);
+  const dateEnd = new Date(period?.dateTo);
   const vacationRange = generateDateRange(dateStart, dateEnd);
 
   return vacationRange
@@ -130,6 +131,7 @@ export function extractDatesFromPeriod(period: ApiDayOff, holidays: DayOff[]) {
         duration: period?.quantity,
         description: period?.description,
         type: period?.type,
+        status: period.status,
       };
     });
 }
@@ -210,10 +212,9 @@ export const getWeekDates = (inputDate: Date) => {
 
 export const getMonthDates = (inputDate: Date) => {
   const firstDay = new Date(inputDate.getFullYear(), inputDate.getMonth(), 1);
-
   const lastDay = new Date(inputDate.getFullYear(), inputDate.getMonth() + 1, 0);
-
   const monthDates = [];
+
   for (let i = firstDay.getDate(); i <= lastDay.getDate(); i++) {
     const currentDate = new Date(inputDate.getFullYear(), inputDate.getMonth(), i);
     monthDates.push(currentDate);
@@ -226,14 +227,16 @@ export const getCurrentTimeRoundedUp = () => {
   const currentTime = new Date();
   const minutes = currentTime.getMinutes();
   const minutesToAdd = (15 - (minutes % 15)) % 15;
+
   currentTime.setMinutes(minutes + minutesToAdd);
+
   const formattedTime = currentTime.toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
   });
 
-  return `${formattedTime}`;
+  return formattedTime;
 };
 
 export const formatDate = (date: Date, type: "short" | "long" = "long") =>

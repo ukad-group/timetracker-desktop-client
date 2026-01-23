@@ -2,15 +2,15 @@ import { PlaceholderProps } from "@/components/ActivitiesSection/types";
 import { useState, useRef } from "react";
 import { useMainStore } from "@/store/mainStore";
 import { shallow } from "zustand/shallow";
-import { ClockIcon, ExclamationCircleIcon, Square2StackIcon } from "@heroicons/react/24/outline";
+import { ClockIcon, Square2StackIcon } from "@heroicons/react/24/outline";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import { ButtonTransparent } from "@/shared/ButtonTransparent";
 import { Popup } from "@/shared/Popup";
 import { Hint } from "@/shared/Hint";
-import { HINTS_GROUP_NAMES, HINTS_ALERTS } from "@/helpers/contstants";
+import { HINTS_GROUP_NAMES, HINTS_ALERTS } from "@/helpers/constants";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 
-const Placeholder = ({ onEditActivity, backgroundError, selectedDate, setSelectedDateReport }: PlaceholderProps) => {
+const Placeholder = ({ onEditActivity, selectedDate, setSelectedDateReport }: PlaceholderProps) => {
   const [showModal, setShowModal] = useState(false);
   const placeholderButtonRef = useRef(null);
   const [reportsFolder] = useMainStore((state) => [state.reportsFolder, state.setReportsFolder], shallow);
@@ -33,15 +33,6 @@ const Placeholder = ({ onEditActivity, backgroundError, selectedDate, setSelecte
 
   return (
     <div className="py-6 text-center">
-      {backgroundError && (
-        <div className="border-t-4  border-red-700 mx-3 mb-6 p-5 shadow-lg text-gray-700 dark:text-slate-400 text-left">
-          <div className="flex justify-start gap-2 w-full text-gray-900 dark:text-dark-heading font-bold">
-            <ExclamationCircleIcon className="w-7 h-7 text-red-700" aria-hidden="true" />
-            <p>Noncritical error</p>
-          </div>
-          <div className="pl-9 pr-8">{backgroundError} Refer to the console for specific error information.</div>
-        </div>
-      )}
       <ClockIcon className="w-12 h-12 mx-auto text-gray-400" aria-hidden="true" />
 
       <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-dark-heading">No tracked time</h3>

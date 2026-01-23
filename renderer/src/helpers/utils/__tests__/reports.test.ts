@@ -1,5 +1,4 @@
 import {
-  ReportActivity,
   calcDurationBetweenTimes,
   formatDuration,
   parseReport,
@@ -7,6 +6,7 @@ import {
   checkIntersection,
   validation,
 } from "../reports";
+import { ReportActivity } from "../types";
 
 const parsedReport = (activity) => parseReport(activity)[0];
 const useFakeTime = () => jest.useFakeTimers().setSystemTime(new Date("2013-05-05"));

@@ -22,11 +22,11 @@ import {
   addNewActivity,
 } from "./utils";
 import { Hint } from "@/shared/Hint";
-import { HINTS_GROUP_NAMES, HINTS_ALERTS } from "@/helpers/contstants";
+import { HINTS_GROUP_NAMES, HINTS_ALERTS } from "@/helpers/constants";
 import { SCREENS } from "@/constants";
 import useScreenSizes from "@/helpers/hooks/useScreenSizes";
-import { KEY_CODES } from "@/helpers/contstants";
-import { TRACK_ANALYTICS } from "@/helpers/contstants";
+import { KEY_CODES } from "@/helpers/constants";
+import { TRACK_ANALYTICS } from "@/helpers/constants";
 
 const TrackTimeModal = ({
   activities,

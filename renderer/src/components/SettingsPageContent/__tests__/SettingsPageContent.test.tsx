@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, fireEvent, renderHook } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import useColorTheme from "@/helpers/hooks/useTheme";
-import { globalIpcRendererMock } from "@/tests/mocks/electron";
+import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";
 import SettingsPageContent from "../SettingsPageContent";
 
 jest.mock("@/helpers/hooks/useTheme", () => ({
@@ -17,7 +17,8 @@ jest.mock("next/router", () => ({
 global.ipcRenderer = {
   on: jest.fn(),
   removeAllListeners: jest.fn(),
-  send: jest.fn(),
+  send: ipcRendererSendMock,
+  sendSync: ipcRendererSendMock,
   ...globalIpcRendererMock,
 };
 

@@ -136,20 +136,12 @@ export const getJiraIssues = async (
 
     const assignedCards =
       cards?.issues
-        .filter(
-          ({ fields }: Fields) => fields?.assignee?.accountId === assignee
-        )
-        .map(({ fields }: Fields) =>
-          replaceHyphensWithSpaces(`JI:: ${fields?.summary}`)
-        ) || [];
+        ?.filter(({ fields }: Fields) => fields?.assignee?.accountId === assignee)
+        .map(({ fields }: Fields) => replaceHyphensWithSpaces(`JI:: ${fields?.summary}`)) || [];
     const notAssignedCards =
       cards?.issues
-        .filter(
-          ({ fields }: Fields) => fields?.assignee?.accountId !== assignee
-        )
-        .map(({ fields }: Fields) =>
-          replaceHyphensWithSpaces(`JI:: ${fields?.summary}`)
-        ) || [];
+        ?.filter(({ fields }: Fields) => fields?.assignee?.accountId !== assignee)
+        .map(({ fields }: Fields) => replaceHyphensWithSpaces(`JI:: ${fields?.summary}`)) || [];
 
     return [assignedCards, notAssignedCards];
   } catch (error) {

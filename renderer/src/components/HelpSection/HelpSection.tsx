@@ -66,7 +66,7 @@ const HelpSection = () => {
                 <strong className="mr-2">Ctrl + Z:</strong> Undo changes
               </li>
               <li>
-                <strong className="mr-2">Ctrl + Y:</strong> Redo changes
+                <strong className="mr-2">Ctrl + Y | Ctrl + Shift + Z:</strong> Redo changes
               </li>
               <li>
                 <strong className="mr-2">Ctrl + Shift + [+]:</strong> Zoom in
@@ -122,6 +122,8 @@ const HelpSection = () => {
                 <strong className="mr-2">ArrowDown (on time field):</strong> Decrease time by 15 minutes.
               </li>
             </ul>
+
+            <p className="mt-2 italic">* Replace Ctrl with Metakey on macos</p>
           </div>
         </div>
       </div>

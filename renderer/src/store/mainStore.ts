@@ -9,10 +9,15 @@ export const useMainStore = createWithEqualityFn<MainStore>()(
       (set) => ({
         reportsFolder: null,
         setReportsFolder: (folder: string) => set({ reportsFolder: folder }),
+        mainStoreLoaded: false,
+        setMainStoreLoaded: () => set({ mainStoreLoaded: true }),
       }),
       {
         name: "main-storage",
         storage: createJSONStorage(() => getStorage()),
+        onRehydrateStorage: () => (state) => {
+          state?.setMainStoreLoaded?.();
+        },
       },
     ),
   ),

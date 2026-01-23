@@ -1,4 +1,4 @@
-import { ReportActivity } from "@/helpers/utils/reports";
+import { ReportActivity } from "@/helpers/utils/types";
 import { Dispatch, SetStateAction } from "react";
 
 export type TrackTimeButtonProps = {
@@ -15,7 +15,7 @@ export type ActivitiesSectionProps = {
 
 export type PlaceholderProps = {
   onEditActivity: (activity: ReportActivity | "new") => void;
-  backgroundError: string;
+  backgroundError?: string;
   selectedDate: Date;
   setSelectedDateReport: Dispatch<SetStateAction<String>>;
 };

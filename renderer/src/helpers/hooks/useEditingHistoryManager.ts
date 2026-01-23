@@ -62,7 +62,7 @@ const useEditingHistoryManager = (initialValue: string) => {
   const [state, dispatch] = useReducer(EditingHistoryReducer, editingHistoryState);
 
   function findFirstDifferenceIndex(prevText, currentText) {
-    const minLength = Math.min(prevText.length, currentText.length);
+    const minLength = Math.min(prevText?.length, currentText?.length);
     for (let i = 0; i < minLength; i++) {
       if (prevText[i] !== currentText[i]) {
         return prevText > currentText ? i + prevText.length - currentText.length : i;

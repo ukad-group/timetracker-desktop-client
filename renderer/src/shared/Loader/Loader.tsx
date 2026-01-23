@@ -1,9 +1,11 @@
-const Loader = () => {
+import clsx from "clsx";
+
+const Loader = ({ className = "" }) => {
   return (
     <svg
       aria-hidden="true"
       role="status"
-      className="inline w-5 h-5 mr-3 text-white animate-spin"
+      className={clsx("inline text-white animate-spin", { "w-5 h-5 mr-3": !className }, className)}
       viewBox="0 0 100 101"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

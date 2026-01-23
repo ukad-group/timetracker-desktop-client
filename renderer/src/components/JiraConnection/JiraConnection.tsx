@@ -4,11 +4,14 @@ import { Button } from "@/shared/Button";
 import { JiraUser } from "@/helpers/utils/jira";
 import { FlagIcon } from "@heroicons/react/24/outline";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
-import { LOCAL_STORAGE_VARIABLES } from "@/helpers/contstants";
+import { LOCAL_STORAGE_VARIABLES } from "@/helpers/constants";
 import isOnline from "is-online";
 
 const JiraConnection = () => {
-  const [users, setUsers] = useState(JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.JIRA_USERS)) || []);
+  const [users, setUsers] = useState(
+    JSON.parse(global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.JIRA_USERS)) ||
+      [],
+  );
 
   const handleSignInButton = async () => {
     const online = await isOnline();
@@ -24,17 +27,24 @@ const JiraConnection = () => {
     const filteredUsers = users.filter((user: JiraUser) => user.userId !== id);
 
     if (filteredUsers.length > 0) {
-      localStorage.setItem(LOCAL_STORAGE_VARIABLES.JIRA_USERS, JSON.stringify(filteredUsers));
+      global.ipcRenderer.send(
+        IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+        LOCAL_STORAGE_VARIABLES.JIRA_USERS,
+        JSON.stringify(filteredUsers),
+      );
     } else {
-      localStorage.removeItem(LOCAL_STORAGE_VARIABLES.JIRA_USERS);
+      global.ipcRenderer.send(IPC_MAIN_CHANNELS.ELECTRON_STORE_DELETE, LOCAL_STORAGE_VARIABLES.JIRA_USERS);
     }
 
     setUsers(filteredUsers);
   };
 
   const addUser = async () => {
-    const authorizationCode = localStorage.getItem(LOCAL_STORAGE_VARIABLES.JIRA_AUTH_CODE);
-    localStorage.removeItem(LOCAL_STORAGE_VARIABLES.JIRA_AUTH_CODE);
+    const authorizationCode = global.ipcRenderer.sendSync(
+      IPC_MAIN_CHANNELS.ELECTRON_STORE_GET,
+      LOCAL_STORAGE_VARIABLES.JIRA_AUTH_CODE,
+    );
+    global.ipcRenderer.send(IPC_MAIN_CHANNELS.ELECTRON_STORE_DELETE, LOCAL_STORAGE_VARIABLES.JIRA_AUTH_CODE);
 
     if (!authorizationCode) return;
 
@@ -64,7 +74,11 @@ const JiraConnection = () => {
 
     const newUsers = [...users, user];
 
-    localStorage.setItem(LOCAL_STORAGE_VARIABLES.JIRA_USERS, JSON.stringify(newUsers));
+    global.ipcRenderer.send(
+      IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+      LOCAL_STORAGE_VARIABLES.JIRA_USERS,
+      JSON.stringify(newUsers),
+    );
     setUsers(newUsers);
   };
 

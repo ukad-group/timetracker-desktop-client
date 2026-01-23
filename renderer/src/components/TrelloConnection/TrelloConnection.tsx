@@ -2,11 +2,15 @@ import React, { useEffect, useState } from "react";
 import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/solid";
 import { Button } from "@/shared/Button";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
-import { LOCAL_STORAGE_VARIABLES } from "@/helpers/contstants";
+import { LOCAL_STORAGE_VARIABLES } from "@/helpers/constants";
 import isOnline from "is-online";
 
 const TrelloConnection = () => {
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.TRELLO_USER)) || null);
+  const [user, setUser] = useState(
+    JSON.parse(
+      global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.TRELLO_USER),
+    ) || null,
+  );
 
   const handleSignInButton = async () => {
     const online = isOnline();
@@ -19,13 +23,16 @@ const TrelloConnection = () => {
   };
 
   const handleSignOutButton = () => {
-    localStorage.removeItem(LOCAL_STORAGE_VARIABLES.TRELLO_USER);
+    global.ipcRenderer.send(IPC_MAIN_CHANNELS.ELECTRON_STORE_DELETE, LOCAL_STORAGE_VARIABLES.TRELLO_USER);
     setUser(null);
   };
 
   const addUser = async () => {
-    const token = localStorage.getItem(LOCAL_STORAGE_VARIABLES.TRELLO_AUTH_TOKEN);
-    localStorage.removeItem(LOCAL_STORAGE_VARIABLES.TRELLO_AUTH_TOKEN);
+    const token = global.ipcRenderer.sendSync(
+      IPC_MAIN_CHANNELS.ELECTRON_STORE_GET,
+      LOCAL_STORAGE_VARIABLES.TRELLO_AUTH_TOKEN,
+    );
+    global.ipcRenderer.send(IPC_MAIN_CHANNELS.ELECTRON_STORE_DELETE, LOCAL_STORAGE_VARIABLES.TRELLO_AUTH_TOKEN);
 
     if (!token) return;
 
@@ -40,7 +47,11 @@ const TrelloConnection = () => {
       username: username || fullName || "",
     };
 
-    localStorage.setItem(LOCAL_STORAGE_VARIABLES.TRELLO_USER, JSON.stringify(newUser));
+    global.ipcRenderer.send(
+      IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+      LOCAL_STORAGE_VARIABLES.TRELLO_USER,
+      JSON.stringify(newUser),
+    );
     setUser(newUser);
   };
 

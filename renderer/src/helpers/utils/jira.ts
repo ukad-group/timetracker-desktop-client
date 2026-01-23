@@ -1,5 +1,5 @@
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
-import { LOCAL_STORAGE_VARIABLES, TRACK_ANALYTICS } from "../contstants";
+import { LOCAL_STORAGE_VARIABLES, TRACK_ANALYTICS } from "../constants";
 import { Office365User } from "./office365";
 import { trackConnections } from "./utils";
 
@@ -20,18 +20,26 @@ export const updateJiraAccessToken = async (refreshToken: string) => {
 };
 
 export const removeJiraStoredUser = (userId: string) => {
-  const storedUsers = JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.JIRA_USERS)) || [];
+  const storedUsers =
+    JSON.parse(global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.JIRA_USERS)) ||
+    [];
   const filteredUsers = storedUsers.filter((user: JiraUser) => user.userId !== userId);
 
   if (filteredUsers.length > 0) {
-    localStorage.setItem(LOCAL_STORAGE_VARIABLES.JIRA_USERS, JSON.stringify(filteredUsers));
+    global.ipcRenderer.send(
+      IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+      LOCAL_STORAGE_VARIABLES.JIRA_USERS,
+      JSON.stringify(filteredUsers),
+    );
   } else {
-    localStorage.removeItem(LOCAL_STORAGE_VARIABLES.JIRA_USERS);
+    global.ipcRenderer.send(IPC_MAIN_CHANNELS.ELECTRON_STORE_DELETE, LOCAL_STORAGE_VARIABLES.JIRA_USERS);
   }
 };
 
 export const updateJiraStoredUser = (userId: string, newAccessToken: string, newRefreshToken: string) => {
-  const storedUsers = JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.JIRA_USERS)) || [];
+  const storedUsers =
+    JSON.parse(global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.JIRA_USERS)) ||
+    [];
   const updatedUsers = storedUsers.map((user: JiraUser) => {
     if (user.userId === userId) {
       return {
@@ -44,7 +52,11 @@ export const updateJiraStoredUser = (userId: string, newAccessToken: string, new
     }
   });
 
-  localStorage.setItem(LOCAL_STORAGE_VARIABLES.JIRA_USERS, JSON.stringify(updatedUsers));
+  global.ipcRenderer.send(
+    IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+    LOCAL_STORAGE_VARIABLES.JIRA_USERS,
+    JSON.stringify(updatedUsers),
+  );
 };
 
 export const getJiraCardsFromAPI = async () => {
@@ -55,7 +67,10 @@ export const getJiraCardsFromAPI = async () => {
 
 export const getJiraResources = async () => {
   try {
-    const storedUsers = JSON.parse(localStorage.getItem(LOCAL_STORAGE_VARIABLES.JIRA_USERS)) || [];
+    const storedUsers =
+      JSON.parse(
+        global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.JIRA_USERS),
+      ) || [];
 
     if (!storedUsers.length) return [];
 
