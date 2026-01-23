@@ -8,6 +8,7 @@ import { ActivitiesSection } from "@/components/ActivitiesSection";
 import { SelectFolderPlaceholder } from "@/components/SelectFolderPlaceholder";
 import { UpdateDescription } from "@/components/UpdateDescription";
 import { SupportSection } from "../SupportSection";
+import { Search } from "@/components/Search";
 import { Hint } from "@/shared/Hint";
 import { useMainStore } from "@/store/mainStore";
 import { useBetaStore } from "@/store/betaUpdatesStore";
@@ -256,8 +257,8 @@ const MainPage = ({
           const storedSectionOption = storedSectionsOptions.find(
             (section: StoredSection) => section.id === item.sectionName,
           );
-          item.side = storedSectionOption.side;
-          item.order = storedSectionOption.order;
+          item.side = storedSectionOption?.side || "left";
+          item.order = storedSectionOption?.order || 0;
           return item;
         })
       : MAIN_PAGE_SECTIONS;
@@ -322,6 +323,7 @@ const MainPage = ({
       ) : (
         <SelectFolderPlaceholder />
       )}
+      <Search reportsFolder={reportsFolder} onResultClick={setSelectedDate} />
       <Link
         href="/settings"
         onClick={() => setSaveReportTrigger(true)}
