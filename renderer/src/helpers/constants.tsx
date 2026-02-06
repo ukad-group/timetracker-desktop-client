@@ -23,6 +23,7 @@ export const SETTING_SECTIONS = {
 export const LOCAL_STORAGE_VARIABLES = {
   SHOW_GOOGLE_EVENTS: "showGoogleEvents",
   SHOW_OFFICE_365_EVENTS: "showOffice365Events",
+  SHOW_SEARCH_BUTTON: "showSearchButton",
   TIMETRACKER_USER: "timetracker-user",
   GOOGLE_USERS: "googleUsers",
   JIRA_USERS: "jira-users",

@@ -42,6 +42,7 @@ const MainPage = ({
   const [selectedDateReport, setSelectedDateReport] = useState<null | string>(null);
   const [saveReportTrigger, setSaveReportTrigger] = useState(false);
   const [isFileExist, setIsFileExist] = useState(false);
+  const [showSearchButton, setShowSearchButton] = useState(true);
   const [reportsFolder, mainStoreLoaded] = useMainStore(
     (state) => [state.reportsFolder, state.mainStoreLoaded],
     shallow,
@@ -62,6 +63,15 @@ const MainPage = ({
       global.ipcRenderer.send(IPC_MAIN_CHANNELS.STOP_PATH_WATCHER, reportsFolder);
     };
   }, [reportsFolder, mainStoreLoaded]);
+
+  useEffect(() => {
+    const storedValue = global.ipcRenderer.sendSync(
+      IPC_MAIN_CHANNELS.ELECTRON_STORE_GET,
+      LOCAL_STORAGE_VARIABLES.SHOW_SEARCH_BUTTON,
+    );
+
+    setShowSearchButton(storedValue !== "false");
+  }, []);
 
   useEffect(() => {
     if (betaUpdateStoreLoaded) {
@@ -361,7 +371,7 @@ const MainPage = ({
       ) : (
         <SelectFolderPlaceholder />
       )}
-      <Search reportsFolder={reportsFolder} onResultClick={setSelectedDate} />
+      {showSearchButton && <Search reportsFolder={reportsFolder} onResultClick={setSelectedDate} />}
       <Link
         href="/settings"
         onClick={() => setSaveReportTrigger(true)}

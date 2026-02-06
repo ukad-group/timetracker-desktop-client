@@ -9,5 +9,19 @@
 .tooltip::after {
   content: "";
 
-  @apply absolute left-[60%] top-full -ml-[5px] border-[5px] border-t-gray-700 border-r-transparent border-b-transparent border-l-transparent;
+  @apply absolute left-1/2 top-full -translate-x-1/2 border-[5px] border-t-gray-700 border-r-transparent border-b-transparent border-l-transparent;
+}
+
+.tooltip-search-hint {
+  @apply w-[520px] max-w-[calc(100vw-2rem)] text-sm leading-5 whitespace-pre-line text-left;
+  bottom: calc(130% + 6px);
+  left: auto;
+  right: -16px;
+  margin-left: 0;
+}
+
+.tooltip-search-hint::after {
+  left: auto;
+  right: 26px;
+  transform: none;
 }
