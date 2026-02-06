@@ -37,8 +37,8 @@ type ParsedSearchQuery = {
 const DEFAULT_OPERATOR: LogicalOperator = "&&";
 const SEARCH_HINT_TEXT = [
   "Examples:",
-  '  proj:"Acme" && activity:review sum',
-  '  "ai 102" || proj:internal avg',
+  '  proj:"project Name" && activity:review sum',
+  '  "some part of description" || proj:internal avg',
   "",
   "Anchors: proj/project:<text>, activity:<text>",
   "Quotes: use \"\" or '' for phrases",
