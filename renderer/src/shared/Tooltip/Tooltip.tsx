@@ -6,9 +6,16 @@ interface Props {
   tooltipText?: string;
   isClickable?: boolean;
   disabled?: boolean;
+  tooltipClassName?: string;
 }
 
-const Tooltip = ({ children, tooltipText = "Copied", isClickable = false, disabled = false }: Props) => {
+const Tooltip = ({
+  children,
+  tooltipText = "Copied",
+  isClickable = false,
+  disabled = false,
+  tooltipClassName,
+}: Props) => {
   const [isTransparent, setIsTransparent] = useState(true);
   const [isRemoved, setIsRemoved] = useState(true);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -37,7 +44,7 @@ const Tooltip = ({ children, tooltipText = "Copied", isClickable = false, disabl
       <p
         className={`tooltip 
         ${isTransparent ? "opacity-0" : "opacity-90"} 
-        ${isRemoved ? "invisible" : "visible"}`}
+        ${isRemoved ? "invisible" : "visible"} ${tooltipClassName ? tooltipClassName : ""}`}
       >
         <CheckIcon className="w-4 h-4" />
         {tooltipText}
@@ -53,7 +60,9 @@ const Tooltip = ({ children, tooltipText = "Copied", isClickable = false, disabl
       data-testid="hover-tooltip-test-id"
     >
       {children}
-      {showTooltip && !disabled && <p className="tooltip visible opacity-90">{tooltipText}</p>}
+      {showTooltip && !disabled && (
+        <p className={`tooltip visible opacity-90 ${tooltipClassName ? tooltipClassName : ""}`}>{tooltipText}</p>
+      )}
     </div>
   );
 

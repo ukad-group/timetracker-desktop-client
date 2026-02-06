@@ -8,6 +8,7 @@ import { ActivitiesSection } from "@/components/ActivitiesSection";
 import { SelectFolderPlaceholder } from "@/components/SelectFolderPlaceholder";
 import { UpdateDescription } from "@/components/UpdateDescription";
 import { SupportSection } from "../SupportSection";
+import { Search } from "@/components/Search";
 import { Hint } from "@/shared/Hint";
 import { useMainStore } from "@/store/mainStore";
 import { useBetaStore } from "@/store/betaUpdatesStore";
@@ -41,6 +42,7 @@ const MainPage = ({
   const [selectedDateReport, setSelectedDateReport] = useState<null | string>(null);
   const [saveReportTrigger, setSaveReportTrigger] = useState(false);
   const [isFileExist, setIsFileExist] = useState(false);
+  const [showSearchButton, setShowSearchButton] = useState(true);
   const [reportsFolder, mainStoreLoaded] = useMainStore(
     (state) => [state.reportsFolder, state.mainStoreLoaded],
     shallow,
@@ -61,6 +63,15 @@ const MainPage = ({
       global.ipcRenderer.send(IPC_MAIN_CHANNELS.STOP_PATH_WATCHER, reportsFolder);
     };
   }, [reportsFolder, mainStoreLoaded]);
+
+  useEffect(() => {
+    const storedValue = global.ipcRenderer.sendSync(
+      IPC_MAIN_CHANNELS.ELECTRON_STORE_GET,
+      LOCAL_STORAGE_VARIABLES.SHOW_SEARCH_BUTTON,
+    );
+
+    setShowSearchButton(storedValue !== "false");
+  }, []);
 
   useEffect(() => {
     if (betaUpdateStoreLoaded) {
@@ -294,8 +305,8 @@ const MainPage = ({
           const storedSectionOption = storedSectionsOptions.find(
             (section: StoredSection) => section.id === item.sectionName,
           );
-          item.side = storedSectionOption.side;
-          item.order = storedSectionOption.order;
+          item.side = storedSectionOption?.side || "left";
+          item.order = storedSectionOption?.order || 0;
           return item;
         })
       : MAIN_PAGE_SECTIONS;
@@ -360,6 +371,7 @@ const MainPage = ({
       ) : (
         <SelectFolderPlaceholder />
       )}
+      {showSearchButton && <Search reportsFolder={reportsFolder} onResultClick={setSelectedDate} />}
       <Link
         href="/settings"
         onClick={() => setSaveReportTrigger(true)}

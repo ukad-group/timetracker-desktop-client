@@ -9,6 +9,7 @@ import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 
 const LayoutSection = () => {
   const { theme, setTheme } = useColorTheme();
+  const [showSearchButton, setShowSearchButton] = useState(true);
 
   const sectionsOptions: StoredSection[] = JSON.parse(
     global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.WIDGET_ORDER),
@@ -38,6 +39,15 @@ const LayoutSection = () => {
 
   const [leftSections, setLeftSections] = useState(distribution(sectionsOptions, "left"));
   const [rightSections, setRightSections] = useState(distribution(sectionsOptions, "right"));
+
+  useEffect(() => {
+    const storedValue = global.ipcRenderer.sendSync(
+      IPC_MAIN_CHANNELS.ELECTRON_STORE_GET,
+      LOCAL_STORAGE_VARIABLES.SHOW_SEARCH_BUTTON,
+    );
+
+    setShowSearchButton(storedValue !== "false");
+  }, []);
 
   const handleOnDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -105,6 +115,16 @@ const LayoutSection = () => {
     );
   }, [leftSections, rightSections]);
 
+  const handleSearchButtonToggle = () => {
+    const nextValue = !showSearchButton;
+    setShowSearchButton(nextValue);
+    global.ipcRenderer.send(
+      IPC_MAIN_CHANNELS.ELECTRON_STORE_SET,
+      LOCAL_STORAGE_VARIABLES.SHOW_SEARCH_BUTTON,
+      nextValue.toString(),
+    );
+  };
+
   return (
     <section className="h-full">
       <div className="overflow-y-auto h-full bg-white sm:rounded-lg p-2 flex flex-col gap-6 dark:bg-dark-container">
@@ -159,6 +179,23 @@ const LayoutSection = () => {
                 })}
               >
                 Toggle to {theme.custom === "light" ? "dark" : "light"} theme
+              </span>
+            </label>
+          </div>
+        </div>
+        <div className="flex flex-col gap-3">
+          <span className="text-lg font-medium text-gray-900 dark:text-dark-heading">Search</span>
+          <div className="flex items-center">
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={showSearchButton}
+                onChange={handleSearchButtonToggle}
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-dark-button-back rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-dark-button-hover"></div>
+              <span className="ml-3 text-sm font-medium text-gray-500 dark:text-dark-main">
+                Show floating search button
               </span>
             </label>
           </div>
