@@ -17,6 +17,24 @@ initialize("A-EU-9361517871");
 // Load environment variables from .env file
 dotenv.config({ path: path.join(app.getAppPath(), "renderer", ".env") });
 
+// Jira/Trello OAuth redirects to this custom scheme. Must be registered before app ready
+// so the callback page can load and run renderer JS (closeWindowIfNeeded).
+const customProtocol = process.env.NEXT_PUBLIC_PROTOCOL;
+if (customProtocol) {
+  protocol.registerSchemesAsPrivileged([
+    {
+      scheme: customProtocol,
+      privileges: {
+        standard: true,
+        secure: true,
+        supportFetchAPI: true,
+        corsEnabled: true,
+        bypassCSP: true,
+      },
+    },
+  ]);
+}
+
 // Register all IPC listeners
 registerIpcHandlers();
 
@@ -28,11 +46,19 @@ const getServerPort = () => {
   return address?.port ? address.port : 0;
 };
 
-const getServerAddress = () => {
-  return process.env.NEXT_PUBLIC_SERVER_ADDRESS?.replace(
-    process.env.NEXT_PUBLIC_PORT_REPLACE_TOKEN_NAME || "",
-    getServerPort().toString(),
-  ) || "";
+/** Map OAuth custom-protocol callbacks to the local HTTP server. Avoids dotenv ${} expansion. */
+const toLocalHttpUrl = (requestUrl: string) => {
+  if (!customProtocol) return requestUrl;
+
+  const protocolOrigin = `${customProtocol}://localhost`;
+  const httpOrigin = `http://localhost:${getServerPort()}`;
+
+  if (!requestUrl.startsWith(protocolOrigin)) {
+    console.error("Unexpected custom-protocol URL:", requestUrl);
+    return requestUrl;
+  }
+
+  return requestUrl.replace(protocolOrigin, httpOrigin);
 };
 
 app.on("ready", async () => {
@@ -99,26 +125,21 @@ app.on("ready", async () => {
     // Here we generate window inside listening too.
   });
 
-  // App Ready continuation
-  app.whenReady().then(() => {
-    if (process.env.NEXT_PUBLIC_PROTOCOL) {
-      protocol.handle(process.env.NEXT_PUBLIC_PROTOCOL as string, (request: Request) => {
-        const localUrl = request.url.replace(
-          process.env.NEXT_PUBLIC_PROTOCOL_SERVER_ADDRESS || "",
-          getServerAddress(),
-        );
-        return net.fetch(localUrl);
-      });
-    }
+  if (customProtocol) {
+    protocol.handle(customProtocol, (request: Request) => {
+      const localUrl = toLocalHttpUrl(request.url);
+      console.log("Custom protocol redirect:", request.url, "->", localUrl);
+      return net.fetch(localUrl);
+    });
+  }
 
-    if (process.platform !== "darwin") {
-      try {
-        windowManager.generateTray();
-      } catch (err) {
-        console.log(err);
-      }
+  if (process.platform !== "darwin") {
+    try {
+      windowManager.generateTray();
+    } catch (err) {
+      console.log(err);
     }
-  });
+  }
 });
 
 app.on("activate", () => {

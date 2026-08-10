@@ -142,7 +142,7 @@ const Office365Connection = () => {
         After connection, you will be able to fill in the Report with the information from events of your Microsoft
         Outlook Calendar
         <br />
-        You can authorize with a work, or personal Microsoft account (e.g. Skype, Xbox)
+        You can authorize with a work, or personal Microsoft account
       </p>
       {users.length > 0 && (
         <div className="flex items-start justify-between gap-6 w-full">

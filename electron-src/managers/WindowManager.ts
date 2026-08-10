@@ -115,13 +115,19 @@ class WindowManager {
             },
         });
 
-        // Handle failed page loads (like "App not found")
-        const handleFailedLoad = () => {
-            console.error(`Failed to load: ${url}`);
+        // Handle failed page loads (like "App not found"). Ignore aborts from OAuth redirects.
+        const handleFailedLoad = (...args: unknown[]) => {
+            const errorCode = args[1] as number | undefined;
+            const errorDescription = args[2] as string | undefined;
+            const validatedURL = args[3] as string | undefined;
+
+            if (errorCode === -3) return; // ERR_ABORTED — common during OAuth redirects
+
+            console.error(`Failed to load: ${validatedURL || url}`, errorCode, errorDescription);
             this.childWindow?.close();
         };
 
-        this.childWindow.webContents.on('did-fail-load', handleFailedLoad);
+        this.childWindow.webContents.on("did-fail-load", handleFailedLoad);
 
         this.childWindow.loadURL(url).catch(handleFailedLoad);
 
