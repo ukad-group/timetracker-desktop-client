@@ -132,7 +132,10 @@ jobs:
       # - run: npm run build
       - run: npm run test
       - run: npm run lint
-      - run: npm run dist
+      # Build only — softprops/action-gh-release owns creating the GitHub Release.
+      # With GH_TOKEN set, electron-builder would otherwise also publish and race softprops
+      # (already_exists on tag_name / unexpected draft releases).
+      - run: npm run dist -- --publish never
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
