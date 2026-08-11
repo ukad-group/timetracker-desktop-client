@@ -30,7 +30,7 @@ After pulling TypeScript changes under `electron-src/`, wait for `tsc -w` to emi
 | Edit | Do not edit / commit |
 | --- | --- |
 | `electron-src/**` | `main/**` (tsc output) |
-| `renderer/src/**` | `renderer/out/**`, `renderer/.next/**` |
+| `renderer/src/**` | `renderer/dist/**` |
 | `renderer/.env` (local only) | Real secrets in git |
 | `package.json` scripts/deps | `dist/**` |
 
@@ -45,7 +45,7 @@ After pulling TypeScript changes under `electron-src/`, wait for `tsc -w` to emi
 
 | Symptom | Likely cause |
 | --- | --- |
-| UI change missing | Wrong folder (`main/` instead of `electron-src/`, or stale Next cache) |
+| UI change missing | Wrong folder (`main/` instead of `electron-src/`), or Vite not running on `:3000` |
 | IPC “does nothing” | Channel string typo; not registered in `IpcHandler`; Electron not restarted after main rebuild |
 | OAuth redirect fails | Missing/wrong `NEXT_PUBLIC_*` in `.env`; port mismatch in redirect URI |
 | Jira/Trello: auth window hangs ~1 min then closes | Custom-protocol rewrite failed (unexpanded `${…}` in `.env`, or scheme not privileged) — see `electron-src/index.ts` `toLocalHttpUrl` |

@@ -20,7 +20,7 @@ import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import { LOCAL_STORAGE_VARIABLES, HINTS_GROUP_NAMES, HINTS_ALERTS, KEY_CODES } from "@/helpers/constants";
 import { MainPageProps, Section } from "./types";
 import { StoredSection } from "@/components/WidgetOrderSection/types";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { Cog8ToothIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
 import { ReportAndNotes, ReportActivity } from "@/helpers/utils/types";
@@ -327,7 +327,7 @@ const MainPage = ({
         <SelectFolderPlaceholder />
       )}
       <Link
-        href="/settings"
+        to="/settings"
         onClick={() => setSaveReportTrigger(true)}
         className={clsx(
           "z-20 h-12 w-12 bg-blue-950 rounded-full fixed right-10 bottom-10 flex items-center justify-center transition-colors duration-300",

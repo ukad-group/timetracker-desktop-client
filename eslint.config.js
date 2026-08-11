@@ -34,7 +34,7 @@ module.exports = [
     },
   },
   {
-    ignores: ["node_modules/**", "dist/**", "main/**", "renderer/out/**", "renderer/.next/**", "coverage/**", "app/**"],
+    ignores: ["node_modules/**", "dist/**", "main/**", "renderer/dist/**", "coverage/**", "app/**"],
   },
 ];
 

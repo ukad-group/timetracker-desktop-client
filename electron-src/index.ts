@@ -1,6 +1,4 @@
 import { app, protocol, net, globalShortcut } from "electron";
-import next from "next";
-import { parse } from "url";
 import { createServer, Server, IncomingMessage, ServerResponse } from "http";
 import { AddressInfo } from "net";
 import path from "path";
@@ -16,6 +14,8 @@ initialize("A-EU-9361517871");
 
 // Load environment variables from .env file
 dotenv.config({ path: path.join(app.getAppPath(), "renderer", ".env") });
+
+const VITE_DEV_PORT = 3000;
 
 // Jira/Trello OAuth redirects to this custom scheme. Must be registered before app ready
 // so the callback page can load and run renderer JS (closeWindowIfNeeded).
@@ -38,13 +38,25 @@ if (customProtocol) {
 // Register all IPC listeners
 registerIpcHandlers();
 
-const gotTheLock = app.requestSingleInstanceLock();
-let server: Server<typeof IncomingMessage, typeof ServerResponse>;
+// Skip single-instance lock in dev: nodemon restarts race the lock and the new process
+// exits cleanly, so Electron never comes back up.
+const gotTheLock = isDev ? true : app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else if (!isDev) {
+  app.on("second-instance", () => {
+    if (windowManager.mainWindow) {
+      if (windowManager.mainWindow.isMinimized()) windowManager.mainWindow.restore();
+      windowManager.mainWindow.show();
+      windowManager.mainWindow.focus();
+    }
+  });
+}
 
-const getServerPort = () => {
-  const address = server?.address() as AddressInfo;
-  return address?.port ? address.port : 0;
-};
+let server: Server<typeof IncomingMessage, typeof ServerResponse>;
+let serverPort = 0;
+
+const getServerPort = () => serverPort;
 
 /** Map OAuth custom-protocol callbacks to the local HTTP server. Avoids dotenv ${} expansion. */
 const toLocalHttpUrl = (requestUrl: string) => {
@@ -61,12 +73,19 @@ const toLocalHttpUrl = (requestUrl: string) => {
   return requestUrl.replace(protocolOrigin, httpOrigin);
 };
 
+const startApp = (port: number) => {
+  if (!gotTheLock) return;
+
+  serverPort = port;
+  process.env.NEXT_PUBLIC_PORT = `${port}`;
+  console.log(`> Ready on http://127.0.0.1:${port}`);
+
+  windowManager.setPort(port);
+  windowManager.createMain();
+};
+
 app.on("ready", async () => {
-  const nextApp = next({
-    dev: isDev,
-    dir: app.getAppPath() + "/renderer",
-  });
-  const requestHandler = nextApp.getRequestHandler();
+  if (!gotTheLock) return;
 
   app.on("browser-window-focus", () => {
     globalShortcut.register("CommandOrControl+Q", () => {
@@ -83,47 +102,22 @@ app.on("ready", async () => {
   });
 
   if (isDev) {
-    await nextApp.prepare();
-  }
-
-  server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
-    if (isDev) {
-      const parsedUrl = parse(req.url, true);
-      requestHandler(req, res, parsedUrl);
-    } else {
+    startApp(VITE_DEV_PORT);
+  } else {
+    server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
       await serveHandler(req, res, {
-        public: path.join(app.getAppPath(), "renderer/out"),
+        public: path.join(app.getAppPath(), "renderer/dist"),
+        rewrites: [{ source: "**", destination: "/index.html" }],
       });
-    }
-  }).listen(0, "127.0.0.1", () => {
-    const port = getServerPort();
-    process.env.NEXT_PUBLIC_PORT = `${port}`;
-    console.log(`> Ready on http://127.0.0.1:${port}`);
+    }).listen(0, "127.0.0.1", () => {
+      const address = server.address() as AddressInfo;
+      startApp(address.port);
+    });
 
-    // Set port in WindowManager so services can use it
-    windowManager.setPort(port);
-
-    if (!gotTheLock) {
-      app.quit();
-    } else {
-      app.on("second-instance", () => {
-        if (windowManager.mainWindow) {
-          if (windowManager.mainWindow.isMinimized()) windowManager.mainWindow.restore();
-          windowManager.mainWindow.show();
-          windowManager.mainWindow.focus();
-        }
-      });
-      windowManager.createMain();
-    }
-  });
-
-  server.on("error", (error: Error) => {
-    console.error("Server error:", error);
-    // Simplified error handling - WindowManager might not be ready if server fails immediately?
-    // But we only show message box if mainWindow exists.
-    // In original code, it generated window inside listening.
-    // Here we generate window inside listening too.
-  });
+    server.on("error", (error: Error) => {
+      console.error("Server error:", error);
+    });
+  }
 
   if (customProtocol) {
     protocol.handle(customProtocol, (request: Request) => {
@@ -147,7 +141,6 @@ app.on("activate", () => {
 });
 
 app.on("window-all-closed", () => {
-  // Original code had app.quit() here.
   app.quit();
 });
 

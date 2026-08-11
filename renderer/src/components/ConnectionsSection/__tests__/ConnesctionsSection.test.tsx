@@ -1,28 +1,9 @@
 import React from "react";
 import { render } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import "@testing-library/jest-dom";
 import ConnectionsSection from "../ConnectionsSection";
 import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";
-
-jest.mock("next/router", () => ({
-  useRouter: () => ({
-    basePath: "",
-    pathname: "/",
-    route: "/",
-    asPath: "",
-    push: async () => true,
-    replace: async () => true,
-    reload: () => {},
-    back: () => {},
-    prefetch: async () => undefined,
-    beforePopState: () => {},
-    events: {
-      on: () => {},
-      off: () => {},
-      emit: () => {},
-    },
-  }),
-}));
 
 global.ipcRenderer = {
   on: jest.fn(),
@@ -44,7 +25,11 @@ describe("GIVEN ConnectionsSection", () => {
   });
 
   test("renders ConnectionsSection correctly", () => {
-    const { getByText } = render(<ConnectionsSection />);
+    const { getByText } = render(
+      <MemoryRouter>
+        <ConnectionsSection />
+      </MemoryRouter>,
+    );
 
     expect(getByText("Connections")).toBeInTheDocument();
     expect(

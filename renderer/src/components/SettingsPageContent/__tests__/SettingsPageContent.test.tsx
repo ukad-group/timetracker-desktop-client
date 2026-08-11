@@ -1,4 +1,5 @@
 import { render, screen, renderHook } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import "@testing-library/jest-dom";
 import useColorTheme from "@/helpers/hooks/useTheme";
 import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";
@@ -7,10 +8,6 @@ import SettingsPageContent from "../SettingsPageContent";
 jest.mock("@/helpers/hooks/useTheme", () => ({
   __esModule: true,
   default: jest.fn(() => ({ theme: { custom: "light", os: true }, setTheme: jest.fn() })),
-}));
-
-jest.mock("next/router", () => ({
-  useRouter: jest.fn(() => ({ push: jest.fn() })),
 }));
 
 global.ipcRenderer = {
@@ -37,7 +34,11 @@ Object.defineProperty(window, "matchMedia", {
 
 describe("GIVEN SettingsPage", () => {
   beforeAll(() => {
-    render(<SettingsPageContent />);
+    render(
+      <MemoryRouter>
+        <SettingsPageContent />
+      </MemoryRouter>,
+    );
 
     window.matchMedia = jest.fn().mockImplementation((query) => ({
       matches: true,

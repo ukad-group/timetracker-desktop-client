@@ -1,12 +1,9 @@
 import React from "react";
 import { render } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import "@testing-library/jest-dom";
 import TimetrackerWebsiteConnection from "../TimetrackerWebsiteConnection";
 import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";
-
-jest.mock("next/router", () => ({
-  useRouter: jest.fn(() => ({ push: jest.fn() })),
-}));
 
 jest.mock("electron", () => ({
   ipcRenderer: {
@@ -41,7 +38,11 @@ describe("GIVEN TimetrackerWebsiteConnection", () => {
   });
 
   it("renders correctly with no logged user", () => {
-    const { getByText, getByRole } = render(<TimetrackerWebsiteConnection />);
+    const { getByText, getByRole } = render(
+      <MemoryRouter>
+        <TimetrackerWebsiteConnection />
+      </MemoryRouter>,
+    );
 
     expect(getByText("Timetracker website")).toBeInTheDocument();
     expect(getByRole("button")).toHaveTextContent("Add account");

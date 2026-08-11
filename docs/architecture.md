@@ -7,23 +7,23 @@ Agent-oriented overview of how the Timetracker desktop client is structured. For
 ```text
 ┌─────────────────────────────────────────────────────────────┐
 │ Electron main process (electron-src → main/)                │
-│  • HTTP server (Next in dev, serve-handler on renderer/out)  │
+│  • Dev: loads Vite on :3000; Prod: serve-handler on renderer/dist │
 │  • WindowManager / tray / child OAuth windows               │
 │  • IpcHandler (FS, store, watchers, integrations)           │
 │  • UpdateManager (electron-updater)                         │
 └───────────────────────────┬─────────────────────────────────┘
                             │ IPC (preload → global.ipcRenderer)
 ┌───────────────────────────▼─────────────────────────────────┐
-│ Renderer (Next.js static export in renderer/)               │
-│  • Pages: index (tracker), settings, offline                │
+│ Renderer (Vite + React SPA in renderer/)                    │
+│  • Routes: / (tracker), /settings, /offline                 │
 │  • Zustand stores + React components                        │
 │  • Calls main for FS, OAuth, persistence, updates           │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-The app is a **single-instance** Electron client. The main process binds a local HTTP server on `127.0.0.1` with an **ephemeral port** (`listen(0)`), then loads `http://localhost:{port}/` in the BrowserWindow. Production serves the static export from `renderer/out`; development runs Next’s request handler against `renderer/`.
+The app is a **single-instance** Electron client. In production the main process binds a local HTTP server on `127.0.0.1` with an **ephemeral port** (`listen(0)`) and serves the Vite build from `renderer/dist` (SPA rewrite to `index.html`). In development Electron loads the Vite dev server at `http://localhost:3000` directly. Either way the BrowserWindow loads `http://localhost:{port}/`.
 
-Environment variables are loaded from `renderer/.env` in the main process (`dotenv`). Many integration values are also exposed to the renderer as `NEXT_PUBLIC_*`.
+Environment variables are loaded from `renderer/.env` in the main process (`dotenv`). Many integration values are also inlined into the renderer at build time as `NEXT_PUBLIC_*` (via Vite `define`).
 
 ## Process responsibilities
 
@@ -31,7 +31,7 @@ Environment variables are loaded from `renderer/.env` in the main process (`dote
 
 | Module | Responsibility |
 | --- | --- |
-| `index.ts` | App lifecycle, Next/static server, protocol handler, shortcut registration, Aptabase init |
+| `index.ts` | App lifecycle, Vite-dev / static server, protocol handler, shortcut registration, Aptabase init |
 | `managers/WindowManager.ts` | Main window, child OAuth windows, tray (non-macOS), focus events, IPC fan-out helpers |
 | `managers/IpcHandler.ts` | All `ipcMain` listeners: reports FS, chokidar watchers, electron-store, session bag, integrations |
 | `managers/UpdateManager.ts` | Beta/stable update checks, download, quit-and-install |
@@ -47,7 +47,7 @@ Compiled output: TypeScript → `main/` (`outDir` in `electron-src/tsconfig.json
 
 | Area | Responsibility |
 | --- | --- |
-| `pages/` | Routes only; `_app.tsx` disables SSR (`dynamic(..., { ssr: false })`) because Electron APIs are required |
+| `main.tsx` / `App.tsx` / `routes/` | SPA entry + react-router routes (`/`, `/settings`, `/offline`) |
 | `components/` | Feature modules (calendar, activities, connections, track-time modal, settings sections, …) |
 | `shared/` | Design-system-ish primitives (Button, Modal, Hint, Autocomplete, …) |
 | `store/` | Zustand stores with Electron-backed persistence |
@@ -55,7 +55,7 @@ Compiled output: TypeScript → `main/` (`outDir` in `electron-src/tsconfig.json
 | `API/` | Renderer-facing wrappers for some calendar/integration flows |
 | `actions/editingActions/` | Pure editing action helpers + tests |
 
-Next is configured with `output: "export"` (`next.config.js`), so there are **no Next API routes** in production — all privileged work stays in Electron.
+There are **no renderer HTTP API routes** — all privileged work stays in Electron via IPC.
 
 ## IPC contract
 
@@ -124,11 +124,11 @@ Credentials and redirect URIs come from `renderer/.env` (template: `.env.demo`).
 
 ```text
 electron-src/*.ts  --tsc-->  main/*.js
-renderer/          --next build (export)-->  renderer/out/**
-electron-builder packages main + renderer/out (+ renderer/.env) → dist/
+renderer/          --vite build-->  renderer/dist/**
+electron-builder packages main + renderer/dist (+ renderer/.env) → dist/
 ```
 
-- Dev: `build-electron:watch` + `electron:watch` (nodemon on `main/`).
+- Dev: Vite `:3000` + `build-electron:watch` + `electron:watch` (nodemon on `main/`, waits for Vite).
 - CI: `.github/workflows/pullrequest.yml`, `release.yml` (tag-driven versioning / multi-OS artifacts).
 - Analytics: Aptabase (`@aptabase/electron`) initialized in main.
 

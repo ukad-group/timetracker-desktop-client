@@ -16,4 +16,6 @@ declare global {
 process.once("loaded", () => {
   global.ipcRenderer = ipcRenderer;
   global.app = app;
+  // Vite maps `global` → `globalThis` in renderer code; keep both in sync.
+  Object.assign(globalThis, { ipcRenderer, app });
 });

@@ -9,7 +9,7 @@ import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import { addPastTime, editActivity } from "@/helpers/utils/utils";
 import { ReportActivity } from "@/helpers/utils/types";
 
-export default function Home() {
+export function HomePage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedDateActivities, setSelectedDateActivities] = useState<Array<ReportActivity> | null>([]);
   const [shouldAutosave, setShouldAutosave] = useState(false);

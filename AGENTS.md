@@ -7,7 +7,7 @@ Cross-platform Electron desktop app for time-tracking reports. Use this file as 
 | Layer | Tech |
 | --- | --- |
 | Desktop shell | Electron (`electron-src/` → compiles to `main/`) |
-| UI | Next.js (Pages Router, `output: "export"`), React 19, Tailwind CSS |
+| UI | Vite + React 19 + react-router, Tailwind CSS |
 | State | Zustand (persisted via Electron storage IPC) |
 | Language | TypeScript (strict mode off; `noImplicitAny: false`) |
 | Tests | Jest + Testing Library (`renderer/` roots) |
@@ -23,7 +23,7 @@ Node `>=18`, npm `>=9`. See `.nvmrc` for the pinned major.
 | `electron-src/managers/` | `WindowManager`, `IpcHandler`, `UpdateManager` | IPC registration and windows |
 | `electron-src/services/` | OAuth / API services (Google, Jira, Trello, Office365, Timetracker) | Called from IPC handlers |
 | `electron-src/helpers/` | FS, datetime, report parsing, preload, `IPC_MAIN_CHANNELS` | Shared constants used by renderer via `@electron/*` |
-| `renderer/src/pages/` | Routes: `/` (main), `/settings`, `/offline` | SSR disabled in `_app.tsx` |
+| `renderer/src/routes/` | Routes: `/`, `/settings`, `/offline` (via `App.tsx` + react-router) |
 | `renderer/src/components/` | Feature UI | Folder = component; usually `Component.tsx`, `types.ts`, `index.ts` |
 | `renderer/src/shared/` | Reusable UI primitives | Same folder convention |
 | `renderer/src/store/` | Zustand stores | Persist through `getStorage()` → IPC |
@@ -35,8 +35,8 @@ Node `>=18`, npm `>=9`. See `.nvmrc` for the pinned major.
 ## Commands
 
 ```sh
-npm run dev              # watch Electron TS + run Electron (Next in-process)
-npm run build            # next build renderer + tsc electron-src
+npm run dev              # Vite renderer + watch Electron TS + Electron
+npm run build            # vite build renderer + tsc electron-src
 npm run type-check       # both tsconfigs
 npm run lint / lint:fix # ESLint on renderer/src
 npm run format           # Prettier on renderer/src
@@ -61,7 +61,7 @@ npm run dist             # clean + build + electron-builder (current OS)
    - Prefer importing channel constants from `@electron/helpers/constants`, not string literals.
 
 4. **Do not commit or rewrite**
-   - `main/`, `renderer/out/`, `renderer/.next/`, `dist/`, `node_modules/`, real `.env` values.
+   - `main/`, `renderer/dist/`, `dist/`, `node_modules/`, real `.env` values.
    - Avoid drive-by refactors outside the requested task.
 
 5. **Component convention**

@@ -2,7 +2,7 @@
   "private": true,
   "name": "timetracker",
   "description": "Timetracker app",
-  "version": "1.53.0-beta.12",
+  "version": "1.53.0-beta.13",
   "author": "mmmykhailo <mmmykhailo@proton.me>",
   "main": "main/index.js",
   "engines": {
@@ -12,14 +12,16 @@
   "scripts": {
     "coverage": "jest --coverage",
     "test": "jest",
-    "clean": "rimraf dist main renderer/out renderer/.next",
+    "clean": "rimraf dist main renderer/dist renderer/.next",
     "postinstall": "electron-builder install-app-deps",
-    "dev": "concurrently -k -r \"npm run build-electron:watch\" \"npm run electron:watch\"",
+    "dev": "npm run build-electron && concurrently -k -r \"npm run build-electron:watch\" \"npm run vite:dev\" \"npm run electron:dev\"",
     "dev:once": "npm run build-electron && electron .",
-    "build-renderer": "next build renderer",
+    "vite:dev": "vite --config renderer/vite.config.mts",
+    "build-renderer": "vite build --config renderer/vite.config.mts",
     "build-electron": "tsc -p electron-src",
-    "build-electron:watch": "tsc -w -p electron-src",
-    "electron:watch": "nodemon --watch main --ext js,json --exec electron .",
+    "build-electron:watch": "tsc -w -p electron-src --preserveWatchOutput",
+    "electron:dev": "wait-on http://127.0.0.1:3000 && electron .",
+    "electron:watch": "wait-on http://127.0.0.1:3000 && nodemon --watch main --ext js,json --delay 2 --exec electron .",
     "build": "npm run build-renderer && npm run build-electron",
     "pack-app": "npm run clean && npm run build && electron-builder --dir",
     "dist": "npm run clean && npm run build && electron-builder",
@@ -64,8 +66,7 @@
     "files": [
       "main",
       "renderer/.env",
-      "renderer/out/**/*",
-      "!renderer/.next/**/*",
+      "renderer/dist/**/*",
       "!renderer/src/**/*",
       "!renderer/node_modules/**/*"
     ],
@@ -102,13 +103,12 @@
     "clsx": "^2.1.1",
     "dotenv": "^16.6.1",
     "electron-is-dev": "^3.0.1",
-    "electron-next": "^3.1.5",
     "electron-store": "^11.0.2",
     "electron-updater": "^6.7.3",
     "husky": "^9.1.7",
-    "next": "^16.1.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
+    "react-router-dom": "^7.9.6",
     "semver": "^7.7.3",
     "serve-handler": "^6.1.6",
     "slate": "^0.120.0",
@@ -132,6 +132,7 @@
     "@types/semver": "^7.7.1",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
     "@typescript-eslint/parser": "^8.50.0",
+    "@vitejs/plugin-react": "^6.0.5",
     "autoprefixer": "^10.4.23",
     "concurrently": "^9.2.1",
     "electron": "^39.2.7",
@@ -150,6 +151,8 @@
     "tailwindcss": "^3.4.19",
     "ts-jest": "^29.4.6",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.50.0"
+    "typescript-eslint": "^8.50.0",
+    "vite": "^8.2.1",
+    "wait-on": "^9.1.0"
   }
 }

@@ -1,7 +1,5 @@
 import { SettingsPageContent } from "@/components/SettingsPageContent";
 
-const SettingsPage = () => {
+export function SettingsPage() {
   return <SettingsPageContent />;
-};
-
-export default SettingsPage;
+}

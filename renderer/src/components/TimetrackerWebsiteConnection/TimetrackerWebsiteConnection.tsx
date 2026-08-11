@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/solid";
 import { Button } from "@/shared/Button";
-import { useRouter } from "next/router";
+import { useNavigate } from "react-router-dom";
 import { Loader } from "@/shared/Loader";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import { LOCAL_STORAGE_VARIABLES } from "@/helpers/constants";
 import { isOnline } from "@/utils/onlineStatus";
 
 const TimetrackerWebsiteConnection = () => {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [loggedUser, setLoggedUser] = useState(
     JSON.parse(
       global.ipcRenderer.sendSync(IPC_MAIN_CHANNELS.ELECTRON_STORE_GET, LOCAL_STORAGE_VARIABLES.TIMETRACKER_USER),
@@ -78,7 +78,7 @@ const TimetrackerWebsiteConnection = () => {
       );
       setLoggedUser(TTUserInfo);
 
-      await router.push("/settings");
+      navigate("/settings");
     } catch (error) {
       console.log(error);
       alert(error);

@@ -10,7 +10,7 @@ export function createWindow(
     ...state,
     ...options,
     webPreferences: {
-      nodeIntegration: false, // in next example false
+      nodeIntegration: false,
       contextIsolation: false,
       preload: join(__dirname, "preload.js"),
       ...options.webPreferences,

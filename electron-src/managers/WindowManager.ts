@@ -35,6 +35,13 @@ class WindowManager {
         return this.port;
     }
 
+    private getLogoPath() {
+        // Dev may not have a Vite build yet; prod packages renderer/dist.
+        return isDev
+            ? path.join(__dirname, "../../renderer/public/images/logo.png")
+            : path.join(__dirname, "../../renderer/dist/images/logo.png");
+    }
+
     createMain() {
         this.mainWindow = createWindow({
             width: 1000,
@@ -43,7 +50,7 @@ class WindowManager {
                 spellcheck: true,
             },
             autoHideMenuBar: true,
-            icon: path.join(__dirname, "../../renderer/out/images/logo.png"),
+            icon: this.getLogoPath(),
         });
 
         this.mainWindow.maximize();
@@ -187,9 +194,7 @@ class WindowManager {
             },
         ]);
 
-        const trayIconPath = path.join(__dirname, "../../renderer/out/images/logo.png");
-
-        this.tray = new Tray(trayIconPath);
+        this.tray = new Tray(this.getLogoPath());
         this.tray.setToolTip("Timetracker");
         this.tray.setContextMenu(contextMenu);
 

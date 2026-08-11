@@ -1,14 +1,14 @@
 node_modules
 *.log
-.next
 dist
 main
-out
 .DS_Store
 .idea
 /coverage.data
 /coverage/
 *.env
 *.tsbuildinfo
+renderer/dist
+renderer/.next
 
 repomix-output.xml

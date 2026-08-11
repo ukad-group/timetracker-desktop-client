@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { MenuItem } from "@/shared/MenuItem";
 import { ButtonTransparent } from "@/shared/ButtonTransparent";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
@@ -37,7 +37,7 @@ const SettingsPageContent = () => {
                 Manage your settings and set preferences
               </span>
             </div>
-            <Link href="/">
+            <Link to="/">
               <ButtonTransparent>
                 <ChevronLeftIcon className="w-4 h-4" /> Back
               </ButtonTransparent>

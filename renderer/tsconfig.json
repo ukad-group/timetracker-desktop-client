@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
@@ -13,28 +9,19 @@
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
     "baseUrl": "./",
     "noImplicitAny": false,
+    "types": ["vite/client", "jest", "node"],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@electron/*": [
-        "../electron-src/*"
-      ]
+      "@/*": ["./src/*"],
+      "@electron/*": ["../electron-src/*"]
     }
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.mts"],
+  "exclude": ["node_modules", "dist"]
 }

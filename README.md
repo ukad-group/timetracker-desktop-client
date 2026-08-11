@@ -4,7 +4,7 @@
 
 # Timetracker Desktop Client
 
-A cross-platform desktop application for creating and managing time tracking reports across multiple projects. Built with Electron, Next.js, and TypeScript.
+A cross-platform desktop application for creating and managing time tracking reports across multiple projects. Built with Electron, Vite, React, and TypeScript.
 
 ![Timetracker Screen Shot](resources/app-screenshot.png)
 
@@ -73,11 +73,11 @@ Reports are stored as plain text files with the following format:
 ## Built With
 
 - **TypeScript** - Type-safe JavaScript
-- **Next.js** - React framework for the renderer process
+- **Vite** - Bundler for the renderer process
 - **Electron** - Cross-platform desktop application framework
 - **Tailwind CSS** - Utility-first CSS framework
 - **Zustand** - Lightweight state management
-- **React** - UI library
+- **React** / **react-router** - UI library and client routing
 
 ## Prerequisites
 
@@ -126,7 +126,7 @@ npm run dev
 This will:
 
 - Build the Electron main process
-- Start the Next.js development server
+- Start the Vite development server
 - Launch the Electron application with hot-reload
 
 ### Production Build
@@ -166,9 +166,9 @@ npm run build-client:linux  # Linux only
 
 ### Development
 
-- `dev` - Build Electron and run in development mode
-- `build` - Build both renderer (Next.js) and Electron processes
-- `build-renderer` - Build only the Next.js renderer process
+- `dev` - Vite renderer + Electron main watch + Electron
+- `build` - Build both renderer (Vite) and Electron processes
+- `build-renderer` - Build only the Vite renderer process
 - `build-electron` - Build only the Electron main process TypeScript code
 
 ### Building & Packaging
@@ -208,7 +208,7 @@ npm run build-client:linux  # Linux only
 
 ### Maintenance
 
-- `clean` - Remove all build artifacts (dist, main, renderer/out, renderer/.next)
+- `clean` - Remove all build artifacts (dist, main, renderer/dist)
 
 ## Project Structure
 
@@ -224,10 +224,10 @@ timetracker-desktop-client/
 │   │   └── preload.ts     # Preload script
 │   ├── index.ts           # Main Electron process entry point
 │   └── TimetrackerWebsiteApi.ts
-├── renderer/              # Next.js renderer process
+├── renderer/              # Vite + React renderer process
 │   ├── src/
 │   │   ├── components/    # React components
-│   │   ├── pages/         # Next.js pages
+│   │   ├── routes/        # react-router page components
 │   │   ├── store/         # Zustand state stores
 │   │   ├── helpers/       # Utility functions and hooks
 │   │   └── shared/        # Shared UI components
