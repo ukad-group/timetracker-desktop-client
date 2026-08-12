@@ -12,7 +12,7 @@
   "scripts": {
     "coverage": "jest --coverage",
     "test": "jest",
-    "clean": "rimraf dist main renderer/dist renderer/.next",
+    "clean": "rimraf dist main renderer/dist app",
     "postinstall": "electron-builder install-app-deps",
     "dev": "npm run build-electron && concurrently -k -r \"npm run build-electron:watch\" \"npm run vite:dev\" \"npm run electron:dev\"",
     "dev:once": "npm run build-electron && electron .",
@@ -76,15 +76,15 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "app/images/logo.png"
+      "icon": "renderer/public/images/logo.png"
     },
     "mac": {
       "target": "dmg",
-      "icon": "app/images/logo.png"
+      "icon": "renderer/public/images/logo.png"
     },
     "linux": {
       "target": "deb",
-      "icon": "app/images/logo.png"
+      "icon": "renderer/public/images/logo.png"
     }
   },
   "dependencies": {
