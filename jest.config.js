@@ -1,11 +1,8 @@
 module.exports = {
   roots: ["<rootDir>/renderer"],
-  testMatch: ["**/__tests__/**/*.+(ts|tsx|js)", "**/?(*.)+(spec|test).+(ts|tsx|js)"],
-  transformIgnorePatterns: ["<rootDir>/node_modules/(?!is-online)/"],
+  testMatch: ["**/__tests__/**/*.+(ts|tsx)", "**/?(*.)+(spec|test).+(ts|tsx)"],
   transform: {
-    "^.+\\.js?$": require.resolve("babel-jest"),
-    "\\.tsx$": "<rootDir>/node_modules/babel-jest",
-    "^.+\\.(ts)$": ["ts-jest", { tsconfig: "./renderer/tsconfig.json" }],
+    "^.+\\.(ts|tsx)$": ["ts-jest", { tsconfig: "./renderer/tsconfig.json" }],
   },
   testEnvironment: "jsdom",
   setupFilesAfterEnv: ["<rootDir>/renderer/src/setupTests.ts", "jest-date-mock"],
