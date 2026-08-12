@@ -63,12 +63,15 @@
     "productName": "Timetracker",
     "artifactName": "${productName}-Setup-${version}.${ext}",
     "asar": true,
+    "electronLanguages": ["en-US"],
     "files": [
       "main",
       "renderer/.env",
       "renderer/dist/**/*",
       "!renderer/src/**/*",
-      "!renderer/node_modules/**/*"
+      "!renderer/node_modules/**/*",
+      "!**/*.map",
+      "!**/node_modules/*/{test,tests,__tests__,docs,example,examples}/**"
     ],
     "directories": {
       "output": "dist",
@@ -85,6 +88,9 @@
     "linux": {
       "target": "deb",
       "icon": "renderer/public/images/logo.png"
+    },
+    "nsis": {
+      "differentialPackage": true
     }
   },
   "dependencies": {
