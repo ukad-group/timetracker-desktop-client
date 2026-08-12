@@ -63,7 +63,9 @@
     "productName": "Timetracker",
     "artifactName": "${productName}-Setup-${version}.${ext}",
     "asar": true,
-    "electronLanguages": ["en-US"],
+    "electronLanguages": [
+      "en-US"
+    ],
     "files": [
       "main",
       "renderer/.env",
@@ -133,7 +135,7 @@
     "@vitejs/plugin-react": "^6.0.5",
     "autoprefixer": "^10.4.23",
     "concurrently": "^9.2.1",
-    "electron": "^39.2.7",
+    "electron": "^43.4.0",
     "electron-builder": "^26.0.12",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
