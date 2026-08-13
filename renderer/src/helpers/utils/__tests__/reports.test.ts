@@ -1,15 +1,31 @@
 import {
   calcDurationBetweenTimes,
   formatDuration,
+  formatDurationAsDecimals,
   parseReport,
   serializeReport,
   checkIntersection,
   validation,
+  addDurationToTime,
+  stringToMinutes,
+  addSuggestions,
 } from "../reports";
 import { ReportActivity } from "../types";
 
 const parsedReport = (activity) => parseReport(activity)[0];
 const useFakeTime = () => jest.useFakeTimers().setSystemTime(new Date("2013-05-05"));
+
+const activity = (overrides: Partial<ReportActivity> = {}): ReportActivity => ({
+  id: 1,
+  from: "09:00",
+  to: "10:00",
+  duration: 3600000,
+  project: "timetracker",
+  activity: "coding",
+  description: "feature",
+  validation: { isValid: true },
+  ...overrides,
+});
 
 describe("parseReport function", () => {
   test("should return empty collection when null or empty string is passed", () => {
@@ -332,7 +348,7 @@ describe("checkIntersection function", () => {
 });
 
 describe("validation function", () => {
-  test("should fail validation when [activity[i - 1].to < activity[i].from]", () => {
+  test("does not flag an intersection when there are only two overlapping rows", () => {
     const activities: ReportActivity[] = [
       {
         id: 1,
@@ -487,5 +503,236 @@ describe("validation function", () => {
       cell: "project",
       description: "The project must be specified in the activity",
     });
+  });
+
+  test("flags an intersection between the current row and the row two steps back", () => {
+    const activities = validation([
+      activity({ id: 1, from: "12:00", to: "13:00" }),
+      activity({ id: 2, from: "13:00", to: "14:00" }),
+      activity({ id: 3, from: "12:30", to: "13:30" }),
+    ]);
+
+    expect(activities[0].validation).toEqual({
+      isValid: false,
+      cell: "time",
+      description: "Intersection of time intervals",
+    });
+    expect(activities[2].validation).toEqual({
+      isValid: false,
+      cell: "time",
+      description: "Intersection of time intervals",
+    });
+    expect(activities[1].validation.isValid).toBe(true);
+  });
+
+  test("should fail validation when time is impossible", () => {
+    const withInvalidHours = validation([activity({ from: "25:00", to: "26:00" })])[0];
+    const withInvalidMinutes = validation([activity({ from: "12:00", to: "12:61" })])[0];
+
+    expect(withInvalidHours.validation).toEqual({
+      isValid: false,
+      cell: "time",
+      description: "Impossible time",
+    });
+    expect(withInvalidMinutes.validation).toEqual({
+      isValid: false,
+      cell: "time",
+      description: "Impossible time",
+    });
+  });
+
+  test("should fail validation when project is set but activity and description are missing", () => {
+    const result = validation([
+      activity({
+        activity: "",
+        description: "",
+      }),
+    ])[0];
+
+    expect(result.validation).toEqual({
+      isValid: false,
+      cell: "activity",
+      description: "No activity or description",
+    });
+  });
+
+  test("keeps a valid activity as valid", () => {
+    const result = validation([activity()])[0];
+
+    expect(result.validation).toEqual({ isValid: true });
+  });
+});
+
+describe("addDurationToTime function", () => {
+  test("adds a decimal hour duration", () => {
+    expect(addDurationToTime("09:00", "1.5")).toBe("10:30");
+  });
+
+  test("adds a duration in minutes when the value includes m", () => {
+    expect(addDurationToTime("09:00", "45m")).toBe("09:45");
+  });
+
+  test("treats an integer greater than 24 as minutes", () => {
+    expect(addDurationToTime("09:00", "30")).toBe("09:30");
+  });
+
+  test("clamps the result to 23:59", () => {
+    expect(addDurationToTime("23:00", "2")).toBe("23:59");
+  });
+
+  test("clamps a negative result to 00:00", () => {
+    expect(addDurationToTime("09:00", "-10")).toBe("00:00");
+  });
+
+  test("returns an empty string for an invalid from time", () => {
+    expect(addDurationToTime("foo", "1")).toBe("");
+  });
+});
+
+describe("formatDurationAsDecimals function", () => {
+  test("formats 90 minutes as 1.5h", () => {
+    expect(formatDurationAsDecimals(90 * 60 * 1000)).toBe("1.5h");
+  });
+
+  test("returns an empty string when ms is undefined", () => {
+    expect(formatDurationAsDecimals(undefined as unknown as number)).toBe("");
+  });
+});
+
+describe("stringToMinutes function", () => {
+  test("converts hh:mm to minutes", () => {
+    expect(stringToMinutes("09:30")).toBe(570);
+  });
+
+  test("handles midnight", () => {
+    expect(stringToMinutes("00:00")).toBe(0);
+  });
+});
+
+describe("addSuggestions function", () => {
+  test("does nothing when latest description map is empty", () => {
+    const latestProjAndDesc: Record<string, string[]> = {};
+    const latestProjAndAct: Record<string, string[]> = {};
+
+    addSuggestions(
+      [activity()],
+      latestProjAndDesc as Record<string, [string]>,
+      latestProjAndAct as Record<string, [string]>,
+    );
+
+    expect(latestProjAndDesc).toEqual({});
+    expect(latestProjAndAct).toEqual({});
+  });
+
+  test("skips breaks and activities without a project", () => {
+    const latestProjAndDesc: Record<string, string[]> = { existing: ["desc"] };
+    const latestProjAndAct: Record<string, string[]> = { existing: ["act"] };
+
+    addSuggestions(
+      [
+        activity({ project: "!", description: "break", activity: "" }),
+        activity({ project: "", description: "no project", activity: "coding" }),
+      ],
+      latestProjAndDesc as Record<string, [string]>,
+      latestProjAndAct as Record<string, [string]>,
+    );
+
+    expect(latestProjAndDesc).toEqual({ existing: ["desc"] });
+    expect(latestProjAndAct).toEqual({ existing: ["act"] });
+  });
+
+  test("adds a new project when maps already have other keys", () => {
+    const latestProjAndDesc: Record<string, string[]> = { existing: ["desc"] };
+    const latestProjAndAct: Record<string, string[]> = { existing: ["act"] };
+
+    addSuggestions(
+      [activity({ project: "timetracker", activity: "coding", description: "feature" })],
+      latestProjAndDesc as Record<string, [string]>,
+      latestProjAndAct as Record<string, [string]>,
+    );
+
+    expect(latestProjAndDesc.timetracker).toEqual(["feature"]);
+    expect(latestProjAndAct.timetracker).toEqual(["coding"]);
+  });
+
+  test("unshifts a new description and activity in front of existing ones", () => {
+    const latestProjAndDesc: Record<string, string[]> = { timetracker: ["old"] };
+    const latestProjAndAct: Record<string, string[]> = { timetracker: ["meeting"] };
+
+    addSuggestions(
+      [activity({ project: "timetracker", activity: "coding", description: "feature" })],
+      latestProjAndDesc as Record<string, [string]>,
+      latestProjAndAct as Record<string, [string]>,
+    );
+
+    expect(latestProjAndDesc.timetracker).toEqual(["feature", "old"]);
+    expect(latestProjAndAct.timetracker).toEqual(["coding", "meeting"]);
+  });
+
+  test("moves an existing description and activity to the front", () => {
+    const latestProjAndDesc: Record<string, string[]> = { timetracker: ["old", "feature"] };
+    const latestProjAndAct: Record<string, string[]> = { timetracker: ["meeting", "coding"] };
+
+    addSuggestions(
+      [activity({ project: "timetracker", activity: "coding", description: "feature" })],
+      latestProjAndDesc as Record<string, [string]>,
+      latestProjAndAct as Record<string, [string]>,
+    );
+
+    expect(latestProjAndDesc.timetracker).toEqual(["feature", "old"]);
+    expect(latestProjAndAct.timetracker).toEqual(["coding", "meeting"]);
+  });
+});
+
+describe("parseReport/serializeReport round-trip", () => {
+  test("preserves from, project, activity, description and isBreak", () => {
+    const activities = [
+      activity({
+        id: 0,
+        from: "09:00",
+        to: "10:00",
+        project: "timetracker",
+        activity: "coding",
+        description: "feature",
+      }),
+      activity({
+        id: 1,
+        from: "10:00",
+        to: "10:30",
+        project: "!",
+        activity: "",
+        description: "",
+        isBreak: true,
+      }),
+      activity({ id: 2, from: "10:30", to: "12:00", project: "internal", activity: "review", description: "pr" }),
+    ];
+
+    const parsed = parseReport(serializeReport(activities))[0];
+
+    expect(parsed).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          from: "09:00",
+          to: "10:00",
+          project: "timetracker",
+          activity: "coding",
+          description: "feature",
+          isBreak: false,
+        }),
+        expect.objectContaining({
+          from: "10:00",
+          to: "10:30",
+          isBreak: true,
+        }),
+        expect.objectContaining({
+          from: "10:30",
+          to: "12:00",
+          project: "internal",
+          activity: "review",
+          description: "pr",
+          isBreak: false,
+        }),
+      ]),
+    );
   });
 });

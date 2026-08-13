@@ -12,7 +12,11 @@ import {
   getMonthDates,
   getCurrentTimeRoundedUp,
   formatDate,
+  extractDatesFromPeriod,
+  generateDateRange,
+  mathOvertimeUndertime,
 } from "../datetime-ui";
+import { ApiDayOff, DayOff, FormattedReport } from "@/components/Calendar/types";
 
 describe("GIVEN datetime-ui/checkIsToday", () => {
   it("returns true if the given date is today", () => {
@@ -143,43 +147,89 @@ describe("GIVEN datetime-ui/getMonthRequiredHours", () => {
   });
 });
 
-// describe('GIVEN datetime-ui/extractDatesFromPeriod', () => {
-//   beforeEach(() => {
-//     jest.clearAllMocks();
-//   });
+describe("GIVEN datetime-ui/generateDateRange", () => {
+  it("returns an inclusive range from start to end", () => {
+    const result = generateDateRange(new Date(2022, 0, 1), new Date(2022, 0, 3));
 
-//   it('returns the correct array of extracted dates', () => {
-//     const period = {
-//       dateFrom: '2022-01-01',
-//       dateTo: '2022-01-05',
-//       quantity: 8,
-//       description: 'Vacation',
-//       type: 1,
-//     };
+    expect(result).toEqual([new Date(2022, 0, 1), new Date(2022, 0, 2), new Date(2022, 0, 3)]);
+  });
 
-//     const holidays = [
-//       { date: new Date('2022-01-03'), duration: 8, description: 'New Year', type: 2 },
-//     ];
+  it("returns a single date when start and end are the same day", () => {
+    expect(generateDateRange(new Date(2022, 0, 1), new Date(2022, 0, 1))).toEqual([new Date(2022, 0, 1)]);
+  });
+});
 
-// const dateRangeMock = [new Date("2022-01-03T22:00:00.000Z"), new Date("2022-01-04T22:00:00.000Z")];
+describe("GIVEN datetime-ui/extractDatesFromPeriod", () => {
+  const period: ApiDayOff = {
+    dateFrom: "2022-01-03T00:00:00",
+    dateTo: "2022-01-07T00:00:00",
+    quantity: 8,
+    description: "Vacation",
+    type: 1,
+    status: 1,
+  };
 
-//     const dateRangeMock = [
-//       new Date("2022-01-03T22:00:00.000Z"),
-//       new Date("2022-01-04T22:00:00.000Z")
-//     ];
+  it("returns weekdays and excludes the only holiday in the range", () => {
+    const holidays: DayOff[] = [
+      { date: new Date(2022, 0, 5), duration: 8, description: "Holiday", type: 2, status: 1 },
+    ];
 
-//     generateDateRange(new Date('2022-01-01'), new Date('2022-01-01'));
+    const result = extractDatesFromPeriod(period, holidays);
 
-//     isTheSameDates(new Date('2022-01-01'), new Date());
+    expect(result.map((item) => item.date)).toEqual([
+      new Date(2022, 0, 3),
+      new Date(2022, 0, 4),
+      new Date(2022, 0, 6),
+      new Date(2022, 0, 7),
+    ]);
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        duration: 8,
+        description: "Vacation",
+        type: 1,
+        status: 1,
+      }),
+    );
+  });
 
-//     const result = extractDatesFromPeriod(period, holidays);
+  it("returns an empty array when there are no holidays to compare against", () => {
+    expect(extractDatesFromPeriod(period, [])).toEqual([]);
+  });
+});
 
-//     expect(result).toEqual([
-//       { date: dateRangeMock[0], duration: 8, description: 'Vacation', type: 1 },
-//       { date: dateRangeMock[1], duration: 8, description: 'Vacation', type: 1 },
-//     ]);
-//   });
-// });
+describe("GIVEN datetime-ui/mathOvertimeUndertime", () => {
+  const calendarDate = new Date(2022, 0, 1);
+  const selectedDate = new Date(2022, 0, 3);
+  const daysOff: DayOff[] = [];
+  const requiredMs = 8 * 3600000;
+
+  it("returns empty overtime when work hours match required hours", () => {
+    const reports: FormattedReport[] = [{ date: "20220103", week: 1, workDurationMs: requiredMs, isValid: true }];
+
+    expect(mathOvertimeUndertime(reports, calendarDate, daysOff, selectedDate)).toEqual({
+      overUnder: "",
+      overUnderHours: 0,
+    });
+  });
+
+  it("returns overtime when work hours exceed required hours", () => {
+    const reports: FormattedReport[] = [
+      { date: "20220103", week: 1, workDurationMs: requiredMs + 3600000, isValid: true },
+    ];
+
+    expect(mathOvertimeUndertime(reports, calendarDate, daysOff, selectedDate)).toEqual({
+      overUnder: "overtime",
+      overUnderHours: 3600000,
+    });
+  });
+
+  it("returns undertime when work hours are below required hours", () => {
+    expect(mathOvertimeUndertime([], calendarDate, daysOff, selectedDate)).toEqual({
+      overUnder: "undertime",
+      overUnderHours: requiredMs,
+    });
+  });
+});
 
 describe("GIVEN datetime-ui/getTimeFromEventObj", () => {
   it("returns the correct time from a valid date string", () => {

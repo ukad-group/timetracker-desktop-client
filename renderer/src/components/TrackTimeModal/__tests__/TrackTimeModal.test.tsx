@@ -133,3 +133,42 @@ describe("durationInput changing", () => {
     expect(toInput).toHaveValue("00:00");
   });
 });
+
+describe("saving an activity", () => {
+  afterAll(() => {
+    global.ipcRenderer = globalIpcRendererMock;
+  });
+
+  test("submits the filled activity and closes the modal", async () => {
+    const submitActivity = jest.fn();
+    const close = jest.fn();
+
+    await act(async () => render(<TrackTimeModal {...mockedProps} submitActivity={submitActivity} close={close} />));
+
+    const projectInput = screen.getByRole("combobox", { name: "Project" });
+    fireEvent.change(projectInput, { target: { value: "timetracker" } });
+    fireEvent.blur(projectInput);
+    fireEvent.submit(document.querySelector("form"));
+
+    expect(submitActivity).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: "12:00",
+        project: "timetracker",
+      }),
+    );
+    expect(submitActivity.mock.calls[0][0].to).toMatch(/^\d{2}:\d{2}$/);
+    expect(close).toHaveBeenCalled();
+  });
+
+  test("does not save when the project is empty", async () => {
+    const submitActivity = jest.fn();
+    const close = jest.fn();
+
+    await act(async () => render(<TrackTimeModal {...mockedProps} submitActivity={submitActivity} close={close} />));
+
+    fireEvent.submit(document.querySelector("form"));
+
+    expect(submitActivity).not.toHaveBeenCalled();
+    expect(close).not.toHaveBeenCalled();
+  });
+});
