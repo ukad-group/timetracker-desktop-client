@@ -81,15 +81,15 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "renderer/public/images/logo.png"
+      "icon": "resources/icon.png"
     },
     "mac": {
       "target": "dmg",
-      "icon": "renderer/public/images/logo.png"
+      "icon": "resources/icon.png"
     },
     "linux": {
       "target": "deb",
-      "icon": "renderer/public/images/logo.png"
+      "icon": "resources/icon.png"
     },
     "nsis": {
       "differentialPackage": true
