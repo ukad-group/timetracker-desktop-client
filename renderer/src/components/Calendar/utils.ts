@@ -129,7 +129,7 @@ export const loadHolidaysAndVacations = async (calendarDate: Date): Promise<DayO
   } catch (error) {
     console.log(error);
 
-    const online = isOnline();
+    const online = await isOnline();
 
     if (!online) {
       console.log(OFFLINE_MESSAGE);

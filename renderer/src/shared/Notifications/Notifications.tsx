@@ -36,7 +36,7 @@ const Notifications = () => {
 
   useEffect(() => {
     (async () => {
-      const online = isOnline();
+      const online = await isOnline();
 
       if (!online) return;
 

@@ -163,7 +163,7 @@ export const Calendar = ({
   const handleRefreshButton = async () => {
     try {
       setLoading(true);
-      const online = isOnline();
+      const online = await isOnline();
 
       if (!online) {
         alert(OFFLINE_MESSAGE);

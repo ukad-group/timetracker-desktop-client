@@ -15,8 +15,8 @@ const Office365Connection = () => {
   );
   const [showEventsInTable, setShowEventsInTable] = useState(false);
 
-  const handleSignInButton = () => {
-    const online = isOnline();
+  const handleSignInButton = async () => {
+    const online = await isOnline();
 
     if (online) {
       global.ipcRenderer.send(IPC_MAIN_CHANNELS.OPEN_CHILD_WINDOW, "office365");

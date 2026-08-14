@@ -78,7 +78,7 @@ export const getTimetrackerContactPersons = async (setMentions: Dispatch<SetStat
     }
   } catch (error) {
     console.log(error);
-    const online = isOnline();
+    const online = await isOnline();
     if (!online) {
       console.log(OFFLINE_MESSAGE);
     }

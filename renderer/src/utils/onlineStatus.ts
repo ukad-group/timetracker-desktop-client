@@ -1,18 +1,49 @@
+import React from "react";
+
 /**
- * Online status utility using navigator.onLine
- * Provides a reactive way to check online status without external dependencies
+ * Online status utility with active HTTPS connectivity probing.
+ * navigator.onLine only reflects local network link state, not internet reachability.
  */
+
+const PROBE_URLS = ["https://icanhazip.com", "https://api.ipify.org?format=json"];
+const PROBE_TIMEOUT_MS = 3000;
+const CACHE_TTL_MS = 3000;
 
 export interface OnlineStatusListener {
   (online: boolean): void;
 }
 
+const probeUrl = async (url: string, signal: AbortSignal): Promise<boolean> => {
+  const response = await fetch(url, {
+    method: "HEAD",
+    cache: "no-store",
+    signal,
+  });
+
+  return response.ok;
+};
+
+const runConnectivityProbe = async (): Promise<boolean> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
+
+  try {
+    await Promise.any(PROBE_URLS.map((url) => probeUrl(url, controller.signal)));
+    return true;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+};
+
 class OnlineStatusManager {
   private listeners: Set<OnlineStatusListener> = new Set();
-  private isOnline: boolean = typeof navigator !== "undefined" ? navigator.onLine : true;
+  private cachedStatus: boolean = typeof navigator !== "undefined" ? navigator.onLine : true;
+  private lastProbeAt = 0;
+  private probeInFlight: Promise<boolean> | null = null;
 
   constructor() {
-    // Only add event listeners if we're in a browser environment
     if (typeof window !== "undefined") {
       window.addEventListener("online", this.handleOnlineChange);
       window.addEventListener("offline", this.handleOfflineChange);
@@ -20,52 +51,66 @@ class OnlineStatusManager {
   }
 
   private handleOnlineChange = () => {
-    this.isOnline = true;
-    this.notifyListeners();
+    void this.checkConnectivity(true);
   };
 
   private handleOfflineChange = () => {
-    this.isOnline = false;
+    this.setStatus(false);
+  };
+
+  private setStatus(online: boolean) {
+    this.cachedStatus = online;
     this.notifyListeners();
-  };
-
-  private notifyListeners = () => {
-    this.listeners.forEach((listener) => listener(this.isOnline));
-  };
-
-  /**
-   * Get current online status
-   * @returns boolean indicating if the browser is online
-   */
-  public getStatus(): boolean {
-    return this.isOnline;
   }
 
-  /**
-   * Add a listener for online status changes
-   * @param listener callback function that receives online status
-   * @returns cleanup function to remove the listener
-   */
+  private notifyListeners = () => {
+    this.listeners.forEach((listener) => listener(this.cachedStatus));
+  };
+
+  public getStatus(): boolean {
+    return this.cachedStatus;
+  }
+
+  public async checkConnectivity(forceProbe = false): Promise<boolean> {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      this.setStatus(false);
+      return false;
+    }
+
+    const now = Date.now();
+    if (!forceProbe && now - this.lastProbeAt < CACHE_TTL_MS) {
+      return this.cachedStatus;
+    }
+
+    if (this.probeInFlight) {
+      return this.probeInFlight;
+    }
+
+    this.probeInFlight = runConnectivityProbe()
+      .then((online) => {
+        this.lastProbeAt = Date.now();
+        this.setStatus(online);
+        return online;
+      })
+      .finally(() => {
+        this.probeInFlight = null;
+      });
+
+    return this.probeInFlight;
+  }
+
   public addListener(listener: OnlineStatusListener): () => void {
     this.listeners.add(listener);
 
-    // Return cleanup function
     return () => {
       this.listeners.delete(listener);
     };
   }
 
-  /**
-   * Remove a specific listener
-   * @param listener the listener to remove
-   */
   public removeListener(listener: OnlineStatusListener): void {
     this.listeners.delete(listener);
   }
 
-  /**
-   * Clean up all event listeners (call when component unmounts)
-   */
   public cleanup(): void {
     if (typeof window !== "undefined") {
       window.removeEventListener("online", this.handleOnlineChange);
@@ -75,26 +120,24 @@ class OnlineStatusManager {
   }
 }
 
-// Export singleton instance
 export const onlineStatusManager = new OnlineStatusManager();
 
-// Export simple function for one-time checks
-export const isOnline = (): boolean => onlineStatusManager.getStatus();
+export const isOnline = (): Promise<boolean> => onlineStatusManager.checkConnectivity();
 
-// Export React hook for components
+export const getCachedOnlineStatus = (): boolean => onlineStatusManager.getStatus();
+
 export const useOnlineStatus = (): boolean => {
-  const [online, setOnline] = React.useState(isOnline());
+  const [online, setOnline] = React.useState(getCachedOnlineStatus());
 
   React.useEffect(() => {
     const cleanup = onlineStatusManager.addListener((status: boolean) => {
       setOnline(status);
     });
 
+    void onlineStatusManager.checkConnectivity();
+
     return cleanup;
   }, []);
 
   return online;
 };
-
-// Add React import for the hook
-import React from "react";

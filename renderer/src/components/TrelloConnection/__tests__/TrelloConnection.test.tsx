@@ -4,6 +4,14 @@ import TrelloConnection from "../TrelloConnection";
 import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 
+jest.mock("@/utils/onlineStatus", () => ({
+  isOnline: jest.fn(),
+}));
+
+import { isOnline } from "@/utils/onlineStatus";
+
+const isOnlineMock = isOnline as jest.MockedFunction<typeof isOnline>;
+
 jest.mock("electron", () => ({
   ipcRenderer: {
     send: jest.fn(),
@@ -22,6 +30,10 @@ global.ipcRenderer = {
 };
 
 describe("GIVEN TrelloConnection", () => {
+  beforeEach(() => {
+    isOnlineMock.mockResolvedValue(true);
+  });
+
   afterAll(() => {
     jest.restoreAllMocks();
 
@@ -29,6 +41,7 @@ describe("GIVEN TrelloConnection", () => {
   });
 
   it("handles sign in button click correctly when online", async () => {
+    isOnlineMock.mockResolvedValue(true);
     const { getByText } = render(<TrelloConnection />);
 
     (global.ipcRenderer.send as jest.Mock).mockClear();
@@ -37,6 +50,19 @@ describe("GIVEN TrelloConnection", () => {
 
     await waitFor(() => {
       expect(global.ipcRenderer.send).toHaveBeenCalledWith(IPC_MAIN_CHANNELS.OPEN_CHILD_WINDOW, "trello");
+    });
+  });
+
+  it("loads offline page when sign in is clicked while offline", async () => {
+    isOnlineMock.mockResolvedValue(false);
+    const { getByText } = render(<TrelloConnection />);
+
+    (global.ipcRenderer.send as jest.Mock).mockClear();
+
+    fireEvent.click(getByText("Add account"));
+
+    await waitFor(() => {
+      expect(global.ipcRenderer.send).toHaveBeenCalledWith(IPC_MAIN_CHANNELS.APP_LOAD_OFFLINE_PAGE);
     });
   });
 

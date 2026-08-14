@@ -16,8 +16,8 @@ const TimetrackerWebsiteConnection = () => {
   );
   const [loading, setLoading] = useState(false);
 
-  const handleSignInButton = () => {
-    const online = isOnline();
+  const handleSignInButton = async () => {
+    const online = await isOnline();
 
     if (online) {
       global.ipcRenderer.send(IPC_MAIN_CHANNELS.OPEN_CHILD_WINDOW, "timetracker-website");

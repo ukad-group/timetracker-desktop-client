@@ -132,6 +132,7 @@ class WindowManager {
 
             console.error(`Failed to load: ${validatedURL || url}`, errorCode, errorDescription);
             this.childWindow?.close();
+            this.mainWindow?.loadURL(`http://localhost:${this.port}/offline`);
         };
 
         this.childWindow.webContents.on("did-fail-load", handleFailedLoad);

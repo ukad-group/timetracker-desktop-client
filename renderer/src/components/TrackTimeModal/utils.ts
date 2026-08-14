@@ -106,7 +106,7 @@ export const getTimetrackerYearProjects = async (setWebTrackerProjects: Dispatch
     console.log(error);
     setWebTrackerProjects(TTUserInfo.yearProjects);
 
-    const online = isOnline();
+    const online = await isOnline();
 
     if (!online) {
       console.log(OFFLINE_MESSAGE);

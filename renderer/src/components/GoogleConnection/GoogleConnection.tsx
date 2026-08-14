@@ -12,8 +12,8 @@ const GoogleConnection = () => {
   const [showGoogleEvents, setShowGoogleEvents] = useState(false);
   const [loggedUsers, setLoggedUsers] = useState([]);
 
-  const handleSignIn = () => {
-    const online = isOnline();
+  const handleSignIn = async () => {
+    const online = await isOnline();
 
     if (online) {
       global.ipcRenderer.send(IPC_MAIN_CHANNELS.OPEN_CHILD_WINDOW, "google");
