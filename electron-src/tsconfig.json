@@ -8,7 +8,7 @@
     "jsx": "preserve",
     "lib": ["dom", "esnext"],
     "module": "commonjs",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "noEmit": false,
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,
