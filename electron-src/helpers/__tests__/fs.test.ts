@@ -48,6 +48,7 @@ describe("GIVEN fs/searchReadFiles", () => {
     readFileSyncMock.mockReset();
   });
 
+  // @rule R4
   it("reads valid timereport files for the requested year and week", () => {
     readdirSyncMock.mockImplementation((dir) => {
       if (dir === directory) return ["2026", "2025"];
@@ -74,12 +75,49 @@ describe("GIVEN fs/searchReadFiles", () => {
     );
   });
 
+  // @rule R5
   it("skips files whose ISO week does not match the query week", () => {
     readdirSyncMock.mockImplementation((dir) => {
       if (dir === directory) return ["2026"];
       if (dir === `${directory}/2026`) return ["week 06"];
       if (dir === `${directory}/2026/week 06`) {
         return ["timereport - 20260101"];
+      }
+
+      return [];
+    });
+
+    const reports = searchReadFiles(directory, [{ year: "2026", week: "06" }]);
+
+    expect(reports).toEqual([]);
+    expect(readFileSyncMock).not.toHaveBeenCalled();
+  });
+
+  // @rule R4
+  it("skips filenames with a .txt extension", () => {
+    readdirSyncMock.mockImplementation((dir) => {
+      if (dir === directory) return ["2026"];
+      if (dir === `${directory}/2026`) return ["week 06"];
+      if (dir === `${directory}/2026/week 06`) {
+        return ["timereport - 20260207.txt"];
+      }
+
+      return [];
+    });
+
+    const reports = searchReadFiles(directory, [{ year: "2026", week: "06" }]);
+
+    expect(reports).toEqual([]);
+    expect(readFileSyncMock).not.toHaveBeenCalled();
+  });
+
+  // @rule R4
+  it("skips filenames that are not timereport - yyyymmdd", () => {
+    readdirSyncMock.mockImplementation((dir) => {
+      if (dir === directory) return ["2026"];
+      if (dir === `${directory}/2026`) return ["week 06"];
+      if (dir === `${directory}/2026/week 06`) {
+        return ["report - 20260207", "timereport-20260207", "notes.txt"];
       }
 
       return [];

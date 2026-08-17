@@ -99,6 +99,7 @@ npm run dist             # clean + build + electron-builder (current OS)
 | [`docs/development.md`](docs/development.md) | Setup, commands, local pitfalls |
 | [`docs/ipc.md`](docs/ipc.md) | Adding or calling IPC channels |
 | [`docs/reports.md`](docs/reports.md) | Changing report files, parse/serialize |
+| [`docs/business-rules.md`](docs/business-rules.md) | Numbered reports-domain rules + test mapping |
 | [`docs/integrations.md`](docs/integrations.md) | OAuth connections (Google, Jira, Trello, …) |
 | [`docs/conventions.md`](docs/conventions.md) | Matching UI/store/test patterns |
 | [`README.md`](README.md) | Human install / build / release |

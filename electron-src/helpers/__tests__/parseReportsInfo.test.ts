@@ -26,6 +26,7 @@ describe("GIVEN parseReportsInfo", () => {
     });
   });
 
+  // @rule H3
   it("keeps the default internal and hr keys when no reports exist", () => {
     const result = parseReportsInfo(REPORTS_FOLDER, SELECTED_DATE);
 
@@ -35,6 +36,7 @@ describe("GIVEN parseReportsInfo", () => {
     });
   });
 
+  // @rule H1
   it("skips missing files and still reads the 31 previous days", () => {
     parseReportsInfo(REPORTS_FOLDER, SELECTED_DATE);
 
@@ -47,6 +49,25 @@ describe("GIVEN parseReportsInfo", () => {
     );
   });
 
+  // @rule H1
+  it("does not include activities from the selected day's report even if the file exists", () => {
+    readFileSyncMock.mockImplementation((filePath) => {
+      if (filePath === getPathFromDate(SELECTED_DATE, REPORTS_FOLDER)) {
+        return "09:00 - today-only - coding - feature\n10:00 - !";
+      }
+      throw new Error("ENOENT");
+    });
+
+    const result = parseReportsInfo(REPORTS_FOLDER, SELECTED_DATE);
+
+    expect(result["today-only"]).toBeUndefined();
+    expect(readFileSyncMock).not.toHaveBeenCalledWith(
+      getPathFromDate(SELECTED_DATE, REPORTS_FOLDER),
+      "utf8"
+    );
+  });
+
+  // @rule H2, H4
   it("parses 2-part, 3-part and 4-part lines and skips breaks", () => {
     readFileSyncMock.mockImplementation((filePath) => {
       if (filePath === pathForDaysAgo(1)) {
@@ -118,6 +139,7 @@ describe("GIVEN parseReportsInfo", () => {
     ]);
   });
 
+  // @rule H5
   it("uses 0 duration when the next line has no start time", () => {
     readFileSyncMock.mockImplementation((filePath) => {
       if (filePath === pathForDaysAgo(1)) {

@@ -61,3 +61,7 @@ Duration of a row is implied by the **next** row’s start time (or end marker).
 - Day editing: `ManualInputForm`, `ActivitiesTable`, `TrackTimeModal`
 - Totals: `Totals` (aggregates parsed activities)
 - Folder setting: `ReportsFolderSection` / `FolderSelector`
+
+## Business rules
+
+Numbered parse/serialize/path/validation rules and their unit-test mapping: [`business-rules.md`](business-rules.md).
