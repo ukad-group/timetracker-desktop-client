@@ -61,7 +61,16 @@ class WindowManager {
         } else {
             this.mainWindow.on("close", (event) => {
                 event.preventDefault();
-                this.mainWindow?.hide();
+
+                if (this.mainWindow?.isFullScreen()) {
+                    // macos workaround for full screen mode
+                    this.mainWindow.once("leave-full-screen", () => {
+                        this.mainWindow?.hide();
+                    });
+                    this.mainWindow.setFullScreen(false);
+                } else {
+                    this.mainWindow?.hide();
+                }
             });
         }
 
