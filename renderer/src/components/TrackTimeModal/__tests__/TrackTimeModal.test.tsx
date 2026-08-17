@@ -145,6 +145,9 @@ describe("saving an activity", () => {
 
     await act(async () => render(<TrackTimeModal {...mockedProps} submitActivity={submitActivity} close={close} />));
 
+    // From is 12:00 (last activity end). Set duration so To is after From regardless of wall clock.
+    fireEvent.change(screen.getByLabelText("Duration"), { target: { value: "1h" } });
+
     const projectInput = screen.getByRole("combobox", { name: "Project" });
     fireEvent.change(projectInput, { target: { value: "timetracker" } });
     fireEvent.blur(projectInput);
@@ -153,10 +156,10 @@ describe("saving an activity", () => {
     expect(submitActivity).toHaveBeenCalledWith(
       expect.objectContaining({
         from: "12:00",
+        to: "13:00",
         project: "timetracker",
       }),
     );
-    expect(submitActivity.mock.calls[0][0].to).toMatch(/^\d{2}:\d{2}$/);
     expect(close).toHaveBeenCalled();
   });
 
@@ -166,6 +169,7 @@ describe("saving an activity", () => {
 
     await act(async () => render(<TrackTimeModal {...mockedProps} submitActivity={submitActivity} close={close} />));
 
+    fireEvent.change(screen.getByLabelText("Duration"), { target: { value: "1h" } });
     fireEvent.submit(document.querySelector("form"));
 
     expect(submitActivity).not.toHaveBeenCalled();
