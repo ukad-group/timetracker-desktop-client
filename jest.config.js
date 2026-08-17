@@ -16,7 +16,7 @@ module.exports = {
       roots: ["<rootDir>/renderer"],
       testMatch: ["**/__tests__/**/*.+(ts|tsx)", "**/?(*.)+(spec|test).+(ts|tsx)"],
       transform: {
-        "^.+\\.(ts|tsx)$": ["ts-jest", { tsconfig: "./renderer/tsconfig.json" }],
+        "^.+\\.(ts|tsx)$": ["ts-jest", { tsconfig: "./renderer/tsconfig.jest.json" }],
       },
       testEnvironment: "jsdom",
       setupFilesAfterEnv: ["<rootDir>/renderer/src/setupTests.ts", "jest-date-mock"],

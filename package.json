@@ -6,7 +6,7 @@
   "author": "mmmykhailo <mmmykhailo@proton.me>",
   "main": "main/index.js",
   "engines": {
-    "node": ">=18.0.0",
+    "node": ">=24.0.0",
     "npm": ">=9.0.0"
   },
   "scripts": {
@@ -41,7 +41,7 @@
     "build-client:win32": "electron-builder --win",
     "build-client:darwin": "npm list -g dmg-license || sudo npm i -g dmg-license && electron-builder --mac",
     "build-client:linux": "electron-builder --linux",
-    "type-check": "tsc -p ./renderer/tsconfig.json && tsc -p ./electron-src/tsconfig.json",
+    "type-check": "tsc -p ./renderer/tsconfig.json && tsc -p ./renderer/tsconfig.node.json && tsc -p ./electron-src/tsconfig.json",
     "format": "prettier --write \"./renderer/src/**/*.{ts,tsx}\"",
     "lint": "eslint \"./renderer/src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"./renderer/src/**/*.{ts,tsx}\" --fix"

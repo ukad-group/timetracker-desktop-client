@@ -13,7 +13,7 @@ Cross-platform Electron desktop app for time-tracking reports. Use this file as 
 | Tests | Jest + Testing Library (`renderer/` roots) |
 | Packaging | electron-builder → `dist/` |
 
-Node `>=18`, npm `>=9`. See `.nvmrc` for the pinned major.
+Node `>=24`, npm `>=9`. See `.nvmrc` for the pinned major.
 
 ## Repo map (where to edit)
 
