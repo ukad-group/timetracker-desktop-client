@@ -32,18 +32,19 @@ const TimetrackerWebsiteConnection = () => {
   };
 
   const loadUserInfo = async () => {
-    setLoading(true);
-    document.body.style.overflow = "hidden";
-
     const authorizationCode = global.ipcRenderer.sendSync(
       IPC_MAIN_CHANNELS.ELECTRON_STORE_GET,
       LOCAL_STORAGE_VARIABLES.TIMETRACKER_WEBSITE_CODE,
     );
-    global.ipcRenderer.send(IPC_MAIN_CHANNELS.ELECTRON_STORE_DELETE, LOCAL_STORAGE_VARIABLES.TIMETRACKER_WEBSITE_CODE);
 
     if (!authorizationCode) return;
 
+    global.ipcRenderer.send(IPC_MAIN_CHANNELS.ELECTRON_STORE_DELETE, LOCAL_STORAGE_VARIABLES.TIMETRACKER_WEBSITE_CODE);
+
     try {
+      setLoading(true);
+      document.body.style.overflow = "hidden";
+
       const userCreds = await global.ipcRenderer.invoke(
         IPC_MAIN_CHANNELS.TIMETRACKER_GET_USER_INFO_TOKEN,
         authorizationCode,

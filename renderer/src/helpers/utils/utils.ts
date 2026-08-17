@@ -175,7 +175,6 @@ export const closeWindowIfNeeded = () => {
         LOCAL_STORAGE_VARIABLES.OFFICE_365_AUTH_CODE,
         urlParams.get("code"),
       );
-      global.ipcRenderer.send(IPC_MAIN_CHANNELS.CHILD_WINDOW_CLOSED, "office365");
     }
 
     if (
@@ -188,7 +187,6 @@ export const closeWindowIfNeeded = () => {
         LOCAL_STORAGE_VARIABLES.JIRA_AUTH_CODE,
         urlParams.get("code"),
       );
-      global.ipcRenderer.send(IPC_MAIN_CHANNELS.CHILD_WINDOW_CLOSED, "jira");
     }
 
     if (
@@ -201,7 +199,6 @@ export const closeWindowIfNeeded = () => {
         LOCAL_STORAGE_VARIABLES.GOOGLE_AUTH_CODE,
         urlParams.get("code"),
       );
-      global.ipcRenderer.send(IPC_MAIN_CHANNELS.CHILD_WINDOW_CLOSED, "google");
     }
 
     if (window.location.hash.includes("token") && !window.location.hash.includes("error")) {
@@ -212,7 +209,6 @@ export const closeWindowIfNeeded = () => {
         LOCAL_STORAGE_VARIABLES.TRELLO_AUTH_TOKEN,
         tokenFromUrl,
       );
-      global.ipcRenderer.send(IPC_MAIN_CHANNELS.CHILD_WINDOW_CLOSED, "trello");
     }
 
     if (window.location.search.includes("code") && window.location.search.includes("state=azure-base")) {
@@ -221,7 +217,6 @@ export const closeWindowIfNeeded = () => {
         LOCAL_STORAGE_VARIABLES.TIMETRACKER_WEBSITE_CODE,
         urlParams.get("code"),
       );
-      global.ipcRenderer.send(IPC_MAIN_CHANNELS.CHILD_WINDOW_CLOSED, "timetracker-website");
     }
 
     if (window.location.search.includes("code") && window.location.search.includes("state=azure-additional")) {

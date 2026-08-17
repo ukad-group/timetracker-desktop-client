@@ -149,28 +149,6 @@ export const registerIpcHandlers = () => {
         windowManager.createChild(getConnectionUrl(connectionName), connectionName);
     });
 
-    ipcMain.on(IPC_MAIN_CHANNELS.CHILD_WINDOW_CLOSED, (_, componentName) => {
-        switch (componentName) {
-            case "google":
-                windowManager.send(IPC_MAIN_CHANNELS.GOOGLE_SHOULD_RERENDER);
-                break;
-            case "jira":
-                windowManager.send(IPC_MAIN_CHANNELS.JIRA_SHOULD_RERENDER);
-                break;
-            case "office365":
-                windowManager.send(IPC_MAIN_CHANNELS.OFFICE365_SHOULD_RERENDER);
-                break;
-            case "timetracker-website":
-                windowManager.send(IPC_MAIN_CHANNELS.TIMETRACKER_SHOULD_RERENDER);
-                break;
-            case "trello":
-                windowManager.send(IPC_MAIN_CHANNELS.TRELLO_SHOULD_RERENDER);
-                break;
-            default:
-                break;
-        }
-    });
-
     // Watchers
     ipcMain.on(IPC_MAIN_CHANNELS.START_FILE_WATCHER, (_, reportsFolder: string, selectedDate: Date) => {
         const timereportPath = getPathFromDate(selectedDate, reportsFolder);
