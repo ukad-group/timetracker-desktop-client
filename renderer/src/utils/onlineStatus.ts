@@ -5,7 +5,8 @@ import React from "react";
  * navigator.onLine only reflects local network link state, not internet reachability.
  */
 
-const PROBE_URLS = ["https://icanhazip.com", "https://api.ipify.org?format=json"];
+/** Endpoints with CORS enabled for browser/Electron renderer fetches (GET only). */
+const PROBE_URLS = ["https://httpbin.org/status/204", "https://api.github.com/zen"];
 const PROBE_TIMEOUT_MS = 3000;
 const CACHE_TTL_MS = 3000;
 
@@ -15,7 +16,7 @@ export interface OnlineStatusListener {
 
 const probeUrl = async (url: string, signal: AbortSignal): Promise<boolean> => {
   const response = await fetch(url, {
-    method: "HEAD",
+    method: "GET",
     cache: "no-store",
     signal,
   });
