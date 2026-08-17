@@ -6,7 +6,7 @@ import React from "react";
  */
 
 /** Endpoints with CORS enabled for browser/Electron renderer fetches (GET only). */
-const PROBE_URLS = ["https://httpbin.org/status/204", "https://api.github.com/zen"];
+const PROBE_URLS = ["https://api.github.com/zen", "https://1.1.1.1/cdn-cgi/trace"];
 const PROBE_TIMEOUT_MS = 3000;
 const CACHE_TTL_MS = 3000;
 
@@ -14,14 +14,16 @@ export interface OnlineStatusListener {
   (online: boolean): void;
 }
 
-const probeUrl = async (url: string, signal: AbortSignal): Promise<boolean> => {
+const probeUrl = async (url: string, signal: AbortSignal): Promise<void> => {
   const response = await fetch(url, {
     method: "GET",
     cache: "no-store",
     signal,
   });
 
-  return response.ok;
+  if (!response.ok) {
+    throw new Error(`Probe failed: ${response.status}`);
+  }
 };
 
 const runConnectivityProbe = async (): Promise<boolean> => {
