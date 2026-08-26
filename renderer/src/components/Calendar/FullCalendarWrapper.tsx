@@ -24,7 +24,12 @@ const FullCalendarWrapper = ({
     return (
       <>
         {eventInfo.event.extendedProps.isValid === false && (
-          <ExclamationCircleIcon className="w-5 h-5 absolute fill-red-500 -top-[25px] -left-[1px] dark:fill-red-500/70" />
+          <span
+            className="pointer-events-auto cursor-help absolute -top-[25px] -left-[1px]"
+            title={eventInfo.event.extendedProps.validationTitle || "This day's report has invalid activities"}
+          >
+            <ExclamationCircleIcon className="w-5 h-5 fill-red-500 dark:fill-red-500/70" />
+          </span>
         )}
         {eventInfo.event.extendedProps.workDurationMs ? (
           <p className="whitespace-normal">{formatDuration(eventInfo.event.extendedProps.workDurationMs)}</p>

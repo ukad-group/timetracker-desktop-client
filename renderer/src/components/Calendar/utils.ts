@@ -138,21 +138,34 @@ export const loadHolidaysAndVacations = async (calendarDate: Date): Promise<DayO
   }
 };
 
+export const getDayValidationTitle = (activities: ReportActivity[]): string => {
+  return activities
+    .filter((activity) => activity.validation.isValid === false && activity.validation.description)
+    .map((activity) => {
+      const range = activity.to ? `${activity.from} - ${activity.to}` : activity.from;
+      return `${range}: ${activity.validation.description}`;
+    })
+    .join("\n");
+};
+
 export const getFormattedReports = (reports: ParsedReport[]) => {
   return reports.map((report) => {
     const { reportDate, data } = report;
     const parsedActivities = (parseReport(data)[0] || []).filter(
       (activity: Partial<ReportActivity>): activity is ReportActivity =>
-        activity.id !== undefined && !!activity.from && !!activity.to && !activity.isBreak,
+        activity.id !== undefined && !!activity.from && !!activity.to,
     );
     const activities: ReportActivity[] = validation(parsedActivities);
-    const workDurationMs = activities.reduce((acc, { duration }) => acc + (duration || 0), 0);
+    const workDurationMs = activities
+      .filter((activity) => !activity.isBreak)
+      .reduce((acc, { duration }) => acc + (duration || 0), 0);
 
     return {
       date: reportDate,
       week: getWeekNumber(reportDate),
       workDurationMs: workDurationMs,
       isValid: activities.every((report: ReportActivity) => report.validation.isValid),
+      validationTitle: getDayValidationTitle(activities),
     };
   });
 };

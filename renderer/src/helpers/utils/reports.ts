@@ -282,6 +282,7 @@ export function validation(activities: Array<ReportActivity>) {
         ? activities[i].from.split(":").map((item) => Number(item))
         : [];
       activities[i].validation = { isValid: true };
+      activities[i].mistakes = "";
 
       if (i > 1 && checkIntersection(activities[i - 2].to, activities[i].from)) {
         activities[i - 2].validation.isValid = false;
@@ -335,9 +336,7 @@ export function validation(activities: Array<ReportActivity>) {
         !activities[i].activity &&
         !activities[i].description
       ) {
-        activities[i].validation.isValid = false;
-        activities[i].validation.cell = "activity";
-        activities[i].validation.description = "No activity or description";
+        activities[i].mistakes += "No activity or description";
       }
     }
 

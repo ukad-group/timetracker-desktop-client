@@ -19,6 +19,7 @@ export type FormattedReport = {
   week: number;
   workDurationMs: number;
   isValid: boolean;
+  validationTitle?: string;
 };
 
 export type DayOff = {

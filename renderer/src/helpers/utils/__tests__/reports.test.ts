@@ -673,19 +673,17 @@ describe("validation function", () => {
   });
 
   // @rule V5
-  test("should fail validation when project is set but activity and description are missing", () => {
+  test("adds a mistake when project is set but activity and description are missing", () => {
     const result = validation([
       activity({
         activity: "",
         description: "",
+        mistakes: "",
       }),
     ])[0];
 
-    expect(result.validation).toEqual({
-      isValid: false,
-      cell: "activity",
-      description: "No activity or description",
-    });
+    expect(result.validation).toEqual({ isValid: true });
+    expect(result.mistakes).toBe("No activity or description");
   });
 
   // @rule V5
@@ -696,16 +694,34 @@ describe("validation function", () => {
         activity: "",
         description: "",
         duration: 3600000,
+        mistakes: "",
       }),
     ])[0];
 
     expect(result.validation).toEqual({ isValid: true });
+    expect(result.mistakes).toBe("");
   });
 
   test("keeps a valid activity as valid", () => {
     const result = validation([activity()])[0];
 
     expect(result.validation).toEqual({ isValid: true });
+  });
+
+  // @rule V5
+  test("does not duplicate mistakes when validation runs more than once", () => {
+    const activities = [
+      activity({
+        activity: "",
+        description: "",
+        mistakes: "",
+      }),
+    ];
+
+    validation(activities);
+    validation(activities);
+
+    expect(activities[0].mistakes).toBe("No activity or description");
   });
 });
 

@@ -60,7 +60,7 @@ Broader UI rules (Totals, Calendar, Bookings, form hooks) are out of scope here.
 | **V2** | Project set but no `to` → `"The event has no end time"`. | `validation` |
 | **V3** | Missing project → `"The project must be specified in the activity"`. | `validation` |
 | **V4** | Hours outside 0–23 or minutes outside 0–59 → `"Impossible time"`. | `validation` |
-| **V5** | Real project (not `!…`) with neither activity nor description → `"No activity or description"`. Breaks (`!` project) do **not** need activity/description. | `validation` |
+| **V5** | Real project (not `!…`) with neither activity nor description → yellow `mistakes: "No activity or description"`; does **not** fail `isValid`. Breaks (`!` project) do **not** need activity/description. | `validation` |
 | **V6** | Description starting with `!` appends `mistakes: " startsWith!"` but does **not** fail validation by itself. | `validation` |
 | **V7** | (legacy) Overlap is checked only between row `i` and row `i-2`. Adjacent two-row overlap is **not** flagged. `checkIntersection` is inclusive (`from <= previousTo`). | `validation`, `checkIntersection` |
 
@@ -138,7 +138,7 @@ The table below lists every rule, its test file, and the exact test case name(s)
 | **V2** | `reports.test.ts` | `should fail validation when is [project] and no [to] property` |
 | **V3** | `reports.test.ts` | `should fail validation when there no [project] and is [to] property` |
 | **V4** | `reports.test.ts` | `should fail validation when time is impossible` |
-| **V5** | `reports.test.ts` | `should fail validation when project is set but activity and description are missing`; `does not require activity or description for a break project` |
+| **V5** | `reports.test.ts` | `adds a mistake when project is set but activity and description are missing`; `does not require activity or description for a break project`; `does not duplicate mistakes when validation runs more than once` |
 | **V6** | `reports.test.ts` | `should add mistake when [description] starts with "!"` |
 | **V7** | `reports.test.ts` | `does not flag an intersection when there are only two overlapping rows`; `flags an intersection between the current row and the row two steps back`; `should return true when times are equal (inclusive overlap)` |
 | **H1** | `electron-src/helpers/__tests__/parseReportsInfo.test.ts` | `skips missing files and still reads the 31 previous days`; `does not include activities from the selected day's report even if the file exists` |
