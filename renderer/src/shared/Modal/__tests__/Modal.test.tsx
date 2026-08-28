@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import Modal from "../Modal";
 
@@ -51,5 +52,32 @@ describe("GIVEN Modal", () => {
     });
 
     expect(onCloseMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("traps keyboard focus inside the modal", async () => {
+    const user = userEvent.setup();
+
+    await act(async () => {
+      render(
+        <>
+          <button>Outside</button>
+          <Modal isOpen={true} title="Test Modal" onClose={jest.fn()} onSubmit={jest.fn()}>
+            <input aria-label="Inside" data-autofocus="true" />
+          </Modal>
+        </>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(document.querySelectorAll("[data-headlessui-focus-guard]")).toHaveLength(2);
+    });
+
+    const outsideButton = screen.getByRole("button", { name: "Outside" });
+
+    for (let i = 0; i < 12; i++) {
+      await user.tab();
+      expect(outsideButton).not.toHaveFocus();
+      expect(document.activeElement).not.toBe(document.body);
+    }
   });
 });

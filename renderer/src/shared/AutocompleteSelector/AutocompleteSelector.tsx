@@ -161,7 +161,10 @@ const AutocompleteSelector = ({
           tabIndex={tabIndex}
           onBlur={handleOnBlur}
         />
-        <ComboboxButton className="absolute inset-y-0 right-0 flex items-center px-2 rounded-r-md focus:outline-none">
+        <ComboboxButton
+          tabIndex={-1}
+          className="absolute inset-y-0 right-0 flex items-center px-2 rounded-r-md focus:outline-none"
+        >
           <ChevronUpDownIcon className="w-5 h-5 text-gray-400" aria-hidden="true" />
         </ComboboxButton>
 

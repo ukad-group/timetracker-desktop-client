@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import TrackTimeModal from "../TrackTimeModal";
 import { TrackTimeModalProps } from "../types";
 import "@testing-library/jest-dom";
@@ -71,6 +71,18 @@ global.ResizeObserver = jest.fn(() => ({
   unobserve: jest.fn(),
   disconnect: jest.fn(),
 }));
+
+describe("focus when the modal opens", () => {
+  window.ResizeObserver = ResizeObserver;
+
+  test("moves focus to the From field", async () => {
+    await act(async () => render(<TrackTimeModal {...mockedProps} />));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("From")).toHaveFocus();
+    });
+  });
+});
 
 describe("toInput prefilled value depends on the date", () => {
   window.ResizeObserver = ResizeObserver;

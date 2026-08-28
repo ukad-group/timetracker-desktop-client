@@ -143,12 +143,13 @@ const TrackTimeModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onSubmit={onSave} onClose={close} title="Track time">
+    <Modal isOpen={isOpen} onSubmit={onSave} onClose={close} title="Track time" initialFocus={timeInputRef}>
       <div className="grid grid-cols-6 gap-6">
         <div className="col-span-6 sm:col-span-2">
           <TextField
             id="from"
             reference={timeInputRef}
+            data-autofocus="true"
             label="From"
             onKeyDown={(event) => handleKey(event, setFrom)}
             required
@@ -156,7 +157,6 @@ const TrackTimeModal = ({
             onChange={onFromChange}
             onBlur={onFromBlur}
             onFocus={selectText}
-            tabIndex={1}
             className={clsx(
               "block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:border-dark-form-border dark:text-dark-heading dark:bg-dark-form-back focus:dark:border-focus-border focus:dark:ring-focus-border",
               {
@@ -192,7 +192,6 @@ const TrackTimeModal = ({
             onChange={onToChange}
             onBlur={onToBlur}
             onFocus={selectText}
-            tabIndex={2}
             className={clsx(
               "block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:border-dark-form-border dark:text-dark-heading dark:bg-dark-form-back focus:dark:border-focus-border focus:dark:ring-focus-border",
               {
@@ -213,7 +212,6 @@ const TrackTimeModal = ({
             onBlur={handleDurationBlur}
             onFocus={selectText}
             value={formattedDuration}
-            tabIndex={3}
             className={clsx(
               "block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:border-dark-form-border dark:text-dark-heading dark:bg-dark-form-back focus:dark:border-focus-border focus:dark:ring-focus-border",
               {
@@ -236,7 +234,6 @@ const TrackTimeModal = ({
             setSelectedItem={setProject}
             isValidationEnabled={isValidationEnabled}
             showedSuggestionsNumber={Object.keys(latestProjAndAct).length}
-            tabIndex={4}
           />
         </div>
         <div ref={textInputRef} className="col-span-6">
@@ -248,7 +245,6 @@ const TrackTimeModal = ({
             selectedItem={activity}
             setSelectedItem={setActivity}
             showedSuggestionsNumber={3}
-            tabIndex={5}
           />
         </div>
         <Hint
@@ -282,7 +278,6 @@ const TrackTimeModal = ({
             selectedItem={description}
             setSelectedItem={setDescription}
             showedSuggestionsNumber={3}
-            tabIndex={6}
             spellCheck
           />
         </div>
