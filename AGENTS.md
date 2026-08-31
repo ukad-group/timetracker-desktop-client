@@ -103,3 +103,17 @@ npm run dist             # clean + build + electron-builder (current OS)
 | [`docs/integrations.md`](docs/integrations.md) | OAuth connections (Google, Jira, Trello, …) |
 | [`docs/conventions.md`](docs/conventions.md) | Matching UI/store/test patterns |
 | [`README.md`](README.md) | Human install / build / release |
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as markdown files under `.scratch/<feature>/`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical roles use matching label strings (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` at the repo root and ADRs in `docs/adr/`. See `docs/agents/domain.md`.
