@@ -21,12 +21,11 @@ const ManualInputForm = ({
   setIsFileExist,
   isToday,
 }: ManualInputFormProps) => {
-  const [report, setReport] = useState("");
+  const [report, setReport] = useState(selectedDateReport || "");
   const [saveBtnStatus, setSaveBtnStatus] = useState("disabled");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showDeleteMessage, setShowDeleteMessage] = useState(false);
   const [showDeleteButton, setShowDeleteButton] = useState(false);
-  const [cursorPosition, setCursorPosition] = useState(0);
   const [progress, setProgress] = useTutorialProgressStore((state) => [state.progress, state.setProgress], shallow);
   const [isFieldDisabled, setIsFieldDisabled] = useState(!isToday);
 
@@ -90,16 +89,6 @@ const ManualInputForm = ({
   useEffect(() => {
     setReport(selectedDateReport || "");
   }, [selectedDateReport]);
-
-  useEffect(() => {
-    setReport(report);
-
-    if (cursorPosition && textareaRef.current) {
-      textareaRef.current.setSelectionRange(cursorPosition, cursorPosition);
-    }
-
-    setCursorPosition(0);
-  }, [report]);
 
   useEffect(() => {
     if (saveReportTrigger && selectedDateReport !== report) {
