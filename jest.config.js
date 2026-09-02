@@ -21,6 +21,7 @@ module.exports = {
       testEnvironment: "jsdom",
       setupFilesAfterEnv: ["<rootDir>/renderer/src/setupTests.ts", "jest-date-mock"],
       moduleNameMapper: {
+        "\\.(css|less|scss|sass)$": "<rootDir>/renderer/src/tests/mocks/styleMock.js",
         "^@/(.*)$": "<rootDir>/renderer/src/$1",
         "^@electron/(.*)$": "<rootDir>/electron-src/$1",
       },

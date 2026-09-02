@@ -33,21 +33,6 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 describe("GIVEN SettingsPage", () => {
-  beforeAll(() => {
-    render(
-      <MemoryRouter>
-        <SettingsPageContent />
-      </MemoryRouter>,
-    );
-
-    window.matchMedia = jest.fn().mockImplementation((query) => ({
-      matches: true,
-      media: query,
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-    }));
-  });
-
   beforeEach(() => {
     (useColorTheme as jest.Mock).mockReturnValue({ theme: {}, setTheme: jest.fn() });
   });
@@ -62,12 +47,21 @@ describe("GIVEN SettingsPage", () => {
     global.ipcRenderer = globalIpcRendererMock;
   });
 
-  it("renders SettingsPage correctly", () => {
+  it("renders SettingsPage correctly", async () => {
+    render(
+      <MemoryRouter>
+        <SettingsPageContent />
+      </MemoryRouter>,
+    );
+
     const { result } = renderHook(() => useColorTheme());
 
     expect(result.current.theme).toEqual({});
 
     expect(screen.getByText("Settings")).toBeInTheDocument();
     expect(screen.getByText("Manage your settings and set preferences")).toBeInTheDocument();
+    expect(
+      await screen.findByText("You can connect available resources to use their capabilities to complete your reports"),
+    ).toBeInTheDocument();
   });
 });
