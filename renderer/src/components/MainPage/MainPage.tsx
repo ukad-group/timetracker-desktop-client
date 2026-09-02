@@ -1,15 +1,18 @@
 import { useEffect, useState, useRef } from "react";
-import { DateSelector } from "@/components/DateSelector";
 import { useReportManagement } from "@/helpers/hooks/useReportManagement";
-import { ManualInputForm } from "@/components/ManualInputForm";
-import { Calendar } from "@/components/Calendar/Calendar";
-import { Totals } from "@/components/Totals";
-import { Bookings } from "@/components/Bookings";
-import { ActivitiesSection } from "@/components/ActivitiesSection";
 import { SelectFolderPlaceholder } from "@/components/SelectFolderPlaceholder";
-import { UpdateDescription } from "@/components/UpdateDescription";
 import { SupportSection } from "../SupportSection";
 import { Hint } from "@/shared/Hint";
+import {
+  LazyActivitiesSection,
+  LazyBookings,
+  LazyCalendar,
+  LazyDateSelector,
+  LazyManualInputForm,
+  LazySection,
+  LazyTotals,
+  LazyUpdateDescription,
+} from "./sections";
 import { useMainStore } from "@/store/mainStore";
 import { useBetaStore } from "@/store/betaUpdatesStore";
 import { useTutorialProgressStore } from "@/store/tutorialProgressStore";
@@ -165,12 +168,14 @@ const MainPage = ({
       sectionName: "Date Selector",
       section: (
         <section className="bg-white shadow sm:rounded-lg dark:bg-dark-container dark:border dark:border-dark-border">
-          <DateSelector
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            isDropboxConnected={isDropboxConnected}
-            selectedDateReport={selectedDateReport || ""}
-          />
+          <LazySection>
+            <LazyDateSelector
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              isDropboxConnected={isDropboxConnected}
+              selectedDateReport={selectedDateReport || ""}
+            />
+          </LazySection>
         </section>
       ),
       order: 1,
@@ -180,13 +185,15 @@ const MainPage = ({
       sectionName: "Activities Table",
       section: (
         <section className="bg-white shadow sm:rounded-lg h-full dark:bg-dark-container dark:border dark:border-dark-border">
-          <ActivitiesSection
-            activities={selectedDateActivities}
-            onEditActivity={setTrackTimeModalActivity}
-            selectedDate={selectedDate}
-            latestProjAndAct={latestProjAndAct}
-            setSelectedDateReport={setSelectedDateReport}
-          />
+          <LazySection>
+            <LazyActivitiesSection
+              activities={selectedDateActivities}
+              onEditActivity={setTrackTimeModalActivity}
+              selectedDate={selectedDate}
+              latestProjAndAct={latestProjAndAct}
+              setSelectedDateReport={setSelectedDateReport}
+            />
+          </LazySection>
         </section>
       ),
       order: 2,
@@ -196,16 +203,18 @@ const MainPage = ({
       sectionName: "Manual InputForm",
       section: (
         <section className="px-4 py-5 bg-white shadow sm:rounded-lg sm:px-6 dark:bg-dark-container dark:border dark:border-dark-border">
-          <ManualInputForm
-            saveReportTrigger={saveReportTrigger}
-            onSave={handleSave}
-            selectedDateReport={selectedDateReport || ""}
-            selectedDate={selectedDate}
-            setSelectedDateReport={setSelectedDateReport}
-            isFileExist={isFileExist}
-            setIsFileExist={setIsFileExist}
-            isToday={isToday}
-          />
+          <LazySection>
+            <LazyManualInputForm
+              saveReportTrigger={saveReportTrigger}
+              onSave={handleSave}
+              selectedDateReport={selectedDateReport || ""}
+              selectedDate={selectedDate}
+              setSelectedDateReport={setSelectedDateReport}
+              isFileExist={isFileExist}
+              setIsFileExist={setIsFileExist}
+              isToday={isToday}
+            />
+          </LazySection>
         </section>
       ),
       order: 1,
@@ -215,14 +224,16 @@ const MainPage = ({
       sectionName: "Calendar",
       section: (
         <section className="lg:col-span-2">
-          <Calendar
-            reportsFolder={reportsFolder}
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            calendarDate={calendarDate}
-            setCalendarDate={setCalendarDate}
-            selectedDateReport={selectedDateReport || ""}
-          />
+          <LazySection>
+            <LazyCalendar
+              reportsFolder={reportsFolder}
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              calendarDate={calendarDate}
+              setCalendarDate={setCalendarDate}
+              selectedDateReport={selectedDateReport || ""}
+            />
+          </LazySection>
         </section>
       ),
       order: 4,
@@ -230,13 +241,21 @@ const MainPage = ({
     },
     {
       sectionName: "Totals",
-      section: <Totals selectedDate={selectedDate} />,
+      section: (
+        <LazySection>
+          <LazyTotals selectedDate={selectedDate} />
+        </LazySection>
+      ),
       order: 2,
       side: "right",
     },
     {
       sectionName: "Bookings",
-      section: <Bookings calendarDate={calendarDate} />,
+      section: (
+        <LazySection>
+          <LazyBookings calendarDate={calendarDate} />
+        </LazySection>
+      ),
       order: 3,
       side: "right",
     },
@@ -244,7 +263,9 @@ const MainPage = ({
       sectionName: "Update Description",
       section: (
         <section>
-          <UpdateDescription />
+          <LazySection>
+            <LazyUpdateDescription />
+          </LazySection>
         </section>
       ),
       order: 4,

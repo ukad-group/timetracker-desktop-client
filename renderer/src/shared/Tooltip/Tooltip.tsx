@@ -1,5 +1,6 @@
 import { useState, ReactNode } from "react";
 import { CheckIcon } from "@heroicons/react/24/solid";
+import "./Tooltip.css";
 
 interface Props {
   children: ReactNode;

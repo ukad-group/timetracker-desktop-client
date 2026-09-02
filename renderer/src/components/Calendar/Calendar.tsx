@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import "./Calendar.css";
 import { formatDuration } from "@/helpers/utils/reports";
 import { NavButtons } from "@/shared/NavButtons";
 import { Button } from "@/shared/Button";

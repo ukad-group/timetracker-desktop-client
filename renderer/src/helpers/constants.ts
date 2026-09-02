@@ -1,9 +1,3 @@
-import { ConnectionsSection } from "@/components/ConnectionsSection";
-import { HelpSection } from "@/components/HelpSection";
-import { ReportsFolderSection } from "@/components/ReportsFolderSection";
-import { LayoutSection } from "@/components/LayoutSection";
-import { VersionSection } from "@/components/VersionSection";
-
 export enum SidebarNavItem {
   Connections = "Connections",
   Help = "Help",
@@ -11,23 +5,6 @@ export enum SidebarNavItem {
   ReportsFolder = "Reports folder",
   VersionSelect = "Version",
 }
-
-export const getSettingSection = (item: SidebarNavItem) => {
-  switch (item) {
-    case SidebarNavItem.Connections:
-      return <ConnectionsSection />;
-    case SidebarNavItem.Help:
-      return <HelpSection />;
-    case SidebarNavItem.ReportsFolder:
-      return <ReportsFolderSection />;
-    case SidebarNavItem.Layout:
-      return <LayoutSection />;
-    case SidebarNavItem.VersionSelect:
-      return <VersionSection />;
-    default:
-      return null;
-  }
-};
 
 export const LOCAL_STORAGE_VARIABLES = {
   SHOW_GOOGLE_EVENTS: "showGoogleEvents",
