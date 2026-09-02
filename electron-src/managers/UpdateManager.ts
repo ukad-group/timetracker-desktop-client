@@ -53,6 +53,12 @@ class UpdateManager {
     }
 
     public checkForUpdates(isBeta: boolean) {
+        // Temporary: macOS auto-update needs a paid Apple Developer identity
+        // (code signing / notarization). Skip checks so the error modal stays quiet.
+        if (process.platform === "darwin") {
+            return;
+        }
+
         try {
             autoUpdater.allowPrerelease = isBeta;
             autoUpdater.checkForUpdates();
@@ -63,6 +69,10 @@ class UpdateManager {
     }
 
     public quitAndInstall() {
+        if (process.platform === "darwin") {
+            return;
+        }
+
         autoUpdater.quitAndInstall(true, true);
     }
 }
