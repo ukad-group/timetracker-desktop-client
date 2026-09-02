@@ -49,7 +49,7 @@ const MainPage = ({
     isFileExist,
     setIsFileExist,
     saveSerializedReport,
-  } = useReportManagement(selectedDate);
+  } = useReportManagement(selectedDate, calendarDate);
 
   const [isBeta, betaUpdateStoreLoaded] = useBetaStore((state) => [state.isBeta, state.betaUpdateStoreLoaded], shallow);
   const [progress, setProgress] = useTutorialProgressStore((state) => [state.progress, state.setProgress], shallow);

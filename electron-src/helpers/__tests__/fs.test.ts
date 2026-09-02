@@ -139,4 +139,28 @@ describe("GIVEN fs/searchReadFiles", () => {
       ])
     ).toEqual([]);
   });
+
+  it("does not enter a 2013 year folder when the quarter query is for 2026", () => {
+    readdirSyncMock.mockImplementation((dir) => {
+      if (dir === directory) return ["2013", "2026"];
+      if (dir === `${directory}/2026`) return ["week 36"];
+      if (dir === `${directory}/2026/week 36`) return ["timereport - 20260901"];
+      throw new Error(`unexpected readdir of ${String(dir)}`);
+    });
+    readFileSyncMock.mockReturnValue(reportContent);
+
+    const reports = searchReadFiles(directory, [{ year: "2026", week: "36" }]);
+
+    expect(reports).toEqual([
+      {
+        data: reportContent,
+        reportDate: "20260901",
+      },
+    ]);
+    expect(readdirSyncMock).not.toHaveBeenCalledWith(`${directory}/2013`);
+    expect(readFileSyncMock).not.toHaveBeenCalledWith(
+      expect.stringContaining("2013"),
+      expect.anything()
+    );
+  });
 });

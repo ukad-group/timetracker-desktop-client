@@ -7,6 +7,7 @@ import {
   getDateFromFilename,
   getWeeksAroundDate,
   getWeeksInMonth,
+  getReportWatchPaths,
 } from "../datetime";
 
 describe("GIVEN datetime/getISOWeek", () => {
@@ -123,6 +124,45 @@ describe("GIVEN datetime/getWeeksAroundDate", () => {
     weeks.forEach(({ week }) => {
       expect(week).toMatch(/^\d{2}$/);
     });
+  });
+
+  it("stays in 2026 for a mid-year date and never includes 2013", () => {
+    const years = new Set(getWeeksAroundDate(new Date(2026, 8, 1)).map(({ year }) => year));
+
+    expect(years).toEqual(new Set(["2026"]));
+    expect(years.has("2013")).toBe(false);
+  });
+
+  it("includes the previous calendar year only when the window crosses 1 January", () => {
+    const years = new Set(getWeeksAroundDate(new Date(2026, 0, 1)).map(({ year }) => year));
+
+    expect(years).toEqual(new Set(["2025", "2026"]));
+  });
+});
+
+describe("GIVEN datetime/getReportWatchPaths", () => {
+  const reportsFolder = "/reports";
+
+  it("returns only the quarter week folders around the given date", () => {
+    expect(getReportWatchPaths(reportsFolder, new Date(2026, 8, 1))).toEqual([
+      "/reports/2026/week 31",
+      "/reports/2026/week 32",
+      "/reports/2026/week 33",
+      "/reports/2026/week 34",
+      "/reports/2026/week 35",
+      "/reports/2026/week 36",
+      "/reports/2026/week 37",
+      "/reports/2026/week 38",
+      "/reports/2026/week 39",
+      "/reports/2026/week 40",
+      "/reports/2026/week 41",
+    ]);
+  });
+
+  it("does not include 2013 week folders when the calendar is in 2026", () => {
+    const paths = getReportWatchPaths(reportsFolder, new Date(2026, 8, 1));
+
+    expect(paths.some((watchPath) => watchPath.includes("/2013/"))).toBe(false);
   });
 });
 

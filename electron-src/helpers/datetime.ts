@@ -98,6 +98,12 @@ export function getWeeksAroundDate(
   return result;
 }
 
+export function getReportWatchPaths(reportsFolder: string, date: Date): string[] {
+  return getWeeksAroundDate(new Date(date)).map(
+    ({ year, week }) => `${reportsFolder}/${year}/week ${week}`
+  );
+}
+
 export function getWeeksInMonth(date: Date): { year: string; week: string }[] {
   const weeksArray: { year: string; week: string }[] = [];
 

@@ -49,7 +49,7 @@ describe("GIVEN useReportManagement", () => {
   it("starts watchers and reads the day report when the store is loaded", async () => {
     const { result } = renderHook(() => useReportManagement(selectedDate));
 
-    expect(sendMock).toHaveBeenCalledWith(IPC_MAIN_CHANNELS.START_FOLDER_WATCHER, reportsFolder);
+    expect(sendMock).toHaveBeenCalledWith(IPC_MAIN_CHANNELS.START_FOLDER_WATCHER, reportsFolder, selectedDate);
     expect(sendMock).toHaveBeenCalledWith(IPC_MAIN_CHANNELS.START_FILE_WATCHER, reportsFolder, selectedDate);
     expect(invokeMock).toHaveBeenCalledWith(IPC_MAIN_CHANNELS.APP_READ_DAY_REPORT, reportsFolder, selectedDate);
 
@@ -57,6 +57,37 @@ describe("GIVEN useReportManagement", () => {
       expect(result.current.selectedDateReport).toBe(dayReport);
       expect(result.current.isFileExist).toBe(true);
     });
+  });
+
+  it("watches week folders around calendarDate when it differs from selectedDate", () => {
+    const calendarDate = new Date(2026, 8, 1);
+
+    renderHook(() => useReportManagement(selectedDate, calendarDate));
+
+    expect(sendMock).toHaveBeenCalledWith(IPC_MAIN_CHANNELS.START_FOLDER_WATCHER, reportsFolder, calendarDate);
+  });
+
+  it("stops the previous folder watcher before starting one for a new calendarDate", async () => {
+    const nextCalendarDate = new Date(2026, 8, 1);
+    const { result, rerender } = renderHook(
+      ({ calendarDate }: { calendarDate: Date }) => useReportManagement(selectedDate, calendarDate),
+      { initialProps: { calendarDate: selectedDate } },
+    );
+
+    await waitFor(() => {
+      expect(result.current.selectedDateReport).toBe(dayReport);
+    });
+
+    sendMock.mockClear();
+    rerender({ calendarDate: nextCalendarDate });
+
+    const folderCalls = sendMock.mock.calls.filter(
+      ([channel]) =>
+        channel === IPC_MAIN_CHANNELS.STOP_PATH_WATCHER || channel === IPC_MAIN_CHANNELS.START_FOLDER_WATCHER,
+    );
+
+    expect(folderCalls[0]).toEqual([IPC_MAIN_CHANNELS.STOP_PATH_WATCHER, reportsFolder]);
+    expect(folderCalls[1]).toEqual([IPC_MAIN_CHANNELS.START_FOLDER_WATCHER, reportsFolder, nextCalendarDate]);
   });
 
   it("sets isFileExist to false when the day file is missing", async () => {

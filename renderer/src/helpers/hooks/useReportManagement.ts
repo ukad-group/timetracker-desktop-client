@@ -3,7 +3,7 @@ import { useMainStore } from "@/store/mainStore";
 import { shallow } from "zustand/shallow";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 
-export const useReportManagement = (selectedDate: Date) => {
+export const useReportManagement = (selectedDate: Date, calendarDate: Date = selectedDate) => {
   const [reportsFolder, mainStoreLoaded] = useMainStore(
     (state) => [state.reportsFolder, state.mainStoreLoaded],
     shallow,
@@ -14,12 +14,12 @@ export const useReportManagement = (selectedDate: Date) => {
 
   useEffect(() => {
     if (mainStoreLoaded) {
-      global.ipcRenderer.send(IPC_MAIN_CHANNELS.START_FOLDER_WATCHER, reportsFolder);
+      global.ipcRenderer.send(IPC_MAIN_CHANNELS.START_FOLDER_WATCHER, reportsFolder, calendarDate);
     }
     return () => {
       global.ipcRenderer.send(IPC_MAIN_CHANNELS.STOP_PATH_WATCHER, reportsFolder);
     };
-  }, [reportsFolder, mainStoreLoaded]);
+  }, [reportsFolder, mainStoreLoaded, calendarDate]);
 
   useEffect(() => {
     readDayReport();

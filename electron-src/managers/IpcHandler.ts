@@ -7,7 +7,7 @@ import Store from "electron-store";
 import fs from "fs";
 import { exec } from "child_process";
 import chokidar, { type FSWatcher } from "chokidar";
-import { getPathFromDate, getWeeksAroundDate, getWeeksInMonth } from "../helpers/datetime";
+import { getPathFromDate, getWeeksAroundDate, getWeeksInMonth, getReportWatchPaths } from "../helpers/datetime";
 import { createDirByPath, searchReadFiles } from "../helpers/fs";
 import { parseReportsInfo, Activity } from "../helpers/parseReportsInfo";
 
@@ -177,10 +177,16 @@ export const registerIpcHandlers = () => {
         }
     });
 
-    ipcMain.on(IPC_MAIN_CHANNELS.START_FOLDER_WATCHER, (_, reportsFolder: string) => {
+    ipcMain.on(IPC_MAIN_CHANNELS.START_FOLDER_WATCHER, (_, reportsFolder: string, watchDate?: Date) => {
         try {
             if (fs.existsSync(reportsFolder)) {
-                const folderWatcher = chokidar.watch(reportsFolder, { ignoreInitial: true });
+                const date = watchDate ? new Date(watchDate) : new Date();
+                const weekPaths = getReportWatchPaths(reportsFolder, date).filter((watchPath) =>
+                    fs.existsSync(watchPath)
+                );
+                if (weekPaths.length === 0) return;
+
+                const folderWatcher = chokidar.watch(weekPaths, { ignoreInitial: true });
                 watchers[reportsFolder] = folderWatcher;
 
                 const notify = () => windowManager.send(IPC_MAIN_CHANNELS.ANY_FILE_CHANGED);
