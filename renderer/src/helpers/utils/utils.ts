@@ -3,6 +3,7 @@ import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
 import { LOCAL_STORAGE_VARIABLES } from "@/helpers/constants";
 import { Dispatch, SetStateAction } from "react";
 import { HintConitions, ReportActivity } from "./types";
+import { calcDurationBetweenTimes } from "./reports";
 
 export const replaceHyphensWithSpaces = (inputString: string): string => inputString.replace(/ - /g, " ");
 
@@ -323,4 +324,55 @@ export const addPastTime = (
     setSelectedDateActivities(tempActivities);
   }
   return isPastTime;
+};
+
+export const submitActivity = (
+  activity: ReportActivity,
+  selectedDateActivities: Array<ReportActivity> | null,
+  setSelectedDateActivities: Dispatch<SetStateAction<Array<ReportActivity>>>,
+  setShouldAutosave: Dispatch<SetStateAction<boolean>>,
+) => {
+  const tempActivities: Array<ReportActivity> = [];
+
+  if (!selectedDateActivities || !selectedDateActivities.length) {
+    activity.id = 1;
+    tempActivities.push(activity);
+    setSelectedDateActivities(tempActivities);
+    setShouldAutosave(true);
+    return;
+  }
+
+  const isEdit = editActivity(activity, selectedDateActivities, setSelectedDateActivities, setShouldAutosave);
+
+  if (isEdit) return;
+
+  const isPastTime = addPastTime(activity, tempActivities, selectedDateActivities, setSelectedDateActivities);
+  tempActivities.forEach((act, i) => {
+    act.id = i;
+    if (act.isBreak) {
+      act.to = "";
+    }
+  });
+
+  if (tempActivities.length === selectedDateActivities.length) {
+    if (!isPastTime) {
+      const lastActivity = tempActivities[tempActivities.length - 1];
+      const shouldCloseOpenWork =
+        lastActivity &&
+        !lastActivity.to &&
+        lastActivity.project &&
+        !lastActivity.isBreak &&
+        stringToMinutes(activity.from) > stringToMinutes(lastActivity.from);
+
+      if (shouldCloseOpenWork) {
+        lastActivity.to = activity.from;
+        lastActivity.duration = calcDurationBetweenTimes(lastActivity.from, activity.from);
+      }
+
+      tempActivities.push(activity);
+    }
+    setSelectedDateActivities(tempActivities.filter((act) => act.duration || (act.project && !act.isBreak)));
+  }
+
+  setShouldAutosave(true);
 };

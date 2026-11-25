@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction } from "react";
-import { addPastTime, editActivity } from "../utils";
+import { addPastTime, editActivity, submitActivity } from "../utils";
 import { ReportActivity } from "../types";
 import { globalIpcRendererMock, ipcRendererSendMock } from "@/tests/mocks/electron";
 
@@ -140,5 +140,68 @@ describe("GIVEN utils/addPastTime", () => {
 
     expect(result).toBe(false);
     expect(setSelectedDateActivities).not.toHaveBeenCalled();
+  });
+});
+
+describe("GIVEN utils/submitActivity", () => {
+  it("keeps an open last work activity when a later activity is appended", () => {
+    const selected = [
+      activity({ id: 0, from: "08:00", to: "13:00", project: "hr", description: "test" }),
+      activity({
+        id: 1,
+        from: "13:00",
+        to: "",
+        duration: undefined,
+        project: "hr",
+        description: "test2",
+      }),
+    ];
+    const incoming = activity({
+      id: null,
+      from: "15:00",
+      to: "16:00",
+      project: "hr",
+      description: "later",
+    });
+    const { setSelectedDateActivities, getNext } = applyUpdater(selected);
+    const setShouldAutosave = jest.fn();
+
+    submitActivity(incoming, selected, setSelectedDateActivities, setShouldAutosave);
+
+    const next = getNext();
+
+    expect(next.map((act) => act.description)).toEqual(["test", "test2", "later"]);
+    expect(next[1]).toMatchObject({ from: "13:00", to: "15:00", description: "test2" });
+    expect(setShouldAutosave).toHaveBeenCalledWith(true);
+  });
+
+  it("keeps an open last work activity when a new activity is inserted at the beginning", () => {
+    const selected = [
+      activity({ id: 0, from: "08:00", to: "13:00", project: "hr", description: "test" }),
+      activity({
+        id: 1,
+        from: "13:00",
+        to: "",
+        duration: undefined,
+        project: "hr",
+        description: "test2",
+      }),
+    ];
+    const incoming = activity({
+      id: null,
+      from: "07:00",
+      to: "08:00",
+      project: "hr",
+      description: "morning",
+    });
+    const { setSelectedDateActivities, getNext } = applyUpdater(selected);
+    const setShouldAutosave = jest.fn();
+
+    submitActivity(incoming, selected, setSelectedDateActivities, setShouldAutosave);
+
+    const next = getNext();
+
+    expect(next.map((act) => act.description)).toEqual(["morning", "test", "test2"]);
+    expect(next[2]).toMatchObject({ from: "13:00", to: "", description: "test2" });
   });
 });

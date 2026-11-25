@@ -6,7 +6,7 @@ import { useMainStore } from "@/store/mainStore";
 import { shallow } from "zustand/shallow";
 import useColorTheme from "@/helpers/hooks/useTheme";
 import { IPC_MAIN_CHANNELS } from "@electron/helpers/constants";
-import { addPastTime, editActivity } from "@/helpers/utils/utils";
+import { submitActivity as saveSubmittedActivity } from "@/helpers/utils/utils";
 import { ReportActivity } from "@/helpers/utils/types";
 
 export function HomePage() {
@@ -58,36 +58,7 @@ export function HomePage() {
   }, [selectedDate, reportsFolder, lastRenderedDay]);
 
   const submitActivity = (activity: ReportActivity) => {
-    const tempActivities: Array<ReportActivity> = [];
-
-    if (!selectedDateActivities || !selectedDateActivities.length) {
-      activity.id = 1;
-      tempActivities.push(activity);
-      setSelectedDateActivities(tempActivities);
-      setShouldAutosave(true);
-      return;
-    }
-
-    const isEdit = editActivity(activity, selectedDateActivities, setSelectedDateActivities, setShouldAutosave);
-
-    if (isEdit) return;
-
-    const isPastTime = addPastTime(activity, tempActivities, selectedDateActivities, setSelectedDateActivities);
-    tempActivities.forEach((act, i) => {
-      act.id = i;
-      if (act.isBreak) {
-        act.to = "";
-      }
-    });
-
-    if (tempActivities.length === selectedDateActivities.length) {
-      if (!isPastTime) {
-        tempActivities.push(activity);
-      }
-      setSelectedDateActivities(tempActivities.filter((act) => act.duration));
-    }
-
-    setShouldAutosave(true);
+    saveSubmittedActivity(activity, selectedDateActivities, setSelectedDateActivities, setShouldAutosave);
   };
 
   const setFocusOnNewActivityBtn = () => {
