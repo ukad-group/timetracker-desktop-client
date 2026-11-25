@@ -864,6 +864,13 @@ describe("addSuggestions function", () => {
 });
 
 describe("parseReport/serializeReport round-trip", () => {
+  // @rule P6, S6
+  test("preserves last work activity that has no end time", () => {
+    const report = "08:00 - hr - test\n13:00 - hr - test2\n";
+
+    expect(serializeReport(parseReport(report)[0])).toBe(report);
+  });
+
   // @rule S6
   test("preserves from, project, activity, description and isBreak", () => {
     const activities = [

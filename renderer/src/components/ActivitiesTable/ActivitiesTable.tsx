@@ -78,11 +78,11 @@ const ActivitiesTable = ({
 
   const handleCopyActivity = (activity: ReportActivity) => {
     global.ipcRenderer.send(IPC_MAIN_CHANNELS.ANALYTICS_DATA, TRACK_ANALYTICS.COPY_REGISTRATION);
-    const lastActivity = activities[activities.length - 1];
+    const lastActivityWithEnd = activities.findLast((item) => item.to);
     onEditActivity({
       ...activity,
       id: null,
-      from: lastActivity?.to,
+      from: lastActivityWithEnd?.to,
       to: checkIsToday(selectedDate) ? getCeiledTime() : "",
       duration: null,
     });
@@ -160,7 +160,7 @@ const ActivitiesTable = ({
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      window.addEventListener("keyup", handleKeyUp);
+      window.removeEventListener("keyup", handleKeyUp);
     };
   }, [firstKey, tableActivities]);
 

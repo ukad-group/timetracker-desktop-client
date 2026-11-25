@@ -26,8 +26,9 @@ import { StoredSection } from "@/components/WidgetOrderSection/types";
 import { Link } from "react-router-dom";
 import { Cog8ToothIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
-import { ReportAndNotes, ReportActivity } from "@/helpers/utils/types";
+import { ReportAndNotes } from "@/helpers/utils/types";
 import { checkIsToday } from "@/helpers/utils/datetime-ui";
+import { toReportActivities } from "./utils";
 
 const MainPage = ({
   selectedDate,
@@ -114,12 +115,7 @@ const MainPage = ({
       const parsedActivities = parsedReportsAndNotes[0];
 
       setReportAndNotes(parsedReportsAndNotes);
-      // Filter out incomplete activities to match ReportActivity type
-      setSelectedDateActivities(
-        parsedActivities.filter(
-          (activity): activity is ReportActivity => activity.id !== undefined && !!activity.from && !!activity.to,
-        ) as ReportActivity[],
-      );
+      setSelectedDateActivities(toReportActivities(parsedActivities));
 
       return;
     }
