@@ -469,7 +469,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
 
-- **Telegram**: [@mrdr_scn](https://t.me/mrdr_scn)
 - **Repository**: [https://github.com/ukad-group/timetracker-desktop-client](https://github.com/ukad-group/timetracker-desktop-client)
 
 <!-- MARKDOWN LINKS & IMAGES -->
